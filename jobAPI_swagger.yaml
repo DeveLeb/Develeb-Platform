@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Job Board API - OpenAPI 3.0
+  description: This is a Job Board API based on the OpenAPI 3.0 specification.
+  version: 1.0.0
+  contact:
+    email: apiteam@jobboard.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://jobboard.api.com/v1
+tags:
+  - name: job
+    description: Everything about jobs
+paths:
+  /job:
+    post:
+      tags:
+        - job
+      summary: Add a new job to the board
+      description: Add a new job to the board
+      operationId: addJob
+      requestBody:
+        description: Create a new job in the system
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - job
+      summary: Update an existing job
+      description: Update an existing job by Id
+      operationId: updateJob
+      requestBody:
+        description: Update an existent job in the system
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Job not found
+        '422':
+          description: Validation exception
+  /job/{jobId}:
+    get:
+      tags:
+        - job
+      summary: Get job by ID
+      description: Returns a single job
+      operationId: getJobById
+      parameters:
+        - name: jobId
+          in: path
+          description: ID of job to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'          
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Job not found
+    delete:
+      tags:
+        - job
+      summary: Deletes a job
+      description: delete a job
+      operationId: deleteJob
+      parameters:
+        - name: jobId
+          in: path
+          description: Job id to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid job value
+        '404':
+          description: Job not found
+  /jobs/category/{categoryId}:
+    get:
+      tags:
+        - job
+      summary: Get jobs by category
+      description: Returns a list of jobs for a specific category
+      operationId: getJobsByCategory
+      parameters:
+        - name: categoryId
+          in: path
+          description: ID of the category
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+        '404':
+          description: No jobs found for this category
+  /jobs/level/{levelId}:
+    get:
+      tags:
+        - job
+      summary: Get jobs by level
+      description: Returns a list of jobs for a specific level
+      operationId: getJobsByLevel
+      parameters:
+        - name: levelId
+          in: path
+          description: ID of the job level
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+        '404':
+          description: No jobs found for this level
+  /jobs/company/{companyName}:
+    get:
+      tags:
+        - job
+      summary: Get jobs by company name
+      description: Returns a list of jobs for a specific company
+      operationId: getJobsByCompanyName
+      parameters:
+        - name: companyName
+          in: path
+          description: Name of the company
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+        '404':
+          description: No jobs found for this company
+components:
+  schemas:
+    Job:
+      type: object
+      required:
+        - title
+        - level_id
+        - category_id
+      properties:
+        job_id:
+          type: integer
+          format: int64
+          example: 10
+        title:
+          type: string
+          example: Software Engineer
+        level_id:
+          type: integer
+          format: int64
+          example: 2
+        category_id:
+          type: integer
+          format: int64
+          example: 1
+        location:
+          type: string
+          example: San Francisco, CA
+        description:
+          type: string
+          example: We are looking for a skilled software engineer...
+        compensation:
+          type: string
+          example: $120,000 - $150,000 per year
+        application_link:
+          type: string
+          example: https://apply.jobboard.com/job/10
+        is_external:
+          type: boolean
+          example: false
+        company_id:
+          type: integer
+          format: int64
+          example: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    JobCategory:
+      type: object
+      properties:
+        category_id:
+          type: integer
+          format: int64
+          example: 1
+        category_title:
+          type: string
+          example: Technology
+    JobLevel:
+      type: object
+      properties:
+        level_id:
+          type: integer
+          format: int64
+          example: 2
+        level_title:
+          type: string
+          example: Mid-level
