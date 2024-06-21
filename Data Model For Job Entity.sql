@@ -26,8 +26,8 @@ CREATE TABLE "Job_Level" (
 CREATE TABLE "Job_Views" (
   "view_id" INTEGER PRIMARY KEY,
   "job_id" INTEGER,
-  "user_id" INTEGER,
-  "viewed_at" TIMESTAMP DEFAULT (now())
+  "total_views" INTEGER,
+  "last_viewed_at" TIMESTAMP DEFAULT (now())
 );
 
 ALTER TABLE "Job" ADD FOREIGN KEY ("level_id") REFERENCES "Job_Level" ("level_id");
