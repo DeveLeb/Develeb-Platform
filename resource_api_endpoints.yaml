@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: Resource API - OpenAPI 3.0
+  description: This is a Recourse API based on the OpenAPI 3.0 specification.
+  version: 1.0.0
+  contact:
+    email: apiteam@resource.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://resource.api.com/v1
+tags:
+  - name: resource
+    description: Everything about resources
+  - name: resource_views
+paths:
+  /resources:
+    get:
+      tags: 
+        - resource
+      summary: Get list of resources
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: Filter by resource type
+        - name: title
+          in: query
+          schema:
+            type: string
+          description: Filter by resource title
+        - name: tags
+          in: query
+          schema:
+            type: string
+            example: community resource,news
+          description: Filter by resource tags (comma separated)
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+    post:
+      tags:
+        - resource
+      summary: Create new resource
+      requestBody:
+        description: Create new resource
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+        required: true
+      responses:
+        '201':
+          description: Resource created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'    
+        '400':
+          description: Invalid input
+    put:
+      tags:
+      - resource
+      summary: Update a resource
+      requestBody:
+        description: Resource to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: Resource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '404':
+          description: Resource not found
+  /resources/{resourceId}:
+    get:
+      tags:
+        - resource
+      summary: Get resource by id
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of resource to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+       '200':
+         description: successful operation
+         content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+       '404':
+         description: resource not found
+    delete:
+      tags:
+      - resource
+      summary: Delete a resource
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Resource deleted successfully
+        '404':
+          description: Resource not found
+  /resources/{resourceId}/views:
+    get:
+      tags:
+        - resource_views
+      summary: get resource views
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of resource
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Resource_views'
+        '404':
+          description: resource not found
+    post:
+      tags:
+        - resource_views
+      summary: Create new resource views
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of resource
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '201':
+          description: Resource views created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource_views'    
+        '400':
+          description: Invalid input
+    put:
+     tags:
+        - resource_views
+     summary: update resource views
+     parameters:
+        - name: resourceId
+          in: path
+          description: ID of resource
+          required: true
+          schema:
+            type: integer
+            format: int64
+     responses:
+        '200':
+          description: Resource views updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource_views'
+        '404':
+          description: Resource not found
+    delete:
+      tags:
+      - resource_views
+      summary: Delete resource views
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Resource views deleted successfully
+        '404':
+          description: Resource not found
+    
+  
+components:
+  schemas:
+    Resource:
+      type: object
+      required:
+      - resourceId
+      - title
+      - link
+      properties:
+        resourceId:
+          type: integer
+          format: int64
+          example: 10
+        title:
+          type: string
+          format: int64
+          example: "Resource Title"
+        tags:
+          type: array
+          items:
+            type: string
+          format: int32
+          example: ["tag 1, tag 2"]
+        description:
+          type: string
+          example: "description of a resource"
+        link:
+          type: string
+          example: "https://www.resource.com"
+        publish:
+          type: boolean
+          example: true
+        type:
+          type: string
+          example: "community resource"
+        created_at:
+          type: string
+          format: date
+          example: "01-01-2024"
+        updated_at:
+          type: string
+          format: date
+          example: "01-01-2024"
+    Resource_views:
+      type: object
+      required:
+       - viewId
+       - resourceId
+       - view_count
+      properties:
+        viewId:
+          type: integer
+          format: int64
+          example: 10
+        resourceId:
+          type: integer
+          format: int64
+          example: 10
+        view_count:
+          type: integer
+          example: 1000
+        last_viewed_date:
+          type: string
+          format: date
+          example: "01-01-2024"
