@@ -1,5 +1,5 @@
 CREATE TABLE "users" (
-  "userid" integer PRIMARY KEY,
+  "userid" SERIAL PRIMARY KEY,
   "password" varchar(255),
   "firstname" varchar(255),
   "lastname" varchar(255),
@@ -8,7 +8,7 @@ CREATE TABLE "users" (
   "education" varchar(255),
   "description" varchar(255),
   "job_role" varchar(255),
-  "joindate" timestamp,
-  "profile_picture" BYTEA,
-  "admin" boolean
+  "joindate" timestamp default (now()),
+  "profile_picture" BYTEA default default_picture,
+  "admin" boolean default FALSE
 );
