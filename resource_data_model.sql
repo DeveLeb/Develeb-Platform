@@ -7,7 +7,7 @@ CREATE TABLE "resources" (
   "publish" boolean,
   "type" varchar(100),
   "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp NOT NULL DEFAULT (now())
+  "updated_at" timestamp 
 );
 
 CREATE TABLE "resource_views" (
