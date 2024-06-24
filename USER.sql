@@ -8,6 +8,7 @@ CREATE TABLE "user" (
   "headline" varchar(255),
   "job_title" varchar(255),
   "level" varchar(255),
+  "tags" varchar(255),
   "created_at" timestamp default (now()),
   "profile_url" varchar(255) default NULL,
   "is_admin" boolean default FALSE,
