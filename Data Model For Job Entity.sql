@@ -1,5 +1,5 @@
 CREATE TABLE "Job" (
-  "job_id" INTEGER PRIMARY KEY,
+  "id" INTEGER PRIMARY KEY,
   "title" VARCHAR NOT NULL,
   "level_id" INTEGER NOT NULL,
   "category_id" INTEGER NOT NULL,
@@ -14,17 +14,17 @@ CREATE TABLE "Job" (
 );
 
 CREATE TABLE "Job_Category" (
-  "category_id" INTEGER PRIMARY KEY,
-  "category_title" VARCHAR NOT NULL
+  "id" INTEGER PRIMARY KEY,
+  "title" VARCHAR NOT NULL
 );
 
 CREATE TABLE "Job_Level" (
-  "level_id" INTEGER PRIMARY KEY,
+  "id" INTEGER PRIMARY KEY,
   "level_title" VARCHAR NOT NULL
 );
 
 CREATE TABLE "Job_Views" (
-  "view_id" INTEGER PRIMARY KEY,
+  "user_id" INTEGER PRIMARY KEY,
   "job_id" INTEGER,
   "total_views" INTEGER,
   "last_viewed_at" TIMESTAMP DEFAULT (now())
