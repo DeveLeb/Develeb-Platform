@@ -66,33 +66,13 @@ paths:
                 $ref: '#/components/schemas/Resource'    
         '400':
           description: Invalid input
-    put:
-      tags:
-      - resource
-      summary: Update a resource
-      requestBody:
-        description: Resource to update
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Resource'
-      responses:
-        '200':
-          description: Resource updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Resource'
-        '404':
-          description: Resource not found
-  /resources/{resourceId}:
+  /resources/{id}:
     get:
       tags:
         - resource
       summary: Get resource by id
       parameters:
-        - name: resourceId
+        - name: id
           in: path
           description: ID of resource to return
           required: true
@@ -108,13 +88,42 @@ paths:
                 $ref: '#/components/schemas/Resource'
        '404':
          description: resource not found
+    put:
+      tags:
+      - resource
+      summary: Update a resource
+      parameters:
+        - name: id
+          in: path
+          description: ID of resource to edit
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: updated resource
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: Resource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '404':
+          description: Resource not found
     delete:
       tags:
       - resource
       summary: Delete a resource
       parameters:
-        - name: resourceId
+        - name: id
           in: path
+          description: ID of resource to delete
           required: true
           schema:
             type: integer
@@ -123,85 +132,63 @@ paths:
           description: Resource deleted successfully
         '404':
           description: Resource not found
-  /resources/{resourceId}/views:
+    
+  /resources/{id}/views:
     get:
       tags:
         - resource_views
-      summary: get resource views
+      summary: get view count for a resource
       parameters:
-        - name: resourceId
+        - name: id
           in: path
           description: ID of resource
           required: true
           schema:
             type: integer
-            format: int64
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/Resource_views'
+                  type: object
+                  properties:
+                     resource_id:
+                       type: integer
+                     view_count:
+                       type: integer
+                       example: 1000
         '404':
           description: resource not found
+  /resources/{id}/view:
     post:
       tags:
         - resource_views
-      summary: Create new resource views
+      summary: record view for a resource
       parameters:
-        - name: resourceId
+        - name: id
           in: path
           description: ID of resource
           required: true
           schema:
             type: integer
             format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
       responses:
         '201':
-          description: Resource views created successfully
+          description: view recorded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource_views'    
-        '400':
-          description: Invalid input
-    put:
-     tags:
-        - resource_views
-     summary: update resource views
-     parameters:
-        - name: resourceId
-          in: path
-          description: ID of resource
-          required: true
-          schema:
-            type: integer
-            format: int64
-     responses:
-        '200':
-          description: Resource views updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Resource_views'
-        '404':
-          description: Resource not found
-    delete:
-      tags:
-      - resource_views
-      summary: Delete resource views
-      parameters:
-        - name: resourceId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Resource views deleted successfully
-        '404':
-          description: Resource not found
+                $ref: '#/components/schemas/Resource_view'    
     
   
 components:
@@ -209,11 +196,11 @@ components:
     Resource:
       type: object
       required:
-      - resourceId
+      - id
       - title
       - link
       properties:
-        resourceId:
+        id:
           type: integer
           format: int64
           example: 10
@@ -247,25 +234,26 @@ components:
           type: string
           format: date
           example: "01-01-2024"
-    Resource_views:
+    Resource_view:
       type: object
       required:
-       - viewId
-       - resourceId
-       - view_count
+       - id
+       - user_id
+       - resource_id
+       - viewed_at
       properties:
-        viewId:
+        id:
+          type: integer
+          format: int64
+        user_id:
           type: integer
           format: int64
           example: 10
-        resourceId:
+        resource_id:
           type: integer
           format: int64
           example: 10
-        view_count:
-          type: integer
-          example: 1000
-        last_viewed_date:
+        viewed_at:
           type: string
           format: date
           example: "01-01-2024"
