@@ -1,12 +1,12 @@
 CREATE TABLE "Job" (
   "id" INTEGER PRIMARY KEY,
-  "title" VARCHAR NOT NULL,
+  "title" VARCHAR(255) NOT NULL,
   "level_id" INTEGER NOT NULL,
   "category_id" INTEGER NOT NULL,
-  "location" VARCHAR,
+  "location" VARCHAR(255),
   "description" TEXT,
-  "compensation" VARCHAR,
-  "application_link" VARCHAR,
+  "compensation" VARCHAR(255),
+  "application_link" VARCHAR(255),
   "is_external" BOOLEAN DEFAULT false,
   "company_id" INTEGER,
   "created_at" TIMESTAMP DEFAULT (now()),
@@ -15,12 +15,12 @@ CREATE TABLE "Job" (
 
 CREATE TABLE "Job_Category" (
   "id" INTEGER PRIMARY KEY,
-  "title" VARCHAR NOT NULL
+  "title" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "Job_Level" (
   "id" INTEGER PRIMARY KEY,
-  "level_title" VARCHAR NOT NULL
+  "level_title" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "Job_Views" (
