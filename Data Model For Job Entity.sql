@@ -24,9 +24,9 @@ CREATE TABLE "Job_Level" (
 );
 
 CREATE TABLE "Job_Views" (
-  "user_id" INTEGER PRIMARY KEY,
+  "id" INTEGER PRIMARY KEY,
   "job_id" INTEGER,
-  "total_views" INTEGER,
+  "user_id" INTEGER,
   "last_viewed_at" TIMESTAMP DEFAULT (now())
 );
 
