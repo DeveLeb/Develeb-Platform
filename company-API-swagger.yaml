@@ -15,75 +15,7 @@ tags:
     description: Everything about companies
   - name: Feedback
     description: Everything about feedback
-  - name: SocialPlatformType
-    description: Everything about social platform types
 paths:
-  /social_platform_type:
-    get:
-      tags:
-        - SocialPlatformType
-      summary: Get all social platform types
-      description: Get all social platform types
-      operationId: getSocialPlatformTypes
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SocialPlatformType'
-    post:
-      tags:
-        - SocialPlatformType
-      summary: Create a new social platform type (admin only)
-      description: Create a new social platform type
-      operationId: addSocialPlatformType
-      requestBody:
-        description: Create a new social platform type
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SocialPlatformType'
-        required: true
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SocialPlatformType'
-        '400':
-          description: Invalid input
-        '403':
-          description: Permission denied
-        '422':
-          description: Validation exception
-  /social_platform_type/{typeId}:
-    delete:
-      tags:
-        - SocialPlatformType
-      summary: Delete social platform type by id (admin only)
-      description: Delete social platform type by id
-      operationId: deleteSocialPlatformType
-      parameters:
-        - name: typeId
-          in: path
-          description: ID of social platform type to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid ID supplied
-        '403':
-          description: Permission denied
-        '404':
-          description: Social platform type not found
   /company:
     get:
       tags:
@@ -119,7 +51,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Company'          
+                $ref: '#/components/schemas/Company'
         '400':
           description: Invalid input
         '422':
@@ -143,7 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Company'          
+                $ref: '#/components/schemas/Company'
         '400':
           description: Invalid ID supplied
         '404':
@@ -171,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Company'          
+                $ref: '#/components/schemas/Company'
         '400':
           description: Invalid ID supplied
         '404':
@@ -225,7 +157,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompanyFeedback'          
+                $ref: '#/components/schemas/CompanyFeedback'
         '400':
           description: Invalid input
         '422':
@@ -307,58 +239,24 @@ components:
         hidden:
           type: boolean
           example: false
-        social_platforms:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanySocialPlatform'
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time 
-    CompanySocialPlatform:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-          example: 1
-        company_id:
-          type: integer
-          format: int64
-          example: 5
-        platform_url:
+        intagram_url:
           type: string
-          example: https://www.linkedin.com/company/google
-        platform_type_id:
-          type: integer
-          format: int64
-          example: 1
-        type:
-          $ref: '#/components/schemas/SocialPlatformType'
-        created_at:
+          example: https://www.instagram.com/google 
+        facebook_url:
           type: string
-          format: date-time
-        updated_at:
+          example: https://www.facebook.com/google 
+        twitter_url: 
           type: string
-          format: date-time 
-    SocialPlatformType:
-      type: object
-      properties:
-        type_id:
-          type: integer
-          format: int64
-          example: 1
-        type_title:
+          example: https://www.twitter.com/google 
+        linkedin_url: 
           type: string
-          example: LinkedIn
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time 
+          example: https://www.linkedin.com/google 
     CompanyFeedback:
       type: object
       properties:
