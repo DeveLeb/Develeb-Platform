@@ -1,48 +1,22 @@
 openapi: 3.0.3
 info:
-  title: Event Management Api - OpenAPI 3.0
-  description: >-
-    API for managing event entities
-
+  title: Event Management API - OpenAPI 3.0
+  description: API for managing event entities
   version: 1.0.11
-
 
 tags:
   - name: events
-    description: operations for event
+    description: Operations for event
     externalDocs:
       description: Find out more
       url: http://swagger.io
+
 paths:
   /events:
-    post:
-      tags:
-        - events
-      summary: Create a new event
-      description: create a new event and generate a whatsapp post for scheduled posting
-      operationId: createEvent
-      requestBody:
-        description: event object that needs to be added
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventInput'
-        required: true
-      responses:
-        '200':
-          description: event created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Event'
-        '400':
-          description: Invalid input
-        '422':
-          description: Validation exception
     get:
       tags:
         - events
-      summary: Get events
+      summary: get events
       description: retrieves a list of events filtered by type, tags, or title
       operationId: getEvents
       parameters:
@@ -62,7 +36,7 @@ paths:
               type: string
         - name: title
           in: query
-          description: title of the event
+          description: Title of the event
           required: false
           schema:
             type: string
@@ -75,12 +49,35 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Event'
+    post:
+      tags:
+        - events
+      summary: create a new event
+      description: create a new event and generate a whatsapp post for scheduled posting
+      operationId: createEvent
+      requestBody:
+        description: event object that needs to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+        required: true
+      responses:
+        '200':
+          description: event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+      security:
+        - adminAuth: []
+
   /events/{eventId}:
     get:
       tags:
         - events
       summary: get event by ID
-      description: retrieve a single event by its ID
+      description: retrieve a single event by its id
       operationId: getEventById
       parameters:
         - name: eventId
@@ -99,6 +96,7 @@ paths:
                 $ref: '#/components/schemas/Event'
         '404':
           description: event not found
+
     put:
       tags:
         - events
@@ -127,10 +125,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Event'
-        '400':
-          description: Invalid input
         '404':
           description: event not found
+      security:
+        - adminAuth: [] 
+
     delete:
       tags:
         - events
@@ -150,6 +149,9 @@ paths:
           description: event marked as deleted
         '404':
           description: event not found
+      security:
+        - adminAuth: [] 
+
 components:
   schemas:
     Event:
@@ -166,10 +168,10 @@ components:
           example: 1
         title:
           type: string
-          example: team meeting
+          example: Team Meeting
         description:
           type: string
-          example: monthly team meeting to discuss project updates
+          example: Monthly team meeting to discuss project updates
         startDate:
           type: string
           format: date-time
@@ -189,59 +191,4 @@ components:
         status:
           type: string
           description: Event status
-          example: active
-          enum:
-            - active
-            - deleted
-        reminders:
-          type: array
-          items:
-            type: string
-            format: date-time
-          example: ['2024-06-30T13:00:00+03:00']
-        whatsAppPost:
-          type: string
-          example: 'join our team meeting on 1st July at 10 AM!'
-      xml:
-        name: event
-    EventInput:
-      type: object
-      required:
-        - title
-        - description
-        - startDate
-        - endDate
-      properties:
-        title:
-          type: string
-          example: team Meeting
-        description:
-          type: string
-          example: monthly team meeting to discuss project updates
-        startDate:
-          type: string
-          format: date-time
-          example: '2024-07-01T10:00:00+03:00'
-        endDate:
-          type: string
-          format: date-time
-          example: '2024-07-01T12:00:00+03:00'
-        type:
-          type: string
-          example: Meeting
-        tags:
-          type: array
-          items:
-            type: string
-          example: ['team', 'monthly']
-        reminders:
-          type: array
-          items:
-            type: string
-            format: date-time
-          example: ['2024-06-30T13:00:00+03:00']
-        whatsAppPost:
-          type: string
-          example: 'join our team meeting on 1st July at 10 AM!'
-      xml:
-        name: eventInput
+          example
