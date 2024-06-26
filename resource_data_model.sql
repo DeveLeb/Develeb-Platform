@@ -1,3 +1,9 @@
+CREATE TABLE "user" (
+  "id" integer PRIMARY KEY,
+  "username" varchar(255) NOT NULL,
+  "password" varchar(255) NOT NULL
+);
+
 CREATE TABLE "resource" (
   "id" integer PRIMARY KEY,
   "title" varchar(255) NOT NULL,
@@ -22,4 +28,17 @@ CREATE TABLE "resource_view" (
   "viewed_at" timestamp DEFAULT (now())
 );
 
+CREATE TABLE "favorite_resource" (
+  "user_id" INTEGER,
+  "resource_id" INTEGER,
+  PRIMARY KEY ("user_id", "resource_id")
+);
+
+ALTER TABLE "resource_view" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+ALTER TABLE "favorite_resource" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
 ALTER TABLE "resource_view" ADD FOREIGN KEY ("resource_id") REFERENCES "resource" ("id");
+
+ALTER TABLE "favorite_resource" ADD FOREIGN KEY ("resource_id") REFERENCES "resource" ("id");
+
