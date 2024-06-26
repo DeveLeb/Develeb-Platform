@@ -7,7 +7,6 @@ CREATE TABLE "user" (
 CREATE TABLE "resource" (
   "id" integer PRIMARY KEY,
   "title" varchar(255) NOT NULL,
-  "tag_ids" integer[],
   "description" TEXT,
   "link" varchar(255) NOT NULL,
   "publish" boolean,
@@ -21,6 +20,13 @@ CREATE TABLE "tag" (
   "tag_name" varchar(255)
 );
 
+CREATE TABLE "resource_tag" (
+  "resource_id" integer,
+  "tag_id" integer,
+  PRIMARY KEY ("resource_id", "tag_id"),
+  FOREIGN KEY ("resource_id") REFERENCES "resource" ("id"),
+  FOREIGN KEY ("tag_id") REFERENCES "tag" ("id")
+)
 CREATE TABLE "resource_view" (
   "id" integer PRIMARY KEY,
   "user_id" integer,
