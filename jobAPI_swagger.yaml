@@ -1,57 +1,53 @@
 openapi: 3.0.3
 info:
-  title: Job Board API - OpenAPI 3.0
-  description: This is a Job Board API based on the OpenAPI 3.0 specification.
+  title: Job Board API
+  description: Job Board RESTful API based on the OpenAPI 3.0 specification. It includes CRUD methods and filtering capabilities for managing job postings
   version: 1.0.1
-  contact:
-    email: apiteam@jobboard.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-servers:
-  - url: https://jobboard.api.com/v1
 tags:
   - name: job
-    description: Everything about jobs
+    description: User Priviledged Operations
   - name: admin
-    description: Admin operations
+    description: Admin privileged Operations
 paths:
-  /job/{jobId}:
+  /jobs/{jobId}:
     get:
       tags:
         - job
-      summary: Get job by ID
-      description: Returns a single job
+      summary: Get job by Id
+      description: Returns a job of the given Id
       operationId: getJobById
       parameters:
         - name: jobId
           in: path
-          description: ID of job to return
+          description: Id of job to return
           required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: Successful operation
+          description: success
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Job'          
         '400':
-          description: Invalid ID supplied
+          description: invalid Id supplied
         '404':
-          description: Job not found
+          description: job not found
     delete:
       tags:
         - admin
-      summary: Delete a particular job
+      summary: delete a particular job by id
       description: Only deletes on the platform, not communication channels
       operationId: deleteJob
       parameters:
         - name: jobId
           in: path
-          description: ID of job to delete
+          description: Id of job to delete
           required: true
           schema:
             type: integer
@@ -64,13 +60,13 @@ paths:
     put:
       tags:
         - admin
-      summary: Update an existing job
-      description: Update an existing job by ID
+      summary: update an existing job
+      description: update an existing job by Id
       operationId: updateJob
       parameters:
         - name: jobId
           in: path
-          description: ID of job to update
+          description: Id of job to update
           required: true
           schema:
             type: integer
@@ -90,7 +86,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Job'          
         '400':
-          description: Invalid ID supplied
+          description: Invalid Id supplied
+        '404':
+          description: Job not found
+        '422':
+          description: Validation exception
+    patch:
+      tags:
+        - admin
+      summary: update an existing job
+      description: Update an existing job by Id
+      parameters:
+        - name: jobId
+          in: path
+          description: Id of job to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update an existing job in the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'          
+        '400':
+          description: Invalid Id supplied
         '404':
           description: Job not found
         '422':
@@ -99,19 +128,19 @@ paths:
     get:
       tags:
         - job
-      summary: Get jobs with filters
-      description: Returns a list of jobs based on filters
+      summary: get jobs with with optional filters
+      description: returns a list of jobs based on filters
       operationId: getJobs
       parameters:
         - name: categoryId
           in: query
-          description: Filter by category ID
+          description: Filter by category Id
           schema:
             type: integer
             format: int64
         - name: levelId
           in: query
-          description: Filter by level ID
+          description: Filter by level Id
           schema:
             type: integer
             format: int64
@@ -135,8 +164,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/Job'
         '404':
-          description: No jobs found for the given filters
-  /job/submit:
+          description: No jobs found 
+  /jobs/submit:
     post:
       tags:
         - job
@@ -157,7 +186,7 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
-  /job/{jobId}/publish:
+  /jobs/{jobId}/publish:
     post:
       tags:
         - admin
@@ -167,7 +196,7 @@ paths:
       parameters:
         - name: jobId
           in: path
-          description: ID of job to publish
+          description: Id of job to publish
           required: true
           schema:
             type: integer
@@ -177,7 +206,7 @@ paths:
           description: Job published successfully
         '404':
           description: Job not found
-  /job/{jobId}/approve:
+  /jobs/{jobId}/approve:
     post:
       tags:
         - admin
@@ -186,7 +215,7 @@ paths:
       parameters:
         - name: jobId
           in: path
-          description: ID of job to approve
+          description: Id of job to approve
           required: true
           schema:
             type: integer
@@ -196,7 +225,7 @@ paths:
           description: Job approved successfully
         '404':
           description: Job not found
-  /job/{jobId}/reject:
+  /jobs/{jobId}/reject:
     post:
       tags:
         - admin
@@ -205,7 +234,7 @@ paths:
       parameters:
         - name: jobId
           in: path
-          description: ID of job to reject
+          description: Id of job to reject
           required: true
           schema:
             type: integer
@@ -216,6 +245,7 @@ paths:
         '404':
           description: Job not found
   /jobcategories:
+  
     post:
       tags:
         - admin
@@ -233,6 +263,68 @@ paths:
           description: Job category created successfully
         '400':
           description: Invalid input
+  /jobcategories/{categoryId}:
+    get:
+      tags:
+        - admin
+      summary: Get a job category by Id
+      operationId: getJobCategory
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Job category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCategory'
+        '404':
+          description: Job category not found
+    put:
+      tags:
+        - admin
+      summary: Update a job category by Id
+      operationId: updateJobCategory
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Updated job category details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCategory'
+      responses:
+        '200':
+          description: Job category updated successfully
+        '400':
+          description: Invalid input
+        '404':
+          description: Job category not found
+    delete:
+      tags:
+        - admin
+      summary: Delete a job category by Id
+      operationId: deleteJobCategory
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Job category deleted successfully
+        '404':
+          description: Job category not found
   /joblevels:
     post:
       tags:
@@ -251,17 +343,79 @@ paths:
           description: Job level created successfully
         '400':
           description: Invalid input
-  /job/{jobId}/analytics:
+  /joblevels/{levelId}:
     get:
       tags:
         - admin
-      summary: Get job analytics by ID
+      summary: Get a job level by Id
+      operationId: getJobLevel
+      parameters:
+        - name: levelId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Job level details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLevel'
+        '404':
+          description: Job level not found
+    put:
+      tags:
+        - admin
+      summary: Update a job level by Id
+      operationId: updateJobLevel
+      parameters:
+        - name: levelId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Updated job level details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobLevel'
+      responses:
+        '200':
+          description: Job level updated successfully
+        '400':
+          description: Invalid input
+        '404':
+          description: Job level not found
+    delete:
+      tags:
+        - admin
+      summary: Delete a job level by Id
+      operationId: deleteJobLevel
+      parameters:
+        - name: levelId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Job level deleted successfully
+        '404':
+          description: Job level not found
+  /jobs/{jobId}/analytics:
+    get:
+      tags:
+        - admin
+      summary: Get job analytics by Id
       description: Returns detailed analytics data for a specific job
       operationId: getJobAnalytics
       parameters:
         - name: jobId
           in: path
-          description: ID of the job to get analytics for
+          description: Id of the job to get analytics for
           required: true
           schema:
             type: integer
@@ -286,7 +440,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/JobView'
         '400':
-          description: Invalid ID supplied
+          description: Invalid Id supplied
         '404':
           description: Job not found
 components:
@@ -374,5 +528,3 @@ components:
         viewed_at:
           type: string
           format: date-time
-      
-    
