@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Swagger User Endpoints- OpenAPI 3.0
+  title:  User Endpoints
   description: |-
     This is a blueprint for the User-related operations API endpoints. It includes all details about these user endpoints including the method used, request body and responses.
   termsOfService: http://swagger.io/terms/
@@ -227,7 +227,7 @@ paths:
       tags:
         - user
       summary: Creates new user 
-      description: Creates list of users with given input array
+      description: Creates a user from the data sent from the registration form
       operationId: Register
       requestBody:
         description: Register Form Data
