@@ -3,13 +3,9 @@ info:
   title: Resource API - OpenAPI 3.0
   description: This is a Recourse API based on the OpenAPI 3.0 specification.
   version: 1.0.0
-  contact:
-    email: apiteam@resource.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-servers:
-  - url: https://resource.api.com/v1
 tags:
   - name: resource
     description: Everything about resources
