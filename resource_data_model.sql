@@ -1,37 +1,37 @@
 CREATE TABLE "user" (
-  "id" integer PRIMARY KEY,
-  "username" varchar(255) NOT NULL,
-  "password" varchar(255) NOT NULL
+  "id" INTEGER PRIMARY KEY,
+  "username" VARCHAR(255) NOT NULL,
+  "password" VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE "resource" (
-  "id" integer PRIMARY KEY,
-  "title" varchar(255) NOT NULL,
+  "id" INTEGER PRIMARY KEY,
+  "title" VARCHAR(255) NOT NULL,
   "description" TEXT,
-  "link" varchar(255) NOT NULL,
-  "publish" boolean,
-  "type" varchar(255),
-  "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp
+  "link" VARCHAR(255) NOT NULL,
+  "publish" BOOLEAN,
+  "type" VARCHAR(255),
+  "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
+  "updated_at" TIMESTAMP
 );
 
 CREATE TABLE "tag" (
-  "id" integer PRIMARY KEY,
-  "tag_name" varchar(255)
+  "id" INTEGER PRIMARY KEY,
+  "tag_name" VARCHAR(255)
 );
 
 CREATE TABLE "resource_tag" (
-  "resource_id" integer,
-  "tag_id" integer,
+  "resource_id" INTEGER,
+  "tag_id" INTEGER,
   PRIMARY KEY ("resource_id", "tag_id"),
   FOREIGN KEY ("resource_id") REFERENCES "resource" ("id"),
   FOREIGN KEY ("tag_id") REFERENCES "tag" ("id")
 )
 CREATE TABLE "resource_view" (
-  "id" integer PRIMARY KEY,
-  "user_id" integer,
-  "resource_id" integer,
-  "viewed_at" timestamp DEFAULT (now())
+  "id" INTEGER PRIMARY KEY,
+  "user_id" INTEGER,
+  "resource_id" INTEGER,
+  "viewed_at" TIMESTAMP DEFAULT (now())
 );
 
 CREATE TABLE "favorite_resource" (
