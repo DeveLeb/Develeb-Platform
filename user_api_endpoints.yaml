@@ -102,9 +102,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Authorization token is required."
-                    
-                    
+                    example: "Authorization token is required."                 
                     
   /users/reset-password:
     post:
@@ -170,7 +168,6 @@ paths:
                     type: string
                     example: "User not found."
                           
-  
   /users/verify:
     post:
       tags:
@@ -220,8 +217,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "User not found."
-  
+                    example: "User not found."  
   /users:
     post:
       tags:
@@ -259,9 +255,7 @@ paths:
                   example: 3
                 job_title:
                   type: integer
-                  example: 2
-                  
-                    
+                  example: 2                    
       responses:
         '201':
           description: User successfully registered
@@ -334,16 +328,7 @@ paths:
                   error:
                     type: string
                     example: "You do not have permission to access this resource."
-      
-      
-      
-      
-  
-  
-                    
-  
-        
-                  
+             
   /users/{userId}:
     get:
       tags:
