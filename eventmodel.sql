@@ -1,10 +1,10 @@
 CREATE TABLE "tags" (
-  "id" serial PRIMARY KEY,
+  "id" integer PRIMARY KEY,
   "value" varchar(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE "types" (
-  "id" serial PRIMARY KEY,
+  "id" integer PRIMARY KEY,
   "value" varchar(50) UNIQUE NOT NULL
 );
 
