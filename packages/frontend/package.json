@@ -1,0 +1,28 @@
+{
+    "name": "frontend",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next",
+        "build": "next build",
+        "lint": "next lint",
+        "prepare": "husky",
+        "knip": "knip"
+    },
+    "dependencies": {
+        "next": "14.2.4",
+        "react": "^18",
+        "react-dom": "^18"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.9",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "eslint": "8.57.0",
+        "eslint-config-next": "14.2.4",
+        "eslint-config-prettier": "^9.1.0",
+        "husky": "^9.0.11",
+        "knip": "^5.23.0",
+        "typescript": "^5.5.2"
+    }
+}
