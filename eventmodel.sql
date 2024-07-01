@@ -1,44 +1,44 @@
 CREATE TABLE "tags" (
-  "id" integer PRIMARY KEY,
-  "value" varchar(255) UNIQUE NOT NULL
+  "id" INTEGER PRIMARY KEY,
+  "value" VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE "types" (
-  "id" integer PRIMARY KEY,
-  "value" varchar(50) UNIQUE NOT NULL
+  "id" INTEGER PRIMARY KEY,
+  "value" VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE "event" (
-  "id" integer PRIMARY KEY NOT NULL,
-  "title" varchar(255) NOT NULL,
-  "description" text,
-  "form_link" varchar(255) NOT NULL,
-  "video_link" varchar(255) NOT NULL,
-  "flyer" varchar(255),
-  "date" datetime,
-  "location" varchar(255),
-  "speaker" varchar(255),
-  "type_id" integer,
-  "created_at" timestamp,
-  "updated_at" timestamp
+  "id" INTEGER PRIMARY KEY NOT NULL,
+  "title" VARCHAR(255) NOT NULL,
+  "description" TEXT,
+  "form_link" VARCHAR(255) NOT NULL,
+  "video_link" VARCHAR(255) NOT NULL,
+  "flyer" VARCHAR(255),
+  "date" DATETIME,
+  "location" VARCHAR(255),
+  "speaker" VARCHAR(255),
+  "type_id" INTEGER,
+  "created_at" TIMESTAMP,
+  "updated_at" TIMESTAMP
 );
 
 
 CREATE TABLE "user_event_registration" (
-  "user_id" integer,
-  "event_id" integer,
+  "user_id" INTEGER,
+  "event_id" INTEGER,
   "primary" key(user_id,event_id)
 );
 
 CREATE TABLE "favorites_events" (
-  "user_id" integer,
-  "event_id" integer,
+  "user_id" INTEGER,
+  "event_id" INTEGER,
   "primary" key(user_id,event_id)
 );
 
 CREATE TABLE "event_tags" (
-  "event_id" integer,
-  "tag_id" integer,
+  "event_id" INTEGER,
+  "tag_id" INTEGER,
   "primary" key(event_id,tag_id)
 );
 
