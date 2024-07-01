@@ -2,33 +2,30 @@ openapi: 3.0.3
 info:
   title: Event Management API - OpenAPI 3.0
   description: API for managing event entities
-  version: 1.0.11
+  version: 1.0.0
 
 tags:
   - name: events
-    description: Operations for event
-    externalDocs:
-      description: Find out more
-      url: http://swagger.io
+    description: Operations for event management
 
 paths:
   /events:
     get:
       tags:
         - events
-      summary: get events
-      description: retrieves a list of events filtered by type, tags, or title
+      summary: Get events
+      description: Retrieves a list of events filtered by type, tags, or title
       operationId: getEvents
       parameters:
         - name: type
           in: query
-          description: type of the event
+          description: Type of the event
           required: false
           schema:
             type: string
         - name: tags
           in: query
-          description: tags associated with the event
+          description: Tags associated with the event
           required: false
           schema:
             type: array
@@ -42,7 +39,7 @@ paths:
             type: string
       responses:
         '200':
-          description: list of events
+          description: List of events
           content:
             application/json:
               schema:
@@ -52,19 +49,19 @@ paths:
     post:
       tags:
         - events
-      summary: create a new event
-      description: create a new event and generate a whatsapp post for scheduled posting
+      summary: Create a new event
+      description: Create a new event and generate a WhatsApp post for scheduled posting
       operationId: createEvent
       requestBody:
-        description: event object that needs to be added
+        description: Event object that needs to be added
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EventInput'
-        required: true
       responses:
         '200':
-          description: event created successfully
+          description: Event created successfully
           content:
             application/json:
               schema:
@@ -76,43 +73,42 @@ paths:
     get:
       tags:
         - events
-      summary: get event by ID
-      description: retrieve a single event by its id
+      summary: Get event by ID
+      description: Retrieve a single event by its ID
       operationId: getEventById
       parameters:
         - name: eventId
           in: path
-          description: id of the event to retrieve
+          description: ID of the event to retrieve
           required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: event details
+          description: Event details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Event'
         '404':
-          description: event not found
-
+          description: Event not found
     put:
       tags:
         - events
-      summary: update an event
-      description: update an existing event
+      summary: Update an event
+      description: Update an existing event
       operationId: updateEvent
       parameters:
         - name: eventId
           in: path
-          description: id of the event to update
+          description: ID of the event to update
           required: true
           schema:
             type: integer
             format: int64
       requestBody:
-        description: updated event object
+        description: Updated event object
         required: true
         content:
           application/json:
@@ -120,37 +116,211 @@ paths:
               $ref: '#/components/schemas/EventInput'
       responses:
         '200':
-          description: event updated successfully
+          description: Event updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Event'
         '404':
-          description: event not found
+          description: Event not found
       security:
-        - adminAuth: [] 
-
+        - adminAuth: []
+    patch:
+      tags:
+        - events
+      summary: Partially update an event
+      description: Update one or more fields of an existing event
+      operationId: patchEvent
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of the event to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Fields of the event to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventPatch'
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '404':
+          description: Event not found
+      security:
+        - adminAuth: []
     delete:
       tags:
         - events
-      summary: delete an event
-      description: mark an event as deleted
+      summary: Delete an event
+      description: Mark an event as deleted
       operationId: deleteEvent
       parameters:
         - name: eventId
           in: path
-          description: id of the event to delete
+          description: ID of the event to delete
           required: true
           schema:
             type: integer
             format: int64
       responses:
         '200':
-          description: event marked as deleted
+          description: Event marked as deleted
         '404':
-          description: event not found
+          description: Event not found
       security:
-        - adminAuth: [] 
+        - adminAuth: []
+
+  /favorites:
+    post:
+      tags:
+        - events
+      summary: Save and favorite an event
+      description: Save and favorite an event for the registered user
+      operationId: saveFavoriteEvent
+      requestBody:
+        description: Event ID to save as favorite
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: integer
+                  format: int64
+                  example: 1
+      responses:
+        '200':
+          description: Event saved as favorite
+      security:
+        - userAuth: []
+
+  /registrations:
+    post:
+      tags:
+        - events
+      summary: Register for an event
+      description: Register a user for an upcoming event
+      operationId: registerEvent
+      requestBody:
+        description: Event ID to register for
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: integer
+                  format: int64
+                  example: 1
+      responses:
+        '200':
+          description: Registered for event successfully
+      security:
+        - userAuth: []
+
+  /events/{eventId}/registrations:
+    get:
+      tags:
+        - events
+      summary: Get registrations for an event
+      description: Retrieve all registrations for a given event
+      operationId: getEventRegistrations
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of the event to get registrations for
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of registrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                      format: int64
+                    username:
+                      type: string
+      security:
+        - adminAuth: []
+
+  /users/{userId}/events:
+    get:
+      tags:
+        - events
+      summary: Get events attended by user
+      description: Retrieve all events attended by a user
+      operationId: getUserEvents
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to get events for
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+      security:
+        - adminAuth: []
+
+  /analytics/events:
+    get:
+      tags:
+        - events
+      summary: Get event analytics
+      description: Retrieve analytics data for events
+      operationId: getEventAnalytics
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRegistrations:
+                    type: integer
+                  totalViews:
+                    type: integer
+                  popularEvents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventId:
+                          type: integer
+                        title:
+                          type: string
+                        views:
+                          type: integer
+      security:
+        - adminAuth: []
 
 components:
   schemas:
@@ -191,4 +361,77 @@ components:
         status:
           type: string
           description: Event status
-          example
+          example: active
+    EventInput:
+      type: object
+      required:
+        - title
+        - description
+        - startDate
+        - endDate
+      properties:
+        title:
+          type: string
+          example: Team Meeting
+        description:
+          type: string
+          example: Monthly team meeting to discuss project updates
+        startDate:
+          type: string
+          format: date-time
+          example: '2024-07-01T10:00:00+03:00'
+        endDate:
+          type: string
+          format: date-time
+          example: '2024-07-01T12:00:00+03:00'
+        type:
+          type: string
+          example: Meeting
+        tags:
+          type: array
+          items:
+            type: string
+          example: ['team', 'monthly']
+        status:
+          type: string
+          description: Event status
+          example: active
+    EventPatch:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Team Meeting
+        description:
+          type: string
+          example: Monthly team meeting to discuss project updates
+        startDate:
+          type: string
+          format: date-time
+          example: '2024-07-01T10:00:00+03:00'
+        endDate:
+          type: string
+          format: date-time
+          example: '2024-07-01T12:00:00+03:00'
+        type:
+          type: string
+          example: Meeting
+        tags:
+          type: array
+          items:
+            type: string
+          example: ['team', 'monthly']
+        status:
+          type: string
+          description: Event status
+          example: active
+
+  securitySchemes:
+    userAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
