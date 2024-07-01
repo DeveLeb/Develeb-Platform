@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String                  @id @default(uuid())
+  email              String                  @unique
+  password           String
+  phoneNumber        String
+  fullName           String
+  username           String                  @unique
+  profileUrl         String
+  levelId            Int
+  categoryId         Int
+  role               Role                    @default(user)
+  isVerified         Boolean                 @default(false)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  tags               String[]
+  eventRegistrations UserEventRegistration[]
+  jobViews           JobViews[]
+  jobSaved           JobSaved[]
+  resourceViews      ResourceViews[]
+  resourceSaved      ResourceSaved[]
+  companyFeedback    CompanyFeedback[]
+  eventSaved         EventSaved[]
+}
+
+model Session {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  jobViews      JobViews[]
+  resourceViews ResourceViews[]
+}
+
+model Job {
+  id              String      @id @default(uuid())
+  title           String
+  levelId         String
+  categoryId      String
+  typeId          String
+  location        String
+  description     String
+  compensation    String
+  applicationLink String
+  isExternal      Boolean     @default(false)
+  companyId       String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  tags            String[]
+  category        JobCategory @relation(fields: [categoryId], references: [id])
+  level           JobLevel    @relation(fields: [levelId], references: [id])
+  type            JobType     @relation(fields: [typeId], references: [id])
+  views           JobViews[]
+  saved           JobSaved[]
+}
+
+model JobCategory {
+  id    String @id @default(uuid())
+  title String
+  jobs  Job[]
+}
+
+model JobLevel {
+  id    String @id @default(uuid())
+  title String
+  jobs  Job[]
+}
+
+model JobType {
+  id    String @id @default(uuid())
+  title String
+  jobs  Job[]
+}
+
+model JobSaved {
+  id      String   @id @default(uuid())
+  jobId   String
+  userId  String
+  savedAt DateTime @default(now())
+  job     Job      @relation(fields: [jobId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+}
+
+model JobViews {
+  id           String   @id @default(uuid())
+  jobId        String
+  userId       String
+  sessionId    String
+  lastViewedAt DateTime @default(now())
+  job          Job      @relation(fields: [jobId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+  session      Session  @relation(fields: [sessionId], references: [id])
+}
+
+model Event {
+  id            String                  @id @default(uuid())
+  title         String
+  description   String
+  videoLink     String
+  flyerLink     String
+  date          DateTime
+  location      String
+  typeId        String
+  tags          String[]
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  registrations UserEventRegistration[]
+  saved         EventSaved[]
+  userId        String
+}
+
+model UserEventRegistration {
+  id       String @id @default(uuid())
+  userId   String
+  eventId  String
+  userType String
+  user     User   @relation(fields: [userId], references: [id])
+  event    Event  @relation(fields: [eventId], references: [id])
+}
+
+model EventSaved {
+  id      String   @id @default(uuid())
+  eventId String
+  userId  String
+  savedAt DateTime @default(now())
+  event   Event    @relation(fields: [eventId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+}
+
+model Resource {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  link        String
+  publish     Boolean         @default(false)
+  type        String
+  tags        String[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  views       ResourceViews[]
+  saved       ResourceSaved[]
+}
+
+model ResourceViews {
+  id           String   @id @default(uuid())
+  userId       String
+  resourceId   String
+  sessionId    String
+  lastViewedAt DateTime @default(now())
+  resource     Resource @relation(fields: [resourceId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+  session      Session  @relation(fields: [sessionId], references: [id])
+}
+
+model ResourceSaved {
+  id         String   @id @default(uuid())
+  resourceId String
+  userId     String
+  savedAt    DateTime @default(now())
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Company {
+  id           String            @id @default(uuid())
+  name         String            @unique
+  description  String
+  website      String            @unique
+  size         String
+  location     String
+  industry     String
+  isVisible    Boolean           @default(false)
+  instagramUrl String
+  facebookUrl  String
+  xUrl         String
+  linkedinUrl  String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  feedback     CompanyFeedback[]
+}
+
+model CompanyFeedback {
+  id          String   @id @default(uuid())
+  companyId   String
+  userId      String
+  description String
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
+enum Role {
+  user
+  admin
+}
