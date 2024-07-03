@@ -1,0 +1,18 @@
+CREATE TABLE "user" (
+  "id" VARCHAR(255) PRIMARY KEY,
+  "username" VARCHAR(255) NOT NULL UNIQUE,
+  "password" VARCHAR(255),
+  "email" VARCHAR(255) NOT NULL,
+  "first_name" VARCHAR(255),
+  "last_name" VARCHAR(255),
+  "phone_number" VARCHAR(30),
+  "headline" VARCHAR(255) default NULL,
+  "job_title" INTEGER,
+  "level" INTEGER,
+  "tags" VARCHAR(255),
+  "created_at" timestamp default (now()),
+  "updated_at" timestamp default (now()),
+  "profile_url" VARCHAR(255) default NULL,
+  "role" VARCHAR(255) default "USER",
+  "is_verified" boolean default FALSE,
+);
