@@ -1,0 +1,620 @@
+openapi: 3.0.3
+info:
+  title:  User Endpoints
+  description: |-
+    This is a blueprint for the User-related operations API endpoints. It includes all details about these user endpoints including the method used, request body and responses.
+  termsOfService: http://swagger.io/terms/
+  
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+
+tags:
+ 
+  - name: user
+    description: User management
+paths:
+  /users/login:
+    post:
+      tags:
+        - user
+      summary: Login
+      description: Logs the user in and generates the session token or JWT token
+      operationId: Login
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        '401':
+          description: Unauthorized - Invalid credentials
+        
+  /users/logout:
+    post:
+      tags:
+        - user
+      summary: Logout
+      description: Logs out the user by invalidating the session or JWT token. Must be logged in first.
+      operationId: logoutUser
+      security:
+       - bearerAuth: []
+      requestBody:
+        description: Logout request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+      responses:
+        '200':
+          description: Successful logout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out."
+        '400':
+          description: Bad Request - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid token."
+        '401':
+          description: Unauthorized - Token required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authorization token is required."                 
+                    
+  /users/reset-password:
+    post:
+      tags:
+        - user
+      summary: Reset Password
+      description: Resets the user's password based on provided credentials or email verification
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                 type: string
+                 format: email
+                 example: "user@example.com"
+                newPassword:
+                 type: string
+                 example: "newPassword123"
+      responses:
+        '200':
+          description: Password successfully reset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password reset successful."
+        
+        '400':
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid email format."
+        '401':
+          description: Unauthorized - User not authorized to reset password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized to reset password."
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found."
+                          
+  /users/verify:
+    post:
+      tags:
+        - user
+      summary: Send verification link
+      description: Sends a verification link to the user's email to verify their account.
+      operationId: sendVerificationLink
+      requestBody:
+        description: Email address to send the verification link to
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Verification email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Verification email sent successfully."
+        '400':
+          description: Bad Request - Invalid email format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid email format."
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found."  
+  /users:
+    post:
+      tags:
+        - user
+      summary: Creates new user 
+      description: Creates a user from the data sent from the registration form
+      operationId: Register
+      requestBody:
+        description: Register Form Data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+                first_name:
+                  type: string
+                  example: "Danny"
+                last_name :
+                  type: string
+                  example : "Doe"
+                phone_number:
+                  type : number
+                  example: 71253647
+                level:
+                  type: integer
+                  example: 3
+                job_title:
+                  type: integer
+                  example: 2                    
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User successfully registered."
+                  userId:
+                    type: integer
+                    example: 123
+        '400':
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid email format."
+        '409':
+          description: Conflict - User already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User with this email already exists."
+                    
+    get:
+      tags: 
+        - user
+      summary: Get a list of users 
+      description: Gets a list of all users
+      operationId: GetUsers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved the list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication required."
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to access this resource."
+             
+  /users/{userId}:
+    get:
+      tags:
+        - user
+      summary: View User Profile
+      description: Retrieves the profile information of the authenticated user.
+      operationId: getUserProfile
+      parameters:
+       - name: userId
+         in: path
+         required : true
+         schema:
+          type: integer
+       
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication required."
+        '404':
+          description: Not Found - User profile not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User profile not found."
+        
+    patch:
+      tags:
+        - user
+      summary: Update one or some user attributes
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          description: id of user to be edited
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []      
+      requestBody:
+        description: here we send only the attribute(s) we want to update 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+         
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully updated the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User successfully updated."
+        '400':
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid user data."
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication required."
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to update this user."
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found."
+                    
+    put:
+      tags:
+        - user
+      summary: Update the user attributes
+      description: Must be logged in to access this feature. Updates all the user attributes.
+      parameters:
+        - name: userId
+          in: path
+          description: id of user to be edited
+          required: true
+          schema:
+            type: integer
+      security: 
+        - bearerAuth: []
+      requestBody:
+        description: here we send the entire schema of the user to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+         
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully updated the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User successfully updated."
+        '400':
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid user data."
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication required."
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to update this user."
+        '404':
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found."                
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      security:
+        - bearerAuth: []
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: integer
+      responses:
+        '400':
+          description: Invalid username supplied
+        '404':
+          description: User not found
+    
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId: 
+          type: integer
+          example: 12345
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        phone_number:
+          type: string
+          example: '76345678'
+        role:
+          type: string
+          description: indicates the role/priviledges of the user
+          example: user
+        level:
+          type: integer
+          example: 2
+        job_title: 
+          type: integer
+          example: 1
+        headline:
+          type: string
+          example: I am a backend developer looking for opportunities
+        is_verified:
+          type: boolean
+          example: false
+        created_at:
+          type: object
+          description: This is a timestamp in unix,can be converted to current date
+          example: '1718896779'
+        profile_picture:
+          type: string
+          description: this is a URL reference to a picture stored in a repository
+      xml:
+        name: user
+  requestBodies:
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
