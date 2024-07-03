@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Company API - OpenAPI 3.0
+  description: Example Description
+  version: 0.0.1
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  contact:
+    email: example@gmail.com
+servers:
+  - url: https://example.com
+tags:
+  - name: Company
+    description: Everything about companies
+  - name: Feedback
+    description: Everything about feedback
+paths:
+  /company:
+    get:
+      tags:
+        - Company
+      summary: Get all companies
+      description: Get all companies
+      operationId: getCompanies
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+    post:
+      tags:
+        - Company
+      summary: Create a new company
+      description: Create a new company
+      operationId: addCompany
+      requestBody:
+        description: Create a new company
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    put:
+      tags:
+        - Company
+      summary: Update an existing company
+      description: Update an existing company by id
+      operationId: updateCompany
+      requestBody:
+        description: Update an existing company by id
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Job not found
+        '422':
+          description: Validation exception
+  /company/{companyId}:
+    get:
+      tags:
+        - Company
+      summary: Get company by id
+      description: Get company by id
+      operationId: getCompany
+      parameters:
+        - name: companyId
+          in: path
+          description: ID of company to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Company not found
+    delete:
+      tags:
+        - Company
+      summary: Delete company by id
+      description: Delete company by id
+      operationId: deleteCompany
+      parameters:
+        - name: companyId
+          in: path
+          description: ID of company to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Company not found
+  /company/{companyId}/feedback:
+    post:
+      tags:
+        - Company
+      summary: Create a new feedback for a company
+      description: Create a new feedback for a company
+      operationId: addFeedback
+      parameters:
+        - name: companyId
+          in: path
+          description: ID of company to add feedback
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Create a new feedback for a company
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyFeedback'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyFeedback'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+  /company/feedback/{feedbackId}:
+    get:
+      tags:
+        - Feedback
+      summary: Get feedback by id
+      description: Get feedback by id
+      operationId: getFeedback
+      parameters:
+        - name: feedbackId
+          in: path
+          description: ID of feedback to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyFeedback'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Feedback not found
+    delete:
+      tags:
+        - Feedback
+      summary: Delete feedback by id
+      description: Delete feedback by id
+      operationId: deleteFeedback
+      parameters:
+        - name: feedbackId
+          in: path
+          description: ID of feedback to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Feedback not found
+components:
+  schemas:
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 5
+        name:
+          type: string
+          example: Google
+        description:
+          type: string
+          example: Google is a multinational technology company...
+        website:
+          type: string
+          example: https://www.google.com
+        size:
+          type: string
+          example: 10000+
+        location:
+          type: string
+          example: Mountain View, CA
+        industry:
+          type: string
+          example: Technology
+        hidden:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time 
+        intagram_url:
+          type: string
+          example: https://www.instagram.com/google 
+        facebook_url:
+          type: string
+          example: https://www.facebook.com/google 
+        twitter_url: 
+          type: string
+          example: https://www.twitter.com/google 
+        linkedin_url: 
+          type: string
+          example: https://www.linkedin.com/google 
+    CompanyFeedback:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        company_id:
+          type: integer
+          format: int64
+          example: 5
+        author_id:
+          type: integer
+          format: int64
+          example: 1
+        description:
+          type: string
+          example: Great company to work for!
+        approved:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time 
