@@ -18,28 +18,27 @@ CREATE TABLE "event" (
   "date" DATETIME,
   "location" VARCHAR(255),
   "speaker" VARCHAR(255),
-  "type_id" INTEGER,
+  "type_id" INTEGER NOT NULL,
   "created_at" TIMESTAMP,
   "updated_at" TIMESTAMP
 );
 
-
 CREATE TABLE "user_event_registration" (
-  "user_id" INTEGER,
-  "event_id" INTEGER,
-  "primary" key(user_id,event_id)
+  "user_id" INTEGER NOT NULL,
+  "event_id" INTEGER NOT NULL,
+  PRIMARY KEY ("user_id", "event_id")
 );
 
 CREATE TABLE "favorites_events" (
-  "user_id" INTEGER,
-  "event_id" INTEGER,
-  "primary" key(user_id,event_id)
+  "user_id" INTEGER NOT NULL,
+  "event_id" INTEGER NOT NULL,
+  PRIMARY KEY ("user_id", "event_id")
 );
 
 CREATE TABLE "event_tags" (
-  "event_id" INTEGER,
-  "tag_id" INTEGER,
-  "primary" key(event_id,tag_id)
+  "event_id" INTEGER NOT NULL,
+  "tag_id" INTEGER NOT NULL,
+  PRIMARY KEY ("event_id", "tag_id")
 );
 
 ALTER TABLE "event" ADD FOREIGN KEY ("type_id") REFERENCES "types" ("id");
