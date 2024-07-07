@@ -76,15 +76,12 @@ const config = {
         '5xl': '2.25rem',
         '7xl': '2.75rem',
       },
-      fontFamily: {
         sans: ['var(--font-sans)', ...fontFamily.sans],
       },
       borderColor: {
         border: 'hsl(var(--border))',
       },
     },
-  },
-  plugins: [require('tailwindcss-animate')],
 } satisfies Config;
 
 export default config;
