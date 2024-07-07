@@ -1,36 +1,154 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Project Layout Documentation
 
-## Getting Started
+#### Root Level
 
-First, run the development server:
+- **README.md**: This file provides an overview of the project structure and guidelines.
+- **package.json**: Lists project dependencies and scripts.
+- **tsconfig.json**: TypeScript configuration file.
+- **next.config.mjs**: Configuration for Next.js.
+- **knip.json**: Configuration file for the Knip dependency analyzer.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+#### Public
+
+- **images/**: Contains general images used in the project.
+
+#### src
+
+- **app/**: Contains the core application files.
+  <!-- - **api/**: Contains API route handlers.
+    - **auth/**: Handles authentication routes using NextAuth. -->
+  - **[ Cpanel | Job | Event | ...]/**: Contains the content reflecting page.
+  - **layout.tsx**: Defines the main layout of the application.
+  - **page.tsx**: The main landing page of the application.
+
+- **components/**: Contains React components.
+  - **atoms/**: Basic building blocks of the UI.
+    - **Button**
+    - **TextInput**
+    - **Tooltip**
+    - ...
+  - **molecules/**: More complex UI elements built from atoms.
+    - **JobCard**: Component for the authentication card.
+    - **CreateEventModal**: Component for the modal to create a todo.
+  - **pages/**: Components specific to pages.
+    - **Cpanel**: Components for the control panel page.
+    - **Job**: Components for the Job page.
+    - **Event**: Components for the Event page.
+
+<!-- - **constants/**: Contains constants used throughout the project.
+  - **AuthProviders.ts**: Constants related to authentication providers.
+  - **TechStackInfo.ts**: Constants related to the tech stack. -->
+
+- **layouts/**: Contains layout components.
+  - **MainLayout.tsx**: The main layout component for the application.
+
+- **middleware.ts**: Middleware configuration file.
+
+<!-- - **models/**: Contains data models.
+  - **todo.ts**: Data model for todo items.
+  - **user.ts**: Data model for users. -->
+
+- **providers/**: Contains context providers.
+  - **AuthSessionProvider.tsx**: Authentication session provider.
+
+- **services/**: Contains service files.
+  - **UserService.ts**: Service for interacting with the user API.
+  - **JobService.ts**: Service for interacting with the job API.
+  - **EventService.ts**: Service for interacting with the event API.
+
+- **styles/**: Contains global and variable styles.
+  - **globals.sass**: Global styles.
+  - **variables.module.sass**: SASS variables.
+
+- **types/**: Contains TypeScript type definitions.
+  - **global.d.ts**: Global type definitions.
+
+- **utils/**: Contains utility functions.
+  - **validation.ts**: Utility functions for validation operations.
+
+- **tests/**: Contains tests for various parts of the application.
+  - **mocks/**: Contains API mockups
+  - **components/**: Contains tests for components.
+    - **atoms/**: Tests for atomic components.
+      - **Button.test.tsx**: Tests for the Button component.
+    - **molecules/**: Tests for molecule components.
+      - **JobCard.test.tsx**: Tests for the JobCard component.
+  - **utils/**: Contains tests for utility functions.
+    - **validation.test.ts**: Tests for the validation utility functions.
+  - **services/**: Contains tests for services.
+    - **UserService.test.ts**
+
+```ts
+// User Service example
+const createUser = async (username: string, email: string) => {
+  return await fetch(URL + "/api/user", {
+    method: "POST",
+    body: JSON.stringify({ username, email }),
+  });
+
+};
+
+const getAllUsers = async () => {
+  return await fetch(URL + "/api/user", {
+    method: "GET",
+  });
+};
+
+const deleteUser = async (userId: string) => {
+  return await fetch(URL + `/api/user?userId=${userId}`, {
+    method: "DELETE",
+  });
+};
+
+const updateUserStatus = async (userId: string, isComplete: boolean) => {
+  return await fetch(URL + `/api/user?userId=${userId}&isComplete=${isComplete}`, {
+    method: "PUT",
+  });
+};
+
+const UserService = {
+  createUser,
+  getAllUsers,
+  deleteUser,
+  updateUserStatus,
+};
+
+export default UserService;
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```ts
+//AuthSessionProvider
+import React from "react";
+import { SessionProvider } from "next-auth/react";
+import { Session } from "next-auth";
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+const AuthSessionProvider = ({ children, session }: Props) => (
+  <SessionProvider session={session}>
+    {children}
+  </SessionProvider>
+)
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+type Props = {
+  children: React.ReactNode,
+  session: Session | null
+}
 
-## Learn More
+export default AuthSessionProvider;
+```
 
-To learn more about Next.js, take a look at the following resources:
+```ts
+// /src/app/Job/page.tsx
+import Job from "@components/pages/Job";
+export default Job;
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```ts
+// /src/components/pages/Job/index.tsx
+export default function Job() {
+  return (
+    <main>
+      <div>...</div>
+    </main>
+  );
+}
+```
