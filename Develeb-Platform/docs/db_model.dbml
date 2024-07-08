@@ -1,0 +1,205 @@
+/*========== USER ENTITY =============*/ 
+
+Table "user" {
+  "id" VARCHAR(255) [pk]
+  "email" VARCHAR(30) [not null]
+  "phone_number" VARCHAR(30)
+  "full_name" VARCHAR(255)
+  "username" VARCHAR(30) [not null, unique]
+  "profile_url" VARCHAR(255)
+  "level_id" INTEGER
+  "category_id" INTEGER 
+  "role" VARCHAR(255) [not null]
+  "is_verified" BOOLEAN [default: false]
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+  "tags" TEXT
+}
+
+Table "session" {
+  "id" INTEGER [pk]
+  "created_at" TIMESTAMP [default: `now()`]
+}
+
+/*========== JOB ENTITY =============*/ 
+Table "job" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+  "level_id" INTEGER [not null]
+  "category_id" INTEGER [not null]
+  "type_id" INTEGER [not null]
+  "location" VARCHAR(255)
+  "description" TEXT
+  "compensation" VARCHAR(255)
+  "application_link" VARCHAR(255)
+  "is_external" BOOLEAN [default: false]
+  "company_id" INTEGER
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+  "tags" TEXT
+}
+
+Table "job_category" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
+
+Table "job_level" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
+
+Table "job_type" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
+
+Table "job_saved" {
+  "id" INTEGER [pk]
+  "job_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
+
+Table "job_views" {
+  "id" INTEGER [pk]
+  "job_id" INTEGER [not null]
+  "user_id" INTEGER
+  "session_id" INTEGER
+  "last_viewed_at" TIMESTAMP [default: `now()`]
+}
+
+/*========== Event Entity ===========*/ 
+
+Table "event" {
+  "id" integer [pk, not null]
+  "title" varchar(255) [not null]
+  "description" text
+  "video_link" varchar(255) [not null]
+  "flyer_link" varchar(255) [not null]
+  "date" datetime
+  "location" varchar(255)
+  "speaker_name" varchar(255)
+  "speaker_description" varchar(255)
+  "speaker_profile_url" varchar(255)
+  "type_id" integer
+  "tags" TEXT
+  "created_at" timestamp
+  "updated_at" timestamp
+}
+
+Table "user_event_registration" {
+  "id" INTEGER [pk]
+  "user_id" integer
+  "event_id" integer
+  "user_type" varchar(255)
+}
+
+Table "event_saved" {
+  "id" INTEGER [pk]
+  "event_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
+
+
+/*========== Resource Entity ===========*/ 
+
+Table "resource" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+  "description" TEXT
+  "link" VARCHAR(255) [not null]
+  "publish" BOOLEAN [default: false]
+  "type" VARCHAR(255)
+  "tags" TEXT
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP
+}
+
+
+
+Table "resource_views" {
+  "id" INTEGER [pk]
+  "user_id" INTEGER
+  "resource_id" INTEGER
+  "session_id" INTEGER
+  "last_viewed_at" TIMESTAMP [default: `now()`]
+}
+
+Table "resource_saved" {
+  "id" INTEGER [pk]
+  "resource_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
+
+
+/*========== COMPANY ENTITY ===========*/ 
+
+Table "company" {
+  "id" INTEGER [pk, not null]
+  "name" VARCHAR(255) [unique]
+  "description" TEXT
+  "website" VARCHAR(255) [unique]
+  "size" VARCHAR(10)
+  "location" VARCHAR(255)
+  "industry" VARCHAR(255)
+  "is_visible" BOOLEAN [default: false]
+  "intagram_url" VARCHAR(255)
+  "facebook_url" VARCHAR(255)
+  "x_url" VARCHAR(255)
+  "linkedin_url" VARCHAR(255)
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP [not null, default: `now()`]
+}
+
+Table "company_feedback" {
+  "id" INTEGER [unique, pk, not null, increment]
+  "company_id" INTEGER
+  "user_id" INTEGER
+  "description" TEXT
+  "approved" BOOLEAN [default: false]
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP [not null, default: `now()`]
+}
+
+
+/*========== TAGS ENTITY ===========*/ 
+
+Table "tags" {
+  "id" INTEGER [pk]
+  "name" VARCHAR(255) [not null, unique]
+}
+
+/*========== ENTITY RELATIONSHIPS ===========*/ 
+
+Ref: "job_category"."id" < "job"."category_id"
+Ref: "job_level"."id" < "job"."level_id"
+Ref: "job_type"."id" < "job"."type_id"
+
+Ref: "job"."id" <> "job_views"."job_id"
+Ref: "job_views"."user_id" <> "user"."id"
+Ref: "session"."id" <> "job_views"."session_id"
+
+Ref: "event"."id" <> "user_event_registration"."event_id"
+Ref: "user"."id" <> "user_event_registration"."user_id"
+
+Ref: "resource"."id" <> "resource_views"."resource_id"
+Ref: "resource_views"."session_id" <> "session"."id"
+Ref: "resource_views"."id" <> "user"."id"
+
+Ref: "user"."id" <> "company_feedback"."user_id"
+Ref: "company"."id" <> "company_feedback"."company_id"
+
+Ref: "job"."id" <> "job_saved"."job_id"
+
+Ref: "job_saved"."user_id" <> "user"."id"
+
+Ref: "event_saved"."event_id" <> "event"."id"
+
+Ref: "user"."id" <> "event_saved"."user_id"
+
+Ref: "resource_saved"."resource_id" <> "resource"."id"
+
+Ref: "resource_saved"."user_id" <> "user"."id"
