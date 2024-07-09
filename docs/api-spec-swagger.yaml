@@ -18,15 +18,15 @@ tags:
     description: User Management
   - name: resource
     description: Resource Management
-  - name: resource_views
   - name: job
     description: Job posts Management
   - name: events
     description: Event Management 
-  - name: Company
-    description: Companies Management
-  - name: Feedback
-    description: Feedback Management  
+  # - name: Company
+  #   description: Companies Management
+  # - name: Feedback
+  #   description: Feedback Management 
+  
 paths:
 
   /session:
@@ -38,15 +38,18 @@ paths:
       operationId: CreateSession
       responses:
         '200':
-          description: success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sessionId:
-                    type: string
-                    example: "9239840"
+            description: success
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        sessionId:
+                          type: string
+                          example: "f21e77c9-8fd6-4d58-ae91-2560b53c2389"
                     
       
   /users/login:
@@ -80,17 +83,31 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                  refreshToken:
-                    type: string
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyX2lkIiwiaWF0IjoxNjI2MjYyMzI0LCJleHAiOjE2MjYyNzAyNzN9.rANDOM_HashEd_SignAtuRE"
-                  userId:
-                    type: string
-                    example: "aksjdowoq2049502#wpq"
+                  data:
+                    type: object
+                    properties:
+                        token:
+                          type: string
+                          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                        refreshToken:
+                          type: string
+                          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyX2lkIiwiaWF0IjoxNjI2MjYyMzI0LCJleHAiOjE2MjYyNzAyNzN9.rANDOM_HashEd_SignAtuRE"
+                        userId:
+                          type: string
+                          example: "f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+                        role:
+                          type: string
+                          example: user
         '401':
-          description: Unauthorized - Invalid credentials
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"
         
   /users/logout:
     post:
@@ -130,7 +147,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Invalid token."
         '401':
@@ -140,7 +157,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Authorization token is required."
                     
@@ -186,7 +203,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Invalid email format."
         '401':
@@ -196,7 +213,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Unauthorized to reset password."
         '404':
@@ -206,7 +223,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "User not found."
                           
@@ -248,7 +265,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Invalid email format."
         '404':
@@ -258,7 +275,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "User not found."
   
@@ -294,12 +311,14 @@ paths:
                 phone_number:
                   type : number
                   example: 71253647
-                level:
-                  type: integer
-                  example: 3
-                job_title:
-                  type: integer
-                  example: 2
+                level_id:
+                  type: string
+                  format: uuid
+                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+                category_id:
+                  type: string
+                  format: uuid
+                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
                   
                     
       responses:
@@ -313,9 +332,12 @@ paths:
                   message:
                     type: string
                     example: "User successfully registered."
-                  userId:
-                    type: integer
-                    example: 123
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         '400':
           description: Bad Request - Invalid input data
           content:
@@ -323,7 +345,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Invalid email format."
         '409':
@@ -333,7 +355,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "User with this email already exists."
                     
@@ -345,15 +367,58 @@ paths:
       operationId: GetUsers
       security:
         - jwt: []
+      parameters:
+        - name: pageIndex
+          in: query
+          description: The index of the page to retrieve
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: pageSize
+          in: query
+          description: The number of users per page
+          required: false
+          schema:
+            type: integer
+            example: 10  
+        - name: username
+          in: query
+          description: Filter users by username (exact match)
+          required: false
+          schema:
+            type: string
+            example: "john_doe"
+        - name: email
+          in: query
+          description: Filter users by email (exact match)
+          required: false
+          schema:
+            type: string
+            format: email
+            example: "john.doe@example.com"    
       responses:
         '200':
           description: Successfully retrieved the list of users
           content:
             application/json:
               schema:
-                type: array
-                items:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pageIndex:
+                    type: integer
+                    example: 1
+                  pageSize:
+                    type: integer
+                    example: 10
+                  totalRecords:
+                    type: integer
+                    example: 100
+                    
         '401':
           description: Unauthorized - User is not authenticated
           content:
@@ -361,7 +426,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Authentication required."
         '403':
@@ -371,10 +436,19 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "You do not have permission to access this resource."
-
+        '404':
+          description: Not Found - User does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found."
                   
   /users/{userId}:
     get:
@@ -388,7 +462,9 @@ paths:
          in: path
          required : true
          schema:
-          type: integer
+           type: string
+           format: uuid
+           example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
        
       security:
         - jwt: []
@@ -398,7 +474,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+               type: object
+               properties:
+                data:
+                    $ref: '#/components/schemas/User'
         '401':
           description: Unauthorized - User is not authenticated
           content:
@@ -406,7 +485,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Authentication required."
         '404':
@@ -416,89 +495,89 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "User profile not found."
         
-    patch:
-      tags:
-        - user
-      summary: Update one or some user attributes
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      parameters:
-        - name: userId
-          in: path
-          description: id of user to be edited
-          required: true
-          schema:
-            type: integer
-      security:
-        - jwt: []      
-      requestBody:
-        description: here we send only the attribute(s) we want to update 
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
+    # patch:
+    #   tags:
+    #     - user
+    #   summary: Update one or some user attributes
+    #   description: This can only be done by the logged in user.
+    #   operationId: updateUser
+    #   parameters:
+    #     - name: userId
+    #       in: path
+    #       description: id of user to be edited
+    #       required: true
+    #       schema:
+    #         type: integer
+    #   security:
+    #     - jwt: []      
+    #   requestBody:
+    #     description: here we send only the attribute(s) we want to update 
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/User'
          
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/User'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: Successfully updated the user
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "User successfully updated."
-        '400':
-          description: Bad Request - Invalid input data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid user data."
-        '401':
-          description: Unauthorized - User is not authenticated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Authentication required."
-        '403':
-          description: Forbidden - User does not have the necessary permissions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "You do not have permission to update this user."
-        '404':
-          description: Not Found - User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "User not found."
+    #       application/xml:
+    #         schema:
+    #           $ref: '#/components/schemas/User'
+    #       application/x-www-form-urlencoded:
+    #         schema:
+    #           $ref: '#/components/schemas/User'
+    #   responses:
+    #     '200':
+    #       description: Successfully updated the user
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: "User successfully updated."
+    #     '400':
+    #       description: Bad Request - Invalid input data
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: "Invalid user data."
+    #     '401':
+    #       description: Unauthorized - User is not authenticated
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: "Authentication required."
+    #     '403':
+    #       description: Forbidden - User does not have the necessary permissions
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: "You do not have permission to update this user."
+    #     '404':
+    #       description: Not Found - User not found
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: "User not found."
                     
     put:
       tags:
@@ -511,7 +590,9 @@ paths:
           description: id of user to be edited
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
+            
       security: 
         - jwt: []
       requestBody:
@@ -545,7 +626,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Invalid user data."
         '401':
@@ -555,7 +636,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "Authentication required."
         '403':
@@ -565,7 +646,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "You do not have permission to update this user."
         '404':
@@ -575,7 +656,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  message:
                     type: string
                     example: "User not found."                
     delete:
@@ -592,20 +673,126 @@ paths:
           description: The name that needs to be deleted
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '400':
-          description: Invalid username supplied
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid user data."
+          
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required."
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to delete this user."
         '404':
-          description: User not found
+          description: Not Found - User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found."
           
-          
+  /users/{userId}/events:
+    get:
+      tags:
+        - user
+      summary: Get events attended by user
+      description: Retrieve all events attended by a user
+      operationId: getUserEvents
+      security:
+        - jwt: [] 
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to get events for
+          required: true
+          schema:
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required."            
+                    
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found." 
+              
   /resources:
     get:
       tags: 
         - resource
       summary: Get list of resources
+      
       parameters:
+        - name: pageIndex
+          in: query
+          description: The index of the page to retrieve
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: pageSize
+          in: query
+          description: The number of users per page
+          required: false
+          schema:
+            type: integer
+            example: 10        
         - name: type
           in: query
           schema:
@@ -628,13 +815,29 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Resource'
+               type: object
+               properties:
+                data:  
+                 type: array
+                 items:
+                   $ref: '#/components/schemas/Resource'
+        
+        '404':
+          description: Not Found - Resource does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found."           
     post:
       tags:
         - resource
       summary: Create new resource
+      security:
+        - jwt: []
       requestBody:
         description: Create new resource
         content:
@@ -648,9 +851,42 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'    
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Resource created successfully.   
         '400':
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input.
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required."            
+                    
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to access this resource."            
   /resources/{id}:
     get:
       tags:
@@ -662,29 +898,43 @@ paths:
           description: ID of resource to return
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
       responses:
        '200':
          description: success
          content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+                type: object
+                properties: 
+                  data :
+                    $ref: '#/components/schemas/Resource'
        '404':
-         description: resource not found
+          description: Not Found - Resource does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found."  
     put:
       tags:
       - resource
       summary: Update a resource
+      security:
+        - jwt: []
       parameters:
         - name: id
           in: path
           description: ID of resource to edit
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       requestBody:
         description: updated resource
         required: true
@@ -698,30 +948,103 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+               type: object
+               properties:
+                  message:
+                   type: string
+                   example: Resource updated successfully
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required."            
+                    
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to access this resource."           
         '404':
           description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: string
+                properties:
+                  message:
+                   type: string
+                   example: Resource not found.
     delete:
       tags:
       - resource
       summary: Delete a resource
+      security:
+        - jwt: []
       parameters:
         - name: id
           in: path
           description: ID of resource to delete
           required: true
           schema:
-            type: integer
+            type: string
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '204':
           description: Resource deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource deleted."
+        '401':
+          description: Unauthorized - User is not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication required."            
+                    
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to access this resource."           
         '404':
           description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: string
+                properties:
+                  message:
+                   type: string
+                   example: Resource not found.
     
   /resources/{id}/views:
     get:
       tags:
-        - ResourceViews
+        - resource
       summary: Get view count for a resource
       parameters:
         - name: id
@@ -729,7 +1052,8 @@ paths:
           description: ID of resource
           required: true
           schema:
-            type: integer
+            type: string
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: success
@@ -738,13 +1062,96 @@ paths:
               schema:
                   type: object
                   properties:
-                     resource_id:
-                       type: integer
-                     view_count:
-                       type: integer
-                       example: 1000
+                    data:
+                      type: object
+                      properties:
+                         resource_id:
+                           type: string
+                           example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+                         view_count:
+                           type: integer
+                           example: 1000
         '404':
           description: resource not found
+          content:
+           application/json:
+              schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Resource not found.
+                      
+  /resources/{resourceId}/save:
+    post:
+        tags:
+          - resource
+        summary: Save an event for the user
+        description: Allows a user to save an event to their favorites
+        security:
+        - jwt: []
+
+        operationId: saveResource
+        parameters:
+          - name: resourceId
+            in: path
+            required: true
+            description: The ID of the event to be saved
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    description: The ID of the user saving the resource
+                    example: " f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+        responses:
+          '200':
+            description: Event saved as favorite
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Event saved as favorite
+          '400':
+            description: Invalid input 
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Invalid input
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+                    
+          '404':
+            description: Event not found or User not found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Resource not found or User not found            
 
   /events:
     get:
@@ -819,8 +1226,9 @@ paths:
           description: ID of the event to retrieve
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: Event details
@@ -842,8 +1250,8 @@ paths:
           description: ID of the event to update
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       requestBody:
         description: Updated event object
         required: true
@@ -862,38 +1270,39 @@ paths:
           description: Event not found
       security:
         - jwt: []
-    patch:
-      tags:
-        - events
-      summary: Partially update an event
-      description: Update one or more fields of an existing event
-      operationId: patchEvent
-      parameters:
-        - name: eventId
-          in: path
-          description: ID of the event to update
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        description: Fields of the event to update
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Event'
-      responses:
-        '200':
-          description: Event updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Event'
-        '404':
-          description: Event not found
-      security:
-        - jwt: []
+    # patch:
+    #   tags:
+    #     - events
+    #   summary: Partially update an event
+    #   description: Update one or more fields of an existing event
+    #   operationId: patchEvent
+    #   parameters:
+    #     - name: eventId
+    #       in: path
+    #       description: ID of the event to update
+    #       required: true
+    #       schema:
+    #         type: string
+    #         format: uuid
+    #         example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+    #   requestBody:
+    #     description: Fields of the event to update
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/Event'
+    #   responses:
+    #     '200':
+    #       description: Event updated successfully
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Event'
+    #     '404':
+    #       description: Event not found
+    #   security:
+    #     - jwt: []
     delete:
       tags:
         - events
@@ -906,8 +1315,8 @@ paths:
           description: ID of the event to delete
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: Event marked as deleted
@@ -916,36 +1325,100 @@ paths:
       security:
         - jwt: []
 
-  /favorites:
-    post:
-      tags:
-        - events
-      summary: Save and favorite an event
-      description: Save and favorite an event for the registered user
-      operationId: saveFavoriteEvent
-      requestBody:
-        description: Event ID to save as favorite
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                eventId:
-                  type: integer
-                  format: int64
-                  example: 1
-      responses:
-        '200':
-          description: Event saved as favorite
-      security:
-        - jwt: []
+  # /favorites:
+  #   post:
+  #     tags:
+  #       - Favorites
+  #     summary: Save and favorite an event
+  #     description: Save and favorite an event for the registered user
+  #     operationId: saveFavoriteEvent
+  #     security:
+  #       - jwt: []
+  #     requestBody:
+  #       description: entity ID to save as favorite
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               entityId:
+  #                 type: string
+  #                 format: uuid
+  #                 example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+  #               userId:
+  #                 type: string
+  #                 format: uuid
+  #                 example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+  #               entityType:
+  #                 type: string
+  #                 example: Resource
+                  
+  #     responses:
+  #       '200':
+  #         description: Event saved as favorite
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 message:
+  #                   type: string
+  #                   example: Event saved as favorite
+  #       '400':
+  #         description: Bad Request
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 message:
+  #                   type: string
+  #                   example: Invalid input or Invalid type
+  #       '401':
+  #           description: Unauthorized
+  #           content:
+  #             application/json:
+  #               schema:
+  #                 type: object
+  #                 properties:
+  #                 message:
+  #                     type: string
+  #                     example: "Unauthorized - Invalid credentials"            
+                  
+  #       '404':
+  #         description: Not Found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 message:
+  #                   type: string
+  #                   example: Event not found or User not found
 
-  /registrations:
+  /events/{eventId}{userId}/register:
     post:
       tags:
         - events
       summary: Register for an event
+      parameters:
+       - name : eventId
+         in: path
+         description: ID of the event to register
+         required: true
+         schema:
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+       - name : userId
+         in: path
+         description: ID of the user that's registering
+         required: true
+         schema:
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       description: Register a user for an upcoming event
       operationId: registerEvent
       requestBody:
@@ -957,12 +1430,21 @@ paths:
               type: object
               properties:
                 eventId:
-                  type: integer
-                  format: int64
-                  example: 1
+                  type: string
+                  format: uuid
+                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: Registered for event successfully
+           
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successful registration"
       security:
         - jwt: []
 
@@ -979,8 +1461,9 @@ paths:
           description: ID of the event to get registrations for
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
+            example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: List of registrations
@@ -992,283 +1475,335 @@ paths:
                   type: object
                   properties:
                     userId:
-                      type: integer
-                      format: int64
+                      type: string
+                      format: uuid
+                      example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
                     username:
                       type: string
       security:
         - jwt: []
 
-  /users/{userId}/events:
-    get:
-      tags:
-        - events
-      summary: Get events attended by user
-      description: Retrieve all events attended by a user
-      operationId: getUserEvents
-      parameters:
-        - name: userId
-          in: path
-          description: ID of the user to get events for
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of events
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Event'
-      security:
+  /events/{eventId}/save:
+    post:
+        tags:
+          - events
+        summary: Save an event for the user
+        description: Allows a user to save an event to their favorites
+        security:
         - jwt: []
 
-  /analytics/events:
-    get:
-      tags:
-        - events
-      summary: Get event analytics
-      description: Retrieve analytics data for events
-      operationId: getEventAnalytics
-      responses:
-        '200':
-          description: Analytics data
+        operationId: saveEvent
+        parameters:
+          - name: eventId
+            in: path
+            required: true
+            description: The ID of the event to be saved
+            schema:
+              type: string
+        requestBody:
+          required: true
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  totalRegistrations:
-                    type: integer
-                  totalViews:
-                    type: integer
-                  popularEvents:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        eventId:
-                          type: integer
-                        title:
-                          type: string
-                        views:
-                          type: integer
-      security:
-        - jwt: []
+                  userId:
+                    type: string
+                    description: The ID of the user saving the event
+                    example: " f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+        responses:
+          '200':
+            description: Event saved as favorite
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Event saved as favorite
+          '400':
+            description: Invalid input 
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Invalid input 
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+                    
+          '404':
+            description: Event not found or User not found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Event not found or User not found
+                    
+    
+     
+      
+      
+  # /analytics/events:
+  #   get:
+  #     tags:
+  #       - events
+  #     summary: Get event analytics
+  #     description: Retrieve analytics data for events
+  #     operationId: getEventAnalytics
+  #     responses:
+  #       '200':
+  #         description: Analytics data
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 totalRegistrations:
+  #                   type: integer
+  #                 totalViews:
+  #                   type: integer
+  #                 popularEvents:
+  #                   type: array
+  #                   items:
+  #                     type: object
+  #                     properties:
+  #                       eventId:
+  #                         type: string
+  #                         format: uuid
+  #                         example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+  #                       title:
+  #                         type: string
+  #                       views:
+  #                         type: integer
+  #     security:
+  #       - jwt: []
     
     
-  /company:
-    get:
-      tags:
-        - Company
-      summary: Get all companies
-      description: Get all companies
-      operationId: getCompanies
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Company'
-    post:
-      tags:
-        - Company
-      summary: Create a new company
-      description: Create a new company. Requires ADMIN authority.
-      security:
-       - jwt: []
-      operationId: addCompany
-      requestBody:
-        description: Create a new company
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Company'
-        required: true
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Company'
-        '400':
-          description: Invalid input
-        '422':
-          description: Validation exception
-    put:
-      tags:
-        - Company
-      summary: Update an existing company
-      security:
-       - jwt: []
-      description: Update an existing company by id
-      operationId: updateCompany
-      requestBody:
-        description: Update an existing company by id
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Company'
-        required: true
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Company'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Job not found
-        '422':
-          description: Validation exception
-  /company/{companyId}:
-    get:
-      tags:
-        - Company
-      summary: Get company by id
-      description: Get company by id
-      operationId: getCompany
-      parameters:
-        - name: companyId
-          in: path
-          description: ID of company to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Company'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Company not found
-    delete:
-      tags:
-        - Company
-      summary: Delete company by id
-      description: Delete company by id
-      security:
-       - jwt: []
-      operationId: deleteCompany
-      parameters:
-        - name: companyId
-          in: path
-          description: ID of company to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Company not found
-  /company/{companyId}/feedback:
-    post:
-      tags:
-        - Company
-      summary: Create a new feedback for a company
-      security:
-       - jwt: []
-      description: Create a new feedback for a company
-      operationId: addFeedback
-      parameters:
-        - name: companyId
-          in: path
-          description: ID of company to add feedback
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        description: Create a new feedback for a company
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompanyFeedback'
-        required: true
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompanyFeedback'
-        '400':
-          description: Invalid input
-        '422':
-          description: Validation exception
-  /company/feedback/{feedbackId}:
-    get:
-      tags:
-        - Feedback
-      summary: Get feedback by id
-      description: Get feedback by id
-      operationId: getFeedback
-      parameters:
-        - name: feedbackId
-          in: path
-          description: ID of feedback to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompanyFeedback'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Feedback not found
-    delete:
-      tags:
-        - Feedback
-      summary: Delete feedback by id
-      security:
-       - jwt: []
-      description: Delete feedback by id
-      operationId: deleteFeedback
-      parameters:
-        - name: feedbackId
-          in: path
-          description: ID of feedback to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Feedback not found
+  # /company:
+  #   get:
+  #     tags:
+  #       - Company
+  #     summary: Get all companies
+  #     description: Get all companies
+  #     operationId: getCompanies
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: '#/components/schemas/Company'
+  #   post:
+  #     tags:
+  #       - Company
+  #     summary: Create a new company
+  #     description: Create a new company. Requires ADMIN authority.
+  #     security:
+  #     - jwt: []
+  #     operationId: addCompany
+  #     requestBody:
+  #       description: Create a new company
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/Company'
+  #       required: true
+  #     responses:
+  #       '201':
+  #         description: Created
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/Company'
+  #       '400':
+  #         description: Invalid input
+  #       '422':
+  #         description: Validation exception
+  #   put:
+  #     tags:
+  #       - Company
+  #     summary: Update an existing company
+  #     security:
+  #     - jwt: []
+  #     description: Update an existing company by id
+  #     operationId: updateCompany
+  #     requestBody:
+  #       description: Update an existing company by id
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/Company'
+  #       required: true
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/Company'
+  #       '400':
+  #         description: Invalid ID supplied
+  #       '404':
+  #         description: Job not found
+  #       '422':
+  #         description: Validation exception
+  # /company/{companyId}:
+  #   get:
+  #     tags:
+  #       - Company
+  #     summary: Get company by id
+  #     description: Get company by id
+  #     operationId: getCompany
+  #     parameters:
+  #       - name: companyId
+  #         in: path
+  #         description: ID of company to return
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/Company'
+  #       '400':
+  #         description: Invalid ID supplied
+  #       '404':
+  #         description: Company not found
+  #   delete:
+  #     tags:
+  #       - Company
+  #     summary: Delete company by id
+  #     description: Delete company by id
+  #     security:
+  #     - jwt: []
+  #     operationId: deleteCompany
+  #     parameters:
+  #       - name: companyId
+  #         in: path
+  #         description: ID of company to delete
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #       '400':
+  #         description: Invalid ID supplied
+  #       '404':
+  #         description: Company not found
+  # /company/{companyId}/feedback:
+  #   post:
+  #     tags:
+  #       - Company
+  #     summary: Create a new feedback for a company
+  #     security:
+  #     - jwt: []
+  #     description: Create a new feedback for a company
+  #     operationId: addFeedback
+  #     parameters:
+  #       - name: companyId
+  #         in: path
+  #         description: ID of company to add feedback
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #     requestBody:
+  #       description: Create a new feedback for a company
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/CompanyFeedback'
+  #       required: true
+  #     responses:
+  #       '201':
+  #         description: Created
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/CompanyFeedback'
+  #       '400':
+  #         description: Invalid input
+  #       '422':
+  #         description: Validation exception
+  # /company/feedback/{feedbackId}:
+  #   get:
+  #     tags:
+  #       - Feedback
+  #     summary: Get feedback by id
+  #     description: Get feedback by id
+  #     operationId: getFeedback
+  #     parameters:
+  #       - name: feedbackId
+  #         in: path
+  #         description: ID of feedback to return
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/CompanyFeedback'
+  #       '400':
+  #         description: Invalid ID supplied
+  #       '404':
+  #         description: Feedback not found
+  #   delete:
+  #     tags:
+  #       - Feedback
+  #     summary: Delete feedback by id
+  #     security:
+  #     - jwt: []
+  #     description: Delete feedback by id
+  #     operationId: deleteFeedback
+  #     parameters:
+  #       - name: feedbackId
+  #         in: path
+  #         description: ID of feedback to delete
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #       '400':
+  #         description: Invalid ID supplied
+  #       '404':
+  #         description: Feedback not found
   /jobs/{jobId}:
     get:
       tags:
         - job
       summary: Get job by Id
       description: Returns a job of the given Id
+      
       operationId: getJobById
       parameters:
         - name: jobId
@@ -1276,19 +1811,43 @@ paths:
           description: Id of job to return
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
       responses:
         '200':
           description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'          
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Job'          
         '400':
-          description: invalid Id supplied
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid ID supplied
+        
+             
+                    
+                  
         '404':
-          description: job not found
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found
+                  
     delete:
       tags:
         - job
@@ -1303,13 +1862,63 @@ paths:
           description: Id of job to delete
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
       responses:
         '204':
           description: Job deleted successfully
+           
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Job deleted."
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid ID supplied
+        
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"   
+        '403':
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to access this resource."              
+                    
+                  
         '404':
-          description: Job not found
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found
     put:
       tags:
         - job
@@ -1324,8 +1933,8 @@ paths:
           description: Id of job to update
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
       requestBody:
         description: Update an existing job in the system
         required: true
@@ -1339,68 +1948,127 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'          
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Job update successful"
         '400':
-          description: Invalid Id supplied
-        '404':
-          description: Job not found
-        '422':
-          description: Validation exception
-    patch:
-      tags:
-        - job
-      summary: update an existing job
-      description: Update an existing job by Id
-      security:
-        - jwt: []
-      parameters:
-        - name: jobId
-          in: path
-          description: Id of job to update
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        description: Update an existing job in the system
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Job'
-      responses:
-        '200':
-          description: Successful operation
+          description: Invalid ID supplied or Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'          
-        '400':
-          description: Invalid Id supplied
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid ID supplied or Bad request
+                 
+        '401':
+          description: Unauthorized - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized - Invalid token
+               
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission
+                 
         '404':
           description: Job not found
-        '422':
-          description: Validation exception
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found
+                 
+        
+    # patch:
+    #   tags:
+    #     - job
+    #   summary: update an existing job
+    #   description: Update an existing job by Id
+    #   security:
+    #     - jwt: []
+    #   parameters:
+    #     - name: jobId
+    #       in: path
+    #       description: Id of job to update
+    #       required: true
+    #       schema:
+    #         type: integer
+    #         format: int64
+    #   requestBody:
+    #     description: Update an existing job in the system
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/Job'
+    #   responses:
+    #     '200':
+    #       description: Successful operation
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Job'          
+    #     '400':
+    #       description: Invalid Id supplied
+    #     '404':
+    #       description: Job not found
+    #     '422':
+    #       description: Validation exception
   /jobs:
     get:
       tags:
         - job
       summary: Get jobs with with optional filters
       description: Returns a list of jobs based on filters
+     
+         
       operationId: getJobs
       parameters:
+        - name: pageIndex
+          in: query
+          description: The index of the page to retrieve
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: pageSize
+          in: query
+          description: The number of users per page
+          required: false
+          schema:
+            type: integer
+            example: 10
         - name: categoryId
           in: query
           description: Filter by category Id
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
         - name: levelId
           in: query
           description: Filter by level Id
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
         - name: companyName
           in: query
           description: Filter by company name
@@ -1417,11 +2085,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Job'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
         '404':
-          description: No jobs found 
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found 
 
     post:
       tags:
@@ -1437,37 +2116,86 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Job'
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Frontend Developer
+                level_id:
+                  type: string
+                  example: 147cfbf5-ab6f-4530-9293-213a881a31fd
+                category_id :
+                  type: string
+                  example: 147cfbf5-ab6f-4530-9293-213a881a31fd
+                type_id:
+                  type: string
+                  example: 147cfbf5-ab6f-4530-9293-213a881a31fd
+                location:
+                  type: string
+                  example: Beirut
+                description:
+                  type: string
+                  example: Frontend position 
+                compensation:
+                  type: string
+                  example: 1200$-1500$
+                application_link:
+                  type: string
+                  example: https://www.google.com
+                is_external:
+                  type: boolean
+                  example: true
+                tags:
+                  type: string
+                  example: '#frontend,#react'
+                
       responses:
         '202':
           description: Job submitted for approval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job submitted for approval
         '400':
           description: Invalid input
-        '422':
-          description: Validation exception
-  /jobs/{jobId}/publish:
-    post:
-      tags:
-        - job
-      summary: Publish job on all communication channels
-      description: Send job to all communication channels (e.g., WhatsApp groups). Must have ADMIN authority.
-      operationId: publishJob
-      security:
-        - jwt: []
-      parameters:
-        - name: jobId
-          in: path
-          description: Id of job to publish
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Job published successfully
-        '404':
-          description: Job not found
-  /jobs/{jobId}/approve:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input
+                  
+        
+        '401':
+          description: Unauthorized - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized - Invalid token
+                  
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission
+                  
+  
+  /jobs/{jobId}{publish}/approve:
     post:
       tags:
         - job
@@ -1482,13 +2210,59 @@ paths:
           description: Id of job to approve
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
+        - name: publish
+          in: path
+          description: "If the job is to be published on whatsapp. It is true by default"
+          required: true
+          schema:
+            type: boolean
+            example: true
+          
       responses:
         '200':
           description: Job approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job approved successfully
+        '401':
+          description: Unauthorized - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized - Invalid token
+                  
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission
+                  
         '404':
           description: Job not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found
   /jobs/{jobId}/reject:
     post:
       tags:
@@ -1496,21 +2270,170 @@ paths:
       summary: Reject a new job submission. 
       description: Must have ADMIN authority.
       operationId: rejectJob
+      security:
+        - jwt: []
       parameters:
         - name: jobId
           in: path
           description: Id of job to reject
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
       responses:
         '200':
           description: Job rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job approved successfully
+        '401':
+          description: Unauthorized - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized - Invalid token
+                  
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission
+                
         '404':
           description: Job not found
-  /jobcategories:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job not found
+  /jobs/{jobId}/save:
+    post:
+        tags:
+          - events
+        summary: Save an event for the user
+        description: Allows a user to save an event to their favorites
+        security:
+        - jwt: []
+
+        operationId: saveJob
+        parameters:
+          - name: jobId
+            in: path
+            required: true
+            description: The ID of the job to be saved
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    description: The ID of the user saving the job
+                    example: " f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+        responses:
+          '200':
+            description: Job saved as favorite
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Job saved as favorite
+          '400':
+            description: Invalid input
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Invalid input
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+                    
+          '404':
+            description: Event not found or User not found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Job not found or User not found
   
+  /jobs/category:
+    
+    get:
+      tags:
+        - job
+      summary: Get a list of all job categories
+      # parameters:
+      #   - name: categories
+      #     description: categories to search for
+      #     in: query
+      #     required: false
+      #     schema:
+      #       type: array
+      #       items:
+      #         type: string
+      #         example: ['backend','frontend']
+          
+      responses:
+        '200':
+          description: List of jobs retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JobCategory'
+        '404':
+          description: Job category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category not found              
+                    
     post:
       tags:
         - job
@@ -1525,13 +2448,56 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JobCategory'
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Backend"
       responses:
-        '201':
+        '200':
           description: Job category created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category created successfully
         '400':
-          description: Invalid input
-  /jobcategories/{categoryId}:
+           description: Bad Request
+           content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Invalid input
+        '401':
+          description: Unauthorized - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized - Invalid token
+                  
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission
+                 
+       
+  /jobs/category/{categoryId}:
     get:
       tags:
         - job
@@ -1545,7 +2511,9 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: Job category details
@@ -1555,6 +2523,14 @@ paths:
                 $ref: '#/components/schemas/JobCategory'
         '404':
           description: Job category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category not found
     put:
       tags:
         - job
@@ -1568,21 +2544,72 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       requestBody:
         description: Updated job category details
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JobCategory'
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Updated category title"
       responses:
         '200':
           description: Job category updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category updated successfully
         '400':
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission 
         '404':
           description: Job category not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category not found
+                    
     delete:
       tags:
         - job
@@ -1596,13 +2623,51 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '204':
           description: Job category deleted successfully
+          content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Category deleted successfully" 
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission               
         '404':
           description: Job category not found
-  /joblevels:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job category not found
+  /jobs/level:
     post:
       tags:
         - job
@@ -1620,10 +2685,36 @@ paths:
               $ref: '#/components/schemas/JobLevel'
       responses:
         '201':
-          description: Job level created successfully
-        '400':
-          description: Invalid input
-  /joblevels/{levelId}:
+          description: Job level created
+          content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                     message:
+                        type: string
+                        example: "Job level created" 
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission 
+  /jobs/level/{levelId}:
     get:
       tags:
         - job
@@ -1637,7 +2728,9 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '200':
           description: Job level details
@@ -1647,6 +2740,14 @@ paths:
                 $ref: '#/components/schemas/JobLevel'
         '404':
           description: Job level not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job level not found
     put:
       tags:
         - job
@@ -1660,7 +2761,9 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       requestBody:
         description: Updated job level details
         required: true
@@ -1671,10 +2774,46 @@ paths:
       responses:
         '200':
           description: Job level updated successfully
-        '400':
-          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job level updated.
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission             
         '404':
           description: Job level not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job level not found
+        
+       
     delete:
       tags:
         - job
@@ -1688,52 +2827,91 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       responses:
         '204':
           description: Job level deleted successfully
-        '404':
-          description: Job level not found
-  /jobs/{jobId}/analytics:
-    get:
-      tags:
-        - job
-      summary: Get job analytics by Id
-      description: Returns detailed analytics data for a specific job.Must have ADMIN authority.
-      security: 
-       - jwt: []
-      operationId: getJobAnalytics
-      parameters:
-        - name: jobId
-          in: path
-          description: Id of the job to get analytics for
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: startDate
-          in: query
-          description: Start date for analytics (format YYYY-MM-DD)
-          schema:
-            type: string
-            format: date
-        - name: endDate
-          in: query
-          description: End date for analytics (format YYYY-MM-DD)
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobViews'
-        '400':
-          description: Invalid Id supplied
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job level deleted successfully.
+          
+        '401':
+            description: Unauthorized
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                   message:
+                      type: string
+                      example: "Unauthorized - Invalid credentials"            
+        '403':
+          description: Forbidden - User does not have permission
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Forbidden - User does not have permission 
         '404':
-          description: Job not found      
+          description: Job level not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Job level not found
+  # /jobs/{jobId}/analytics:
+  #   get:
+  #     tags:
+  #       - job
+  #     summary: Get job analytics by Id
+  #     description: Returns detailed analytics data for a specific job.Must have ADMIN authority.
+  #     security: 
+  #     - jwt: []
+  #     operationId: getJobAnalytics
+  #     parameters:
+  #       - name: jobId
+  #         in: path
+  #         description: Id of the job to get analytics for
+  #         required: true
+  #         schema:
+  #           type: integer
+  #           format: int64
+  #       - name: startDate
+  #         in: query
+  #         description: Start date for analytics (format YYYY-MM-DD)
+  #         schema:
+  #           type: string
+  #           format: date
+  #       - name: endDate
+  #         in: query
+  #         description: End date for analytics (format YYYY-MM-DD)
+  #         schema:
+  #           type: string
+  #           format: date
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/JobViews'
+  #       '400':
+  #         description: Invalid Id supplied
+  #       '404':
+  #         description: Job not found      
 components:
   schemas:
     Job:
@@ -1744,20 +2922,20 @@ components:
         - category_id
       properties:
         job_id:
-          type: integer
-          format: int64
-          example: 10
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
           example: Software Engineer
         level_id:
-          type: integer
-          format: int64
-          example: 2
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         category_id:
-          type: integer
-          format: int64
-          example: 1
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         location:
           type: string
           example: San Francisco, CA
@@ -1774,9 +2952,9 @@ components:
           type: boolean
           example: false
         company_id:
-          type: integer
-          format: int64
-          example: 5
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         created_at:
           type: string
           format: date-time
@@ -1790,9 +2968,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 1
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
           example: Technology
@@ -1800,9 +2978,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 2
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
           example: Mid-level
@@ -1810,17 +2988,21 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         job_id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
-          format: int64
-          nullable: true
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         session_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         last_viewed_at:
           type: string
           format: date-time
@@ -1828,14 +3010,17 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         job_id:
-          type: integer
-          description: The ID of the job saved
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
-          description: The ID of the user who saved the job
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         saved_at:
           type: string
           format: date-time
@@ -1846,15 +3031,18 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
     Event:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
         description:
@@ -1878,7 +3066,9 @@ components:
           type: string
           format: uri
         type_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         tags:
           type: string
         created_at:
@@ -1896,24 +3086,34 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         event_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_type:
           type: string
     EventSaved:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         event_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         saved_at:
           type: string
           format: date-time
@@ -1930,12 +3130,11 @@ components:
       - link
       properties:
         id:
-          type: integer
-          format: int64
-          example: 10
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         title:
           type: string
-          format: int64
           example: "Resource Title"
         tags:
           type: array
@@ -1972,19 +3171,21 @@ components:
        - viewed_at
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
-          format: int64
-          example: 10
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         resource_id:
-          type: integer
-          format: int64
-          example: 10
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         session_id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         last_viewed_at:
           type: string
           format: date-time 
@@ -1992,13 +3193,18 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         resource_id:
-          type: integer
-          description: The ID of the resource saved
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+             description: The ID of the resource saved
         user_id:
-          type: integer
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
           description: The ID of the user who saved the resource
         saved_at:
           type: string
@@ -2011,7 +3217,8 @@ components:
       properties:
         id: 
           type: string
-          example: KD1F23RF4EW5#$
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         full_name:
           type: string
           example: John James
@@ -2026,11 +3233,13 @@ components:
           description: indicates the role/priviledges of the user
           example: user
         level_id:
-          type: integer
-          example: 2
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         category_id: 
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         is_verified:
           type: boolean
           example: false
@@ -2051,9 +3260,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 5
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         name:
           type: string
           example: Google
@@ -2098,17 +3307,17 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 1
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         company_id:
-          type: integer
-          format: int64
-          example: 5
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         user_id:
-          type: integer
-          format: int64
-          example: 1
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         description:
           type: string
           example: Great company to work for!
@@ -2125,9 +3334,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 2949402
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         created_at:
           type: string
           format: date-time
@@ -2135,8 +3344,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
         name:
           type: string
           
