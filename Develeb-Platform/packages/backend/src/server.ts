@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import cors from 'cors';
 import express, { Express } from 'express';
 import helmet from 'helmet';
