@@ -17,13 +17,13 @@ Table "user" {
 }
 
 Table "session" {
-  "id" INTEGER [pk]
+  "id" VARCHAR(255) [pk]
   "created_at" TIMESTAMP [default: `now()`]
 }
 
 /*========== JOB ENTITY =============*/ 
 Table "job" {
-  "id" INTEGER [pk]
+  "id" VARCHAR(255) [pk]
   "title" VARCHAR(255) [not null]
   "level_id" INTEGER [not null]
   "category_id" INTEGER [not null]
@@ -33,9 +33,11 @@ Table "job" {
   "compensation" VARCHAR(255)
   "application_link" VARCHAR(255)
   "is_external" BOOLEAN [default: false]
+  "is_approved" BOOLEAN [default: false]
   "company_id" INTEGER
   "created_at" TIMESTAMP [default: `now()`]
   "updated_at" TIMESTAMP [default: `now()`]
+  "posted_at" TIMESTAMP [default: null]
   "tags" TEXT
 }
 
@@ -72,7 +74,7 @@ Table "job_views" {
 /*========== Event Entity ===========*/ 
 
 Table "event" {
-  "id" integer [pk, not null]
+  "id" VARCHAR(255) [pk]
   "title" varchar(255) [not null]
   "description" text
   "video_link" varchar(255) [not null]
@@ -86,6 +88,7 @@ Table "event" {
   "tags" TEXT
   "created_at" timestamp
   "updated_at" timestamp
+  "posted_at" TIMESTAMP [default: null]
 }
 
 Table "user_event_registration" {
@@ -106,7 +109,7 @@ Table "event_saved" {
 /*========== Resource Entity ===========*/ 
 
 Table "resource" {
-  "id" INTEGER [pk]
+  "id" VARCHAR(255) [pk]
   "title" VARCHAR(255) [not null]
   "description" TEXT
   "link" VARCHAR(255) [not null]
@@ -115,6 +118,7 @@ Table "resource" {
   "tags" TEXT
   "created_at" TIMESTAMP [not null, default: `now()`]
   "updated_at" TIMESTAMP
+  "posted_at" TIMESTAMP [default: null]
 }
 
 
@@ -138,7 +142,7 @@ Table "resource_saved" {
 /*========== COMPANY ENTITY ===========*/ 
 
 Table "company" {
-  "id" INTEGER [pk, not null]
+  "id" VARCHAR(255) [pk]
   "name" VARCHAR(255) [unique]
   "description" TEXT
   "website" VARCHAR(255) [unique]
