@@ -6,6 +6,7 @@ Table "user" {
   "phone_number" VARCHAR(30)
   "full_name" VARCHAR(255)
   "username" VARCHAR(30) [not null, unique]
+  "password" VARCHAR(255) [not null]
   "profile_url" VARCHAR(255)
   "level_id" INTEGER
   "category_id" INTEGER 
