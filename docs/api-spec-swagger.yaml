@@ -312,13 +312,12 @@ paths:
                   type : number
                   example: 71253647
                 level_id:
-                  type: string
-                  format: uuid
-                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+                  type: integer
+                  format: int64
                 category_id:
-                  type: string
-                  format: uuid
-                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+                  type: integer
+                  format: int64
+                  
                   
                     
       responses:
@@ -1082,7 +1081,7 @@ paths:
                       type: string
                       example: Resource not found.
                       
-  /resources/{resourceId}/save:
+  /resources/{resourceId}/save/{userId}:
     post:
         tags:
           - resource
@@ -1099,17 +1098,14 @@ paths:
             description: The ID of the event to be saved
             schema:
               type: string
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                    description: The ID of the user saving the resource
-                    example: " f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+          - name: userId
+            in: path
+            required : true
+            schema:
+             type: string
+             format: uuid
+             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389    
+        
         responses:
           '200':
             description: Event saved as favorite
@@ -1397,7 +1393,7 @@ paths:
   #                   type: string
   #                   example: Event not found or User not found
 
-  /events/{eventId}{userId}/register:
+  /events/{eventId}/register/{userId}:
     post:
       tags:
         - events
@@ -1421,18 +1417,7 @@ paths:
             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
       description: Register a user for an upcoming event
       operationId: registerEvent
-      requestBody:
-        description: Event ID to register for
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                eventId:
-                  type: string
-                  format: uuid
-                  example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+      
       responses:
         '200':
           description: Registered for event successfully
@@ -1483,7 +1468,7 @@ paths:
       security:
         - jwt: []
 
-  /events/{eventId}/save:
+  /events/{eventId}/save/{userId}:
     post:
         tags:
           - events
@@ -1500,17 +1485,12 @@ paths:
             description: The ID of the event to be saved
             schema:
               type: string
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                    description: The ID of the user saving the event
-                    example: " f21e77c9-8fd6-4d58-ae91-2560b53c2389"
+          - name: userId
+            in: path
+            required: true
+            schema:
+              type: string
+        
         responses:
           '200':
             description: Event saved as favorite
@@ -2061,14 +2041,14 @@ paths:
           in: query
           description: Filter by category Id
           schema:
-            type: string
-            format: uuid
+            type: integer
+            format: int64
         - name: levelId
           in: query
           description: Filter by level Id
           schema:
-            type: string
-            format: uuid
+            type: integer
+            format: int64
         - name: companyName
           in: query
           description: Filter by company name
@@ -2195,7 +2175,7 @@ paths:
                     example: Forbidden - User does not have permission
                   
   
-  /jobs/{jobId}{publish}/approve:
+  /jobs/{jobId}/approve:
     post:
       tags:
         - job
@@ -2212,13 +2192,13 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: publish
-          in: path
-          description: "If the job is to be published on whatsapp. It is true by default"
-          required: true
-          schema:
-            type: boolean
-            example: true
+        # - name: publish
+        #   in: path
+        #   description: "If the job is to be published on whatsapp. It is true by default"
+        #   required: true
+        #   schema:
+        #     type: boolean
+        #     example: true
           
       responses:
         '200':
@@ -2323,10 +2303,10 @@ paths:
                   message:
                     type: string
                     example: Job not found
-  /jobs/{jobId}/save:
+  /jobs/{jobId}/save/{userId}:
     post:
         tags:
-          - events
+          - job
         summary: Save an event for the user
         description: Allows a user to save an event to their favorites
         security:
@@ -2511,9 +2491,8 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+            type: integer
+            format: int64
       responses:
         '200':
           description: Job category details
@@ -2544,9 +2523,9 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+            
+            type: integer
+            format: int64
       requestBody:
         description: Updated job category details
         required: true
@@ -2623,9 +2602,8 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+             type: integer
+            format: int64
       responses:
         '204':
           description: Job category deleted successfully
@@ -2728,9 +2706,8 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+             type: integer
+            format: int64
       responses:
         '200':
           description: Job level details
@@ -2761,9 +2738,8 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+             type: integer
+            format: int64
       requestBody:
         description: Updated job level details
         required: true
@@ -2827,9 +2803,8 @@ paths:
           in: path
           required: true
           schema:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+             type: integer
+            format: int64
       responses:
         '204':
           description: Job level deleted successfully
@@ -2929,13 +2904,11 @@ components:
           type: string
           example: Software Engineer
         level_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         category_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         location:
           type: string
           example: San Francisco, CA
@@ -2952,9 +2925,8 @@ components:
           type: boolean
           example: false
         company_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         created_at:
           type: string
           format: date-time
@@ -2968,9 +2940,8 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+         type: integer
+         format: int64
         title:
           type: string
           example: Technology
@@ -2978,9 +2949,8 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         title:
           type: string
           example: Mid-level
@@ -2988,21 +2958,17 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         job_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         session_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         last_viewed_at:
           type: string
           format: date-time
@@ -3010,17 +2976,14 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         job_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         saved_at:
           type: string
           format: date-time
@@ -3031,9 +2994,8 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         title:
           type: string
     Event:
@@ -3066,9 +3028,8 @@ components:
           type: string
           format: uri
         type_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         tags:
           type: string
         created_at:
@@ -3103,17 +3064,14 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         event_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         saved_at:
           type: string
           format: date-time
@@ -3171,21 +3129,17 @@ components:
        - viewed_at
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+         type: integer
+          format: int64
         resource_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         session_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         last_viewed_at:
           type: string
           format: date-time 
@@ -3193,19 +3147,14 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         resource_id:
-             type: string
-             format: uuid
-             example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
-             description: The ID of the resource saved
+             type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
-          description: The ID of the user who saved the resource
+          type: integer
+          format: int64
         saved_at:
           type: string
           format: date-time
@@ -3233,13 +3182,11 @@ components:
           description: indicates the role/priviledges of the user
           example: user
         level_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         category_id: 
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         is_verified:
           type: boolean
           example: false
@@ -3307,17 +3254,14 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         company_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         user_id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         description:
           type: string
           example: Great company to work for!
@@ -3344,9 +3288,8 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
-          example: f21e77c9-8fd6-4d58-ae91-2560b53c2389
+          type: integer
+          format: int64
         name:
           type: string
           
