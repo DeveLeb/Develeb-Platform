@@ -1,20 +1,23 @@
 <a id="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
+<div align="center">
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+
+</div>
 
 <!-- PROJECT LOGO -->
 
-![Alt text](./docs/Logo.jpeg)
-
 <br />
 <div align="center">
-
+  <a href="https://github.com/DeveLeb/Develeb-Platform">
+    <img src="docs/Logo.jpeg" alt="Logo" width="200" height="200">
+  </a>
   <h3 align="center">DeveLeb Platform</h3>
   <p align="center">
     The all in one platform for the tech community!
@@ -71,11 +74,16 @@ This platform will be a comprehensive portal into all things tech in Lebanon—j
 
 ### Built With
 
-* [![Next][Next.js]][Next-url]
-* [![Node][Node.js]][Node-url]
-* [![Express][Express.js]][Express-url]
-* [![Lerna][Lerna.js]][Lerna-url]
-* [![Tailwind][Tailwind.js]][Tailwind-url]
+<div align="center">
+
+[![Next][Next.js]][Next-url]
+[![Node][Node.js]][Node-url]
+[![Express][Express.js]][Express-url]
+[![Lerna][Lerna.js]][Lerna-url]
+[![Tailwind][Tailwind.css]][Tailwind-url]
+
+</div>
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -159,5 +167,5 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [Express-url]: https://expressjs.com/
 [Lerna.js]: https://img.shields.io/badge/lerna.js-000000?style=for-the-badge&logo=lernasdotjs&logoColor=white
 [Lerna-url]: https://lerna.js.org/
-[Tailwind.js]: https://img.shields.io/badge/tailwind.js-000000?style=for-the-badge&logo=tailwinddotjs&logoColor=white
+[Tailwind.css]: https://img.shields.io/badge/tailwind.js-000000?style=for-the-badge&logo=tailwinddotjs&logoColor=white
 [Tailwind-url]: https://tailwindcss.com/
