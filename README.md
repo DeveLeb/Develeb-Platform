@@ -76,6 +76,10 @@ This platform will be a comprehensive portal into all things tech in Lebanon—j
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- DATABASE -->
+## DATA MODEL
+![Alt text](./docs/db_model.png)
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 <!-- GETTING STARTED -->
