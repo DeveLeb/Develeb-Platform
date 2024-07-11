@@ -9,6 +9,9 @@
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 <!-- PROJECT LOGO -->
+
+![Alt text](./docs/Logo.jpeg)
+
 <br />
 <div align="center">
 
