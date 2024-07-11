@@ -1,3 +1,6 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable simple-import-sort/imports */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import cors from 'cors';
 import express, { Express } from 'express';
 import helmet from 'helmet';
@@ -6,6 +9,7 @@ import { pino } from 'pino';
 import { healthCheckRouter } from './api/healthCheck/healthCheckRouter';
 import { userRouter } from './api/user/userRouter';
 import { openAPIRouter } from './api-docs/openAPIRouter';
+import jobRoute from './api/job/jobRoutes';
 import errorHandler from './common/middleware/errorHandler';
 import rateLimiter from './common/middleware/rateLimiter';
 import requestLogger from './common/middleware/requestLogger';
@@ -28,6 +32,7 @@ app.use(requestLogger);
 // Routes
 app.use('/health-check', healthCheckRouter);
 app.use('/users', userRouter);
+app.use('/jobs', jobRoute);
 
 // Swagger UI
 app.use(openAPIRouter);
