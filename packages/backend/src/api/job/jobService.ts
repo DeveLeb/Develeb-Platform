@@ -4,12 +4,12 @@
 /* eslint-disable simple-import-sort/imports */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { job } from 'src/drizzle/schema';
+import { job, jobCategory, jobLevel } from 'src/drizzle/schema';
 import { db } from '../../drizzle/db';
 import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
 import { logger } from 'src/server';
-import { Job, JobSchema, JobPatchSchema, createJobSchema } from './jobModel';
+import { Job, JobSchema, JobPatchSchema, createJobSchema, JobCategorySchema } from './jobModel';
 import { z, ZodError } from 'zod';
 
 export const getJobById = async (req: Request, res: Response) => {
@@ -39,6 +39,9 @@ export const getJobById = async (req: Request, res: Response) => {
 };
 
 export const deleteJobById = async (req: Request, res: Response) => {
+  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   try {
     const { id } = req.params;
 
@@ -201,6 +204,9 @@ export const submitJobForApproval = async (req: Request, res: Response) => {
 };
 
 export const approveJob = async (req: Request, res: Response) => {
+  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   const { jobId } = req.params;
 
   try {
@@ -225,6 +231,9 @@ export const approveJob = async (req: Request, res: Response) => {
 };
 
 export const rejectJob = async (req: Request, res: Response) => {
+  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   try {
     const { jobId } = req.params;
     if (!jobId) {
@@ -238,5 +247,185 @@ export const rejectJob = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Error rejecting job:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// export const jobToPublish = async (req: Request, res: Response) => {
+//   if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
+//     return res.status(401).json({ message: 'Unauthorized' });
+//   }
+//   const { jobID } = req.params;
+//   try {
+//   } catch (error) {
+//     logger.error('Error publishing job:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+export const createJobCategory = async (req: Request, res: Response) => {
+  const { title } = JobCategorySchema.parse(req.body);
+  try {
+    const newCategory = await db
+      .insert(jobCategory)
+      .values({ title })
+      .returning()
+      .catch((error) => {
+        throw new Error('Job category already exist');
+      });
+
+    res.status(201).json({
+      message: 'Job category created successfully',
+      category: newCategory[0],
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+    }
+    if ((error as Error).message === 'Job category already exists') {
+      return res.status(409).json({ message: (error as Error).message });
+    }
+    logger.error('Error creating job category:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getCategoryById = async (req: Request, res: Response) => {
+  const { categoryId } = req.params;
+  try {
+    const categoryFound = await db.select().from(jobCategory).where(eq(jobCategory.id, categoryId));
+    if (categoryFound.length === 0) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+    res.status(200).json({ category: categoryFound[0] });
+  } catch (error) {
+    logger.error('Error fetching job category', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const upadteJobCategory = async (req: Request, res: Response) => {
+  const { categoryId } = req.params;
+  const { title } = JobCategorySchema.parse(req.body);
+  try {
+    const updatedCategory = await db
+      .update(jobCategory)
+      .set({ title })
+      .where(eq(jobCategory.id, categoryId))
+      .returning();
+    if (updatedCategory.length === 0) {
+      return res.status(404).json({ message: 'Job category not found' });
+    }
+    res.status(200).json({
+      message: 'Job category updated successfully',
+      category: updatedCategory[0],
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+    }
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      return res.status(409).json({ message: 'A job category with this title already exists' });
+    }
+    logger.error('Error updating job category:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteJobCategoryById = async (req: Request, res: Response) => {
+  const { categoryId } = req.params;
+  try {
+    const deletedCategory = await db.delete(jobCategory).where(eq(jobCategory.id, categoryId)).returning();
+    if (deletedCategory.length === 0) {
+      return res.status(404).json({ error: 'Job category not found' });
+    }
+    return res.status(200).json({
+      message: 'Job category deleted successfully',
+      category: deletedCategory[0],
+    });
+  } catch (error) {
+    console.error('Error deleting job category:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createJobLevel = async (req: Request, res: Response) => {
+  const { title } = JobCategorySchema.parse(req.body);
+  try {
+    const newLevel = await db
+      .insert(jobLevel)
+      .values({ title })
+      .returning()
+      .catch((error) => {
+        throw new Error('Job category already exist');
+      });
+
+    res.status(201).json({
+      message: 'Job category created successfully',
+      category: newLevel[0],
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+    }
+    if ((error as Error).message === 'Job category already exists') {
+      return res.status(409).json({ message: (error as Error).message });
+    }
+    logger.error('Error creating job category:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getJobLevelById = async (req: Request, res: Response) => {
+  const { levelId } = req.params;
+  try {
+    const levelFound = await db.select().from(jobLevel).where(eq(jobLevel.id, levelId));
+    if (levelFound.length === 0) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+    res.status(200).json({ category: levelFound[0] });
+  } catch (error) {
+    logger.error('Error fetching job category', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateJobLevelById = async (req: Request, res: Response) => {
+  const { levelId } = req.params;
+  const { title } = JobCategorySchema.parse(req.body);
+  try {
+    const updatedLevel = await db.update(jobLevel).set({ title }).where(eq(jobLevel.id, levelId)).returning();
+    if (updatedLevel.length === 0) {
+      return res.status(404).json({ message: 'Job level not found' });
+    }
+    res.status(200).json({
+      message: 'Job level updated successfully',
+      level: updatedLevel[0],
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+    }
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      return res.status(409).json({ message: 'A job level with this title already exists' });
+    }
+    logger.error('Error updating job level:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteJobLevelById = async (req: Request, res: Response) => {
+  const { levelId } = req.params;
+  try {
+    const deletedLevel = await db.delete(jobLevel).where(eq(jobLevel.id, levelId)).returning();
+    if (deletedLevel.length === 0) {
+      return res.status(404).json({ error: 'Job level not found' });
+    }
+    return res.status(200).json({
+      message: 'Job level deleted successfully',
+      level: deletedLevel[0],
+    });
+  } catch (error) {
+    console.error('Error deleting job level:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

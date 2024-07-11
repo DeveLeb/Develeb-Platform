@@ -48,3 +48,8 @@ export const JobPatchSchema = z.object({
   companyId: z.string().optional(),
   tags: z.string().optional(),
 });
+
+export type JobCategory = z.infer<typeof JobCategorySchema>
+export const JobCategorySchema = z.object({
+  title: z.string().min(2)
+})
