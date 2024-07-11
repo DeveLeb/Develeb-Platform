@@ -2320,6 +2320,13 @@ paths:
             description: The ID of the job to be saved
             schema:
               type: string
+          - name: userId
+            in: path
+            required: true
+            description: The ID of the job to be saved
+            schema:
+              type: string
+          
         requestBody:
           required: true
           content:
@@ -2603,7 +2610,7 @@ paths:
           required: true
           schema:
              type: integer
-            format: int64
+             format: int64
       responses:
         '204':
           description: Job category deleted successfully
@@ -2707,7 +2714,7 @@ paths:
           required: true
           schema:
              type: integer
-            format: int64
+             format: int64
       responses:
         '200':
           description: Job level details
@@ -2738,7 +2745,7 @@ paths:
           in: path
           required: true
           schema:
-             type: integer
+            type: integer
             format: int64
       requestBody:
         description: Updated job level details
@@ -2803,7 +2810,7 @@ paths:
           in: path
           required: true
           schema:
-             type: integer
+            type: integer
             format: int64
       responses:
         '204':
@@ -3133,7 +3140,7 @@ components:
           format: int64
         user_id:
          type: integer
-          format: int64
+         format: int64
         resource_id:
           type: integer
           format: int64
@@ -3151,7 +3158,7 @@ components:
           format: int64
         resource_id:
              type: integer
-          format: int64
+             format: int64
         user_id:
           type: integer
           format: int64
