@@ -135,29 +135,22 @@ export const jobViews = pgTable(
   })
 );
 
-export const event = pgTable(
-  'event',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    title: varchar('title', { length: 255 }).notNull(),
-    description: text('description'),
-    videoLink: varchar('video_link', { length: 255 }).notNull(),
-    flyerLink: varchar('flyer_link', { length: 255 }).notNull(),
-    date: timestamp('date'),
-    location: varchar('location', { length: 255 }),
-    speakerName: varchar('speaker_name', { length: 255 }),
-    speakerDescription: varchar('speaker_description', { length: 255 }),
-    speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-    typeId: integer('type_id').references(() => jobType.id),
-    tags: text('tags'),
-    createdAt: timestamp('created_at'),
-    updatedAt: timestamp('updated_at'),
-  },
-  (table) => ({
-    eventDateIdx: index('event_date_idx').on(table.date),
-    eventTypeIdx: index('event_type_idx').on(table.typeId),
-  })
-);
+export const event = pgTable('event', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  videoLink: varchar('video_link', { length: 255 }).notNull(),
+  flyerLink: varchar('flyer_link', { length: 255 }).notNull(),
+  date: timestamp('date'),
+  location: varchar('location', { length: 255 }),
+  speakerName: varchar('speaker_name', { length: 255 }),
+  speakerDescription: varchar('speaker_description', { length: 255 }),
+  speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
+  typeId: integer('type_id').references(() => jobType.id),
+  tags: text('tags'),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+});
 
 export const userEventRegistration = pgTable(
   'user_event_registration',
