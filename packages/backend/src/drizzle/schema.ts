@@ -1,19 +1,4 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prettier/prettier */
-import {
-  boolean,
-  index,
-  integer,
-  pgTable,
-  primaryKey,
-  serial,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -21,7 +6,7 @@ export const user = pgTable('user', {
   phoneNumber: varchar('phone_number', { length: 15 }),
   fullName: varchar('full_name', { length: 255 }),
   username: varchar('username', { length: 30 }).notNull().unique(),
-  password:varchar('password',{length:255}).notNull(),
+  password: varchar('password', { length: 255 }).notNull(),
   profileUrl: varchar('profile_url', { length: 255 }),
   levelId: uuid('level_id').references(() => jobLevel.id),
   categoryId: uuid('category_id').references(() => jobCategory.id),
@@ -59,8 +44,9 @@ export const job = pgTable(
     companyId: uuid('company_id').references(() => company.id),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    postedAt: timestamp('posted_at'),
     tags: text('tags'),
-    isApproved: boolean('is_approved')
+    isApproved: boolean('is_approved'),
   },
   (table) => ({
     jobLevelIdx: index('job_level_idx').on(table.levelId),
@@ -68,7 +54,7 @@ export const job = pgTable(
     jobTypeIdx: index('job_type_idx').on(table.typeId),
     jobCompanyIdx: index('job_company_idx').on(table.companyId),
     jobCreatedAtIdx: index('job_created_at_idx').on(table.createdAt),
-  }),
+  })
 );
 
 export const jobCategory = pgTable(
@@ -79,7 +65,7 @@ export const jobCategory = pgTable(
   },
   (table) => ({
     jobCategoryTitleIdx: uniqueIndex('job_category_title_idx').on(table.title),
-  }),
+  })
 );
 
 export const jobLevel = pgTable(
@@ -90,7 +76,7 @@ export const jobLevel = pgTable(
   },
   (table) => ({
     jobLevelTitleIdx: uniqueIndex('job_level_title_idx').on(table.title),
-  }),
+  })
 );
 
 export const jobType = pgTable(
@@ -101,7 +87,7 @@ export const jobType = pgTable(
   },
   (table) => ({
     jobTypeTitleIdx: uniqueIndex('job_type_title_idx').on(table.title),
-  }),
+  })
 );
 
 export const jobSaved = pgTable(
@@ -117,7 +103,7 @@ export const jobSaved = pgTable(
   (table) => ({
     jobSavedJobIdx: index('job_saved_job_idx').on(table.jobId),
     jobSavedUserIdx: index('job_saved_user_idx').on(table.userId),
-  }),
+  })
 );
 
 export const jobViews = pgTable(
@@ -135,7 +121,7 @@ export const jobViews = pgTable(
     jobViewsJobIdx: index('job_views_job_idx').on(table.jobId),
     jobViewsUserIdx: index('job_views_user_idx').on(table.userId),
     jobViewsSessionIdx: index('job_views_session_idx').on(table.sessionId),
-  }),
+  })
 );
 
 export const event = pgTable(
@@ -159,7 +145,7 @@ export const event = pgTable(
   (table) => ({
     eventDateIdx: index('event_date_idx').on(table.date),
     eventTypeIdx: index('event_type_idx').on(table.typeId),
-  }),
+  })
 );
 
 export const userEventRegistration = pgTable(
@@ -173,7 +159,7 @@ export const userEventRegistration = pgTable(
   (table) => ({
     userEventRegUserIdx: index('user_event_reg_user_idx').on(table.userId),
     userEventRegEventIdx: index('user_event_reg_event_idx').on(table.eventId),
-  }),
+  })
 );
 
 export const eventSaved = pgTable(
@@ -189,7 +175,7 @@ export const eventSaved = pgTable(
   (table) => ({
     eventSavedEventIdx: index('event_saved_event_idx').on(table.eventId),
     eventSavedUserIdx: index('event_saved_user_idx').on(table.userId),
-  }),
+  })
 );
 
 export const resource = pgTable('resource', {
@@ -215,13 +201,9 @@ export const resourceViews = pgTable(
   },
   (table) => ({
     resourceViewsUserIdx: index('resource_views_user_idx').on(table.userId),
-    resourceViewsResourceIdx: index('resource_views_resource_idx').on(
-      table.resourceId,
-    ),
-    resourceViewsSessionIdx: index('resource_views_session_idx').on(
-      table.sessionId,
-    ),
-  }),
+    resourceViewsResourceIdx: index('resource_views_resource_idx').on(table.resourceId),
+    resourceViewsSessionIdx: index('resource_views_session_idx').on(table.sessionId),
+  })
 );
 
 export const resourceSaved = pgTable(
@@ -235,11 +217,9 @@ export const resourceSaved = pgTable(
     savedAt: timestamp('saved_at').defaultNow(),
   },
   (table) => ({
-    resourceSavedResourceIdx: index('resource_saved_resource_idx').on(
-      table.resourceId,
-    ),
+    resourceSavedResourceIdx: index('resource_saved_resource_idx').on(table.resourceId),
     resourceSavedUserIdx: index('resource_saved_user_idx').on(table.userId),
-  }),
+  })
 );
 
 export const company = pgTable(
@@ -265,7 +245,7 @@ export const company = pgTable(
     companyWebsiteIdx: uniqueIndex('company_website_idx').on(table.website),
     companyIndustryIdx: index('company_industry_idx').on(table.industry),
     companyIsVisibleIdx: index('company_is_visible_idx').on(table.isVisible),
-  }),
+  })
 );
 
 export const companyFeedback = pgTable(
@@ -280,14 +260,10 @@ export const companyFeedback = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    companyFeedbackCompanyIdx: index('company_feedback_company_idx').on(
-      table.companyId,
-    ),
+    companyFeedbackCompanyIdx: index('company_feedback_company_idx').on(table.companyId),
     companyFeedbackUserIdx: index('company_feedback_user_idx').on(table.userId),
-    companyFeedbackApprovedIdx: index('company_feedback_approved_idx').on(
-      table.approved,
-    ),
-  }),
+    companyFeedbackApprovedIdx: index('company_feedback_approved_idx').on(table.approved),
+  })
 );
 
 export const tags = pgTable(
@@ -298,5 +274,5 @@ export const tags = pgTable(
   },
   (table) => ({
     tagsNameIdx: uniqueIndex('tags_name_idx').on(table.name),
-  }),
+  })
 );

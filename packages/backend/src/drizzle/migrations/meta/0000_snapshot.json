@@ -1,5 +1,5 @@
 {
-  "id": "881ef196-037f-44ec-9bd9-5cdd78fc08ca",
+  "id": "477fdba7-a8e0-4e5a-8fd6-ac44ae7c814a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -626,6 +626,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "posted_at": {
+          "name": "posted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "tags": {
           "name": "tags",
