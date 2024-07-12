@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 50 }).notNull().unique(),
   phoneNumber: varchar('phone_number', { length: 15 }),
   fullName: varchar('full_name', { length: 255 }),
@@ -36,7 +36,7 @@ export const session = pgTable('session', {
 export const job = pgTable(
   'job',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 255 }).notNull(),
     levelId: integer('level_id')
       .notNull()
@@ -138,7 +138,7 @@ export const jobViews = pgTable(
 export const event = pgTable(
   'event',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     videoLink: varchar('video_link', { length: 255 }).notNull(),
@@ -190,7 +190,7 @@ export const eventSaved = pgTable(
 );
 
 export const resource = pgTable('resource', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   link: varchar('link', { length: 255 }).notNull(),
@@ -236,7 +236,7 @@ export const resourceSaved = pgTable(
 export const company = pgTable(
   'company',
   {
-    id: uuid('id').primaryKey(),
+    id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).unique(),
     description: text('description'),
     website: varchar('website', { length: 255 }).unique(),
