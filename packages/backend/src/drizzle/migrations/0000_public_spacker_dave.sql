@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS "company" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "company_feedback" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"company_id" uuid,
 	"user_id" uuid,
 	"description" text,
@@ -38,14 +38,14 @@ CREATE TABLE IF NOT EXISTS "event" (
 	"speaker_name" varchar(255),
 	"speaker_description" varchar(255),
 	"speaker_profile_url" varchar(255),
-	"type_id" uuid,
+	"type_id" integer,
 	"tags" text,
 	"created_at" timestamp,
 	"updated_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "event_saved" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"event_id" uuid NOT NULL,
 	"user_id" uuid,
 	"saved_at" timestamp DEFAULT now()
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS "event_saved" (
 CREATE TABLE IF NOT EXISTS "job" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"title" varchar(255) NOT NULL,
-	"level_id" uuid NOT NULL,
-	"category_id" uuid NOT NULL,
-	"type_id" uuid NOT NULL,
+	"level_id" integer NOT NULL,
+	"category_id" integer NOT NULL,
+	"type_id" integer NOT NULL,
 	"location" varchar(255),
 	"description" text,
 	"compensation" varchar(255),
@@ -65,40 +65,41 @@ CREATE TABLE IF NOT EXISTS "job" (
 	"company_id" uuid,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
+	"posted_at" timestamp,
 	"tags" text,
 	"is_approved" boolean
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_category" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"title" varchar(255) NOT NULL,
 	CONSTRAINT "job_category_title_unique" UNIQUE("title")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_level" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"title" varchar(255) NOT NULL,
 	CONSTRAINT "job_level_title_unique" UNIQUE("title")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_saved" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"job_id" uuid NOT NULL,
 	"user_id" uuid,
 	"saved_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_type" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"title" varchar(255) NOT NULL,
 	CONSTRAINT "job_type_title_unique" UNIQUE("title")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_views" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"job_id" uuid NOT NULL,
 	"user_id" uuid,
-	"session_id" uuid,
+	"session_id" integer,
 	"last_viewed_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -115,27 +116,27 @@ CREATE TABLE IF NOT EXISTS "resource" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "resource_saved" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"resource_id" uuid NOT NULL,
 	"user_id" uuid,
 	"saved_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "resource_views" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" uuid,
 	"resource_id" uuid,
-	"session_id" uuid,
+	"session_id" integer,
 	"last_viewed_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "session" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "tags" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(255) NOT NULL,
 	CONSTRAINT "tags_name_unique" UNIQUE("name")
 );
@@ -148,8 +149,8 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"username" varchar(30) NOT NULL,
 	"password" varchar(255) NOT NULL,
 	"profile_url" varchar(255),
-	"level_id" uuid,
-	"category_id" uuid,
+	"level_id" integer,
+	"category_id" integer,
 	"role" varchar(50) DEFAULT 'USER' NOT NULL,
 	"is_verified" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now(),
@@ -160,7 +161,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_event_registration" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" uuid,
 	"event_id" uuid,
 	"user_type" varchar(255)
@@ -311,8 +312,6 @@ CREATE INDEX IF NOT EXISTS "company_is_visible_idx" ON "company" USING btree ("i
 CREATE INDEX IF NOT EXISTS "company_feedback_company_idx" ON "company_feedback" USING btree ("company_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "company_feedback_user_idx" ON "company_feedback" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "company_feedback_approved_idx" ON "company_feedback" USING btree ("approved");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "event_date_idx" ON "event" USING btree ("date");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "event_type_idx" ON "event" USING btree ("type_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "event_saved_event_idx" ON "event_saved" USING btree ("event_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "event_saved_user_idx" ON "event_saved" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "job_level_idx" ON "job" USING btree ("level_id");--> statement-breakpoint

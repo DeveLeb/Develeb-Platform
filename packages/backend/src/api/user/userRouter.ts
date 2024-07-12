@@ -3,10 +3,7 @@ import express, { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
-import {
-  handleServiceResponse,
-  validateRequest,
-} from '../../common/utils/httpHandlers';
+import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
 
@@ -37,15 +34,11 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(UserSchema, 'Success'),
   });
 
-  router.get(
-    '/:id',
-    validateRequest(GetUserSchema),
-    async (req: Request, res: Response) => {
-      const id = parseInt(req.params.id as string, 10);
-      const serviceResponse = await userService.findById(id);
-      handleServiceResponse(serviceResponse, res);
-    },
-  );
+  router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id as string, 10);
+    const serviceResponse = await userService.findById(id);
+    handleServiceResponse(serviceResponse, res);
+  });
 
   return router;
 })();

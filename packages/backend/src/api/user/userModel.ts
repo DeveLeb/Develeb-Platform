@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 

@@ -1,16 +1,11 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable no-empty */
-/* eslint-disable prettier/prettier */
-/* eslint-disable simple-import-sort/imports */
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { job, jobCategory, jobLevel } from 'src/drizzle/schema';
-import { db } from '../../drizzle/db';
-import { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
+import { Request, Response } from 'express';
+import { job, jobCategory, jobLevel } from 'src/drizzle/schema';
 import { logger } from 'src/server';
-import { Job, JobSchema, JobPatchSchema, createJobSchema, JobCategorySchema } from './jobModel';
 import { z, ZodError } from 'zod';
+
+import { db } from '../../drizzle/db';
+import { createJobSchema, JobCategorySchema, JobSchema } from './jobModel';
 
 export const getJobById = async (req: Request, res: Response) => {
   try {
@@ -39,7 +34,7 @@ export const getJobById = async (req: Request, res: Response) => {
 };
 
 export const deleteJobById = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
+  if (!req.user || req.user.role.toLowerCase() != 'admin') {
     return res.status(401).json({ message: 'Unauthorized' });
   }
   try {
@@ -64,6 +59,9 @@ export const deleteJobById = async (req: Request, res: Response) => {
 };
 
 export const updateJob = async (req: Request, res: Response) => {
+  if (!req.user || req.user.role.toLowerCase() != 'admin') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   try {
     const { jobId } = req.params;
 
@@ -98,6 +96,9 @@ export const updateJob = async (req: Request, res: Response) => {
 };
 
 export const patchJob = async (req: Request, res: Response) => {
+  if (!req.user || req.user.role.toLowerCase() != 'admin') {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   try {
     const jobId = req.params.jobId;
 
@@ -105,7 +106,7 @@ export const patchJob = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid job ID format' });
     }
 
-    const jobPatchData = JobPatchSchema.parse(req.body);
+    const jobPatchData = JobSchema.parse(req.body);
 
     const existingJob = await db.select().from(job).where(eq(job.id, jobId));
 
@@ -167,6 +168,8 @@ export const submitJobForApproval = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
+    let isAdmin;
+    req.user.role.toLowerCase() === 'admin' ? (isAdmin = true) : (isAdmin = false);
     const jobData = createJobSchema.safeParse(req.body);
 
     if (!jobData.success) {
@@ -189,7 +192,7 @@ export const submitJobForApproval = async (req: Request, res: Response) => {
         isExternal: jobData.data.is_external,
         companyId: jobData.data.company_id,
         tags: jobData.data.tags,
-        isApproved: false,
+        isApproved: isAdmin,
       })
       .returning();
 
@@ -250,18 +253,6 @@ export const rejectJob = async (req: Request, res: Response) => {
   }
 };
 
-// export const jobToPublish = async (req: Request, res: Response) => {
-//   if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
-//     return res.status(401).json({ message: 'Unauthorized' });
-//   }
-//   const { jobID } = req.params;
-//   try {
-//   } catch (error) {
-//     logger.error('Error publishing job:', error);
-//     res.status(500).json({ message: 'Internal server error' });
-//   }
-// };
-
 export const createJobCategory = async (req: Request, res: Response) => {
   const { title } = JobCategorySchema.parse(req.body);
   try {
@@ -270,7 +261,7 @@ export const createJobCategory = async (req: Request, res: Response) => {
       .values({ title })
       .returning()
       .catch((error) => {
-        throw new Error('Job category already exist');
+        throw new error('Job category already exist');
       });
 
     res.status(201).json({
@@ -290,9 +281,10 @@ export const createJobCategory = async (req: Request, res: Response) => {
 };
 
 export const getCategoryById = async (req: Request, res: Response) => {
-  const { categoryId } = req.params;
   try {
-    const categoryFound = await db.select().from(jobCategory).where(eq(jobCategory.id, categoryId));
+    const { id } = req.params;
+    const categoryID = parseInt(id, 10);
+    const categoryFound = await db.select().from(jobCategory).where(eq(jobCategory.id, categoryID));
     if (categoryFound.length === 0) {
       return res.status(404).json({ message: 'Category not found' });
     }
@@ -304,13 +296,14 @@ export const getCategoryById = async (req: Request, res: Response) => {
 };
 
 export const upadteJobCategory = async (req: Request, res: Response) => {
-  const { categoryId } = req.params;
-  const { title } = JobCategorySchema.parse(req.body);
   try {
+    const { id } = req.params;
+    const categoryID = parseInt(id, 10);
+    const { title } = JobCategorySchema.parse(req.body);
     const updatedCategory = await db
       .update(jobCategory)
       .set({ title })
-      .where(eq(jobCategory.id, categoryId))
+      .where(eq(jobCategory.id, categoryID))
       .returning();
     if (updatedCategory.length === 0) {
       return res.status(404).json({ message: 'Job category not found' });
@@ -332,9 +325,10 @@ export const upadteJobCategory = async (req: Request, res: Response) => {
 };
 
 export const deleteJobCategoryById = async (req: Request, res: Response) => {
-  const { categoryId } = req.params;
   try {
-    const deletedCategory = await db.delete(jobCategory).where(eq(jobCategory.id, categoryId)).returning();
+    const { id } = req.params;
+    const categoryID = parseInt(id, 10);
+    const deletedCategory = await db.delete(jobCategory).where(eq(jobCategory.id, categoryID)).returning();
     if (deletedCategory.length === 0) {
       return res.status(404).json({ error: 'Job category not found' });
     }
@@ -349,14 +343,14 @@ export const deleteJobCategoryById = async (req: Request, res: Response) => {
 };
 
 export const createJobLevel = async (req: Request, res: Response) => {
-  const { title } = JobCategorySchema.parse(req.body);
   try {
+    const { title } = JobCategorySchema.parse(req.body);
     const newLevel = await db
       .insert(jobLevel)
       .values({ title })
       .returning()
       .catch((error) => {
-        throw new Error('Job category already exist');
+        throw error('Job category already exist');
       });
 
     res.status(201).json({
@@ -376,9 +370,10 @@ export const createJobLevel = async (req: Request, res: Response) => {
 };
 
 export const getJobLevelById = async (req: Request, res: Response) => {
-  const { levelId } = req.params;
   try {
-    const levelFound = await db.select().from(jobLevel).where(eq(jobLevel.id, levelId));
+    const { id } = req.params;
+    const levelID = parseInt(id, 10);
+    const levelFound = await db.select().from(jobLevel).where(eq(jobLevel.id, levelID));
     if (levelFound.length === 0) {
       return res.status(404).json({ message: 'Category not found' });
     }
@@ -390,10 +385,11 @@ export const getJobLevelById = async (req: Request, res: Response) => {
 };
 
 export const updateJobLevelById = async (req: Request, res: Response) => {
-  const { levelId } = req.params;
-  const { title } = JobCategorySchema.parse(req.body);
   try {
-    const updatedLevel = await db.update(jobLevel).set({ title }).where(eq(jobLevel.id, levelId)).returning();
+    const { id } = req.params;
+    const levelID = parseInt(id, 10);
+    const { title } = JobCategorySchema.parse(req.body);
+    const updatedLevel = await db.update(jobLevel).set({ title }).where(eq(jobLevel.id, levelID)).returning();
     if (updatedLevel.length === 0) {
       return res.status(404).json({ message: 'Job level not found' });
     }
@@ -414,9 +410,10 @@ export const updateJobLevelById = async (req: Request, res: Response) => {
 };
 
 export const deleteJobLevelById = async (req: Request, res: Response) => {
-  const { levelId } = req.params;
   try {
-    const deletedLevel = await db.delete(jobLevel).where(eq(jobLevel.id, levelId)).returning();
+    const { id } = req.params;
+    const levelID = parseInt(id, 10);
+    const deletedLevel = await db.delete(jobLevel).where(eq(jobLevel.id, levelID)).returning();
     if (deletedLevel.length === 0) {
       return res.status(404).json({ error: 'Job level not found' });
     }

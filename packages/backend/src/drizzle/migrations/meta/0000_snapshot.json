@@ -1,5 +1,5 @@
 {
-  "id": "881ef196-037f-44ec-9bd9-5cdd78fc08ca",
+  "id": "2a7c62e1-ef72-4d65-98a0-6fe4756129e6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -184,10 +184,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "company_id": {
           "name": "company_id",
@@ -374,7 +373,7 @@
         },
         "type_id": {
           "name": "type_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -397,38 +396,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "event_date_idx": {
-          "name": "event_date_idx",
-          "columns": [
-            {
-              "expression": "date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "event_type_idx": {
-          "name": "event_type_idx",
-          "columns": [
-            {
-              "expression": "type_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "event_type_id_job_type_id_fk": {
           "name": "event_type_id_job_type_id_fk",
@@ -453,10 +421,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "event_id": {
           "name": "event_id",
@@ -560,19 +527,19 @@
         },
         "level_id": {
           "name": "level_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "category_id": {
           "name": "category_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "type_id": {
           "name": "type_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -626,6 +593,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "posted_at": {
+          "name": "posted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "tags": {
           "name": "tags",
@@ -780,10 +753,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "title": {
           "name": "title",
@@ -827,10 +799,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "title": {
           "name": "title",
@@ -874,10 +845,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "job_id": {
           "name": "job_id",
@@ -968,10 +938,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "title": {
           "name": "title",
@@ -1015,10 +984,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "job_id": {
           "name": "job_id",
@@ -1034,7 +1002,7 @@
         },
         "session_id": {
           "name": "session_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1210,10 +1178,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "resource_id": {
           "name": "resource_id",
@@ -1304,10 +1271,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
@@ -1323,7 +1289,7 @@
         },
         "session_id": {
           "name": "session_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1434,8 +1400,7 @@
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -1456,10 +1421,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -1546,13 +1510,13 @@
         },
         "level_id": {
           "name": "level_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
         "category_id": {
           "name": "category_id",
-          "type": "uuid",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1644,10 +1608,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",

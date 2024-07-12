@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { User } from '../user/userModel';
 
 export const users: User[] = [
