@@ -1,15 +1,26 @@
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey(),
   email: varchar('email', { length: 50 }).notNull().unique(),
   phoneNumber: varchar('phone_number', { length: 15 }),
   fullName: varchar('full_name', { length: 255 }),
   username: varchar('username', { length: 30 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
   profileUrl: varchar('profile_url', { length: 255 }),
-  levelId: uuid('level_id').references(() => jobLevel.id),
-  categoryId: uuid('category_id').references(() => jobCategory.id),
+  levelId: integer('level_id').references(() => jobLevel.id),
+  categoryId: integer('category_id').references(() => jobCategory.id),
   role: varchar('role', { length: 50 }).notNull().default('USER'),
   isVerified: boolean('is_verified').default(false),
   createdAt: timestamp('created_at').defaultNow(),
@@ -18,22 +29,22 @@ export const user = pgTable('user', {
 });
 
 export const session = pgTable('session', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey(),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
 export const job = pgTable(
   'job',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey(),
     title: varchar('title', { length: 255 }).notNull(),
-    levelId: uuid('level_id')
+    levelId: integer('level_id')
       .notNull()
       .references(() => jobLevel.id),
-    categoryId: uuid('category_id')
+    categoryId: integer('category_id')
       .notNull()
       .references(() => jobCategory.id),
-    typeId: uuid('type_id')
+    typeId: integer('type_id')
       .notNull()
       .references(() => jobType.id),
     location: varchar('location', { length: 255 }),
@@ -60,7 +71,7 @@ export const job = pgTable(
 export const jobCategory = pgTable(
   'job_category',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     title: varchar('title', { length: 255 }).notNull().unique(),
   },
   (table) => ({
@@ -71,7 +82,7 @@ export const jobCategory = pgTable(
 export const jobLevel = pgTable(
   'job_level',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     title: varchar('title', { length: 255 }).notNull().unique(),
   },
   (table) => ({
@@ -82,7 +93,7 @@ export const jobLevel = pgTable(
 export const jobType = pgTable(
   'job_type',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     title: varchar('title', { length: 255 }).notNull().unique(),
   },
   (table) => ({
@@ -93,7 +104,7 @@ export const jobType = pgTable(
 export const jobSaved = pgTable(
   'job_saved',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     jobId: uuid('job_id')
       .notNull()
       .references(() => job.id),
@@ -109,12 +120,12 @@ export const jobSaved = pgTable(
 export const jobViews = pgTable(
   'job_views',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     jobId: uuid('job_id')
       .notNull()
       .references(() => job.id),
     userId: uuid('user_id').references(() => user.id),
-    sessionId: uuid('session_id').references(() => session.id),
+    sessionId: integer('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
   (table) => ({
@@ -127,7 +138,7 @@ export const jobViews = pgTable(
 export const event = pgTable(
   'event',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey(),
     title: varchar('title', { length: 255 }).notNull(),
     description: text('description'),
     videoLink: varchar('video_link', { length: 255 }).notNull(),
@@ -137,7 +148,7 @@ export const event = pgTable(
     speakerName: varchar('speaker_name', { length: 255 }),
     speakerDescription: varchar('speaker_description', { length: 255 }),
     speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-    typeId: uuid('type_id').references(() => jobType.id),
+    typeId: integer('type_id').references(() => jobType.id),
     tags: text('tags'),
     createdAt: timestamp('created_at'),
     updatedAt: timestamp('updated_at'),
@@ -151,7 +162,7 @@ export const event = pgTable(
 export const userEventRegistration = pgTable(
   'user_event_registration',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     userId: uuid('user_id').references(() => user.id),
     eventId: uuid('event_id').references(() => event.id),
     userType: varchar('user_type', { length: 255 }),
@@ -165,7 +176,7 @@ export const userEventRegistration = pgTable(
 export const eventSaved = pgTable(
   'event_saved',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     eventId: uuid('event_id')
       .notNull()
       .references(() => event.id),
@@ -179,7 +190,7 @@ export const eventSaved = pgTable(
 );
 
 export const resource = pgTable('resource', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   link: varchar('link', { length: 255 }).notNull(),
@@ -193,10 +204,10 @@ export const resource = pgTable('resource', {
 export const resourceViews = pgTable(
   'resource_views',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     userId: uuid('user_id').references(() => user.id),
     resourceId: uuid('resource_id').references(() => resource.id),
-    sessionId: uuid('session_id').references(() => session.id),
+    sessionId: integer('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
   (table) => ({
@@ -209,7 +220,7 @@ export const resourceViews = pgTable(
 export const resourceSaved = pgTable(
   'resource_saved',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     resourceId: uuid('resource_id')
       .notNull()
       .references(() => resource.id),
@@ -225,7 +236,7 @@ export const resourceSaved = pgTable(
 export const company = pgTable(
   'company',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey(),
     name: varchar('name', { length: 255 }).unique(),
     description: text('description'),
     website: varchar('website', { length: 255 }).unique(),
@@ -251,7 +262,7 @@ export const company = pgTable(
 export const companyFeedback = pgTable(
   'company_feedback',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     companyId: uuid('company_id').references(() => company.id),
     userId: uuid('user_id').references(() => user.id),
     description: text('description'),
@@ -269,7 +280,7 @@ export const companyFeedback = pgTable(
 export const tags = pgTable(
   'tags',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: serial('id').primaryKey(),
     name: varchar('name', { length: 255 }).notNull().unique(),
   },
   (table) => ({
