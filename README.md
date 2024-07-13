@@ -16,7 +16,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/DeveLeb/Develeb-Platform">
-    <img src="docs/Logo.jpeg" alt="Logo" width="200" height="200">
+    <img src="docs/Logo.png" alt="Logo" width="200" height="200">
   </a>
   <h3 align="center">DeveLeb Platform</h3>
   <p align="center">
