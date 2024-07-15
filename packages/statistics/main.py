@@ -157,7 +157,7 @@ def tally_languages(postings: list[dict]) -> dict:
     for posting in postings:
         if 'languages' in posting:
             for language in posting['languages']:
-                language = language.strip()
+                language = language.strip().lower()
                 if language is None or len(language) == 0:
                     continue
                 languages[language] = languages.get(language, 0) + 1
@@ -181,7 +181,7 @@ def tally_frameworks(postings: list[dict]) -> dict:
     for posting in postings:
         if 'frameworks' in posting:
             for framework in posting['frameworks']:
-                framework = framework.strip()
+                framework = framework.strip().lower()
                 if framework is None or len(framework) == 0:
                     continue
                 frameworks[framework] = frameworks.get(framework, 0) + 1
@@ -205,9 +205,10 @@ def tally_locations(postings: list[dict]) -> dict:
     for posting in postings:
         if 'location' in posting:
             if posting['location'][1] is not None:
-                # Flag emoji
-                country_emoji = decode_surrogate_ascii(posting['location'][1])
-                locations[country_emoji] = locations.get(country_emoji, 0) + 1
+                # # Flag emoji
+                # country_emoji = decode_surrogate_ascii(posting['location'][1])
+                # locations[country_emoji] = locations.get(country_emoji, 0) + 1
+                locations['Relocation'] = locations.get('Relocation', 0) + 1
             else:
                 if (
                     posting['location'][0] is None
