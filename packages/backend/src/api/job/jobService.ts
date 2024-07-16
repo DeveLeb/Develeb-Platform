@@ -331,7 +331,7 @@ export const upadteJobCategory = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteJobCategoryById = async (req: Request, res: Response) => {
+export const deleteJobCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const categoryID = parseInt(id, 10);
@@ -391,7 +391,7 @@ export const getJobLevelById = async (req: Request, res: Response) => {
   }
 };
 
-export const updateJobLevelById = async (req: Request, res: Response) => {
+export const updateJobLevel = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const levelID = parseInt(id, 10);
@@ -416,7 +416,7 @@ export const updateJobLevelById = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteJobLevelById = async (req: Request, res: Response) => {
+export const deleteJobLevel = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const levelID = parseInt(id, 10);
@@ -461,7 +461,7 @@ export const saveJob = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-export const getcategories = async (req: Request, res: Response): Promise<Response> => {
+export const getCategories = async (req: Request, res: Response): Promise<Response> => {
   try {
     const categories = await db.select().from(jobCategory);
     if (!categories) return res.status(400).json('Something went wrong');
