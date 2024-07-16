@@ -1,9 +1,10 @@
 import express from 'express';
 
-//import { deleteJobById, getJobById, patchJob, updateJob } from './jobService';
+import { getJobById, getJobs } from './jobService';
 
 const router = express.Router();
 
-router.route('/:id').get();
+router.route('/:id').get(getJobById);
+router.route('/').get(getJobs);
 
 export default router;
