@@ -1,6 +1,6 @@
 'use client';
-// src/app/Event/page.tsx
 import React from 'react';
+
 import EventSearchPanel from '../../components/molecules/EventSearchPanel';
 
 const EventPage = () => {
