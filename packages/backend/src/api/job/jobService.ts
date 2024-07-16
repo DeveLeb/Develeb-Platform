@@ -1,10 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, like, SQL, sql } from 'drizzle-orm';
 import { Request, Response } from 'express';
-import { job, jobCategory, jobLevel } from 'src/drizzle/schema';
+import { company, job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
 import { logger } from 'src/server';
 import { z, ZodError } from 'zod';
 
-import { db } from '../../drizzle/db';
+import { db } from '../../db';
 import { createJobSchema, JobCategorySchema, JobSchema } from './jobModel';
 
 export const getJobById = async (req: Request, res: Response) => {
@@ -12,7 +12,7 @@ export const getJobById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(500).json({ message: 'Job ID is required' });
+      return res.status(400).json({ message: 'Job ID is required' });
     }
 
     const foundJob = await db.query.job.findFirst({
@@ -41,7 +41,7 @@ export const deleteJobById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(500).json({ message: 'Job ID is required' });
+      return res.status(400).json({ message: 'Job ID is required' });
     }
 
     const result = await db.delete(job).where(eq(job.id, id));
@@ -95,72 +95,79 @@ export const updateJob = async (req: Request, res: Response) => {
   }
 };
 
-export const patchJob = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+export const getJobs = async (req: Request, res: Response) => {
   try {
-    const jobId = req.params.jobId;
+    const { pageIndex = '1', pageSize = '10', categoryId, levelId, companyName } = req.query;
 
-    if (!z.string().uuid().safeParse(jobId).success) {
-      return res.status(400).json({ error: 'Invalid job ID format' });
+    const page = parseInt(pageIndex as string, 10) || 1;
+    const limit = parseInt(pageSize as string, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    const conditions: SQL[] = [eq(job.isApproved, true)];
+
+    if (categoryId) {
+      conditions.push(eq(job.categoryId, parseInt(categoryId as string, 10)));
     }
 
-    const jobPatchData = JobSchema.parse(req.body);
-
-    const existingJob = await db.select().from(job).where(eq(job.id, jobId));
-
-    if (existingJob.length === 0) {
-      return res.status(404).json({ error: 'Job not found' });
+    if (levelId) {
+      conditions.push(eq(job.levelId, parseInt(levelId as string, 10)));
     }
 
-    const updatedJobData = { ...jobPatchData, updatedAt: new Date() };
+    if (companyName) {
+      conditions.push(like(company.name, `%${companyName as string}%`));
+    }
 
-    const updatedJob = await db.update(job).set(updatedJobData).where(eq(job.id, jobId)).returning();
+    let baseQuery = db
+      .select({
+        job: job,
+        category: jobCategory.title,
+        level: jobLevel.title,
+        companyName: company.name,
+      })
+      .from(job)
+      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
+      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
+      .leftJoin(company, eq(job.companyId, company.id));
 
-    res.status(200).json(updatedJob[0]);
+    if (conditions.length > 0) {
+      baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+    }
+
+    const countQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(job)
+      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
+      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
+      .leftJoin(company, eq(job.companyId, company.id));
+
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+
+    const finalQuery = baseQuery.limit(limit).offset(offset);
+
+    const [totalCount, result] = await Promise.all([countQuery.execute(), finalQuery.execute()]);
+
+    if (!totalCount || !result) {
+      throw new Error('Failed to fetch jobs');
+    }
+
+    if (result.length === 0) return res.status(404).json('No job found');
+
+    res.json({
+      data: result,
+      pagination: {
+        currentPage: page,
+        pageSize: limit,
+        totalCount: totalCount[0].count,
+        totalPages: Math.ceil(totalCount[0].count / limit),
+      },
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(422).json({ error: 'Validation exception', msg: error.errors });
-    } else {
-      console.error('Error updating job:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-// export const getAllJobs = async (req: Request, res: Response) => {
-//   try {
-//     const { categoryId, levelId, companyName, popular } = req.query;
-
-//     let query: PgSelect = db.select().from(job);
-//     const conditions: SQL[] = [];
-
-//     if (categoryId) {
-//       conditions.push(eq(job.categoryId, categoryId as string));
-//     }
-
-//     if (levelId) {
-//       conditions.push(eq(job.levelId, levelId as string));
-//     }
-
-//     if (companyName) {
-//       conditions.push(eq(job.companyId,company.id));
-//     }
-
-//     if (conditions.length > 0) {
-//       query = query.where(and(...conditions));
-//     }
-
-//     const jobResults = await query;
-
-//     if (jobResults.length === 0) {
-//       return res.status(404).json({ message: 'No jobs found' });
-//     }
-
-//     res.status(200).json(jobResults);
-//   } catch (error) {}
-// };
 
 export const submitJobForApproval = async (req: Request, res: Response) => {
   try {
@@ -337,7 +344,7 @@ export const deleteJobCategoryById = async (req: Request, res: Response) => {
       category: deletedCategory[0],
     });
   } catch (error) {
-    console.error('Error deleting job category:', error);
+    logger.error('Error deleting job category:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -422,7 +429,44 @@ export const deleteJobLevelById = async (req: Request, res: Response) => {
       level: deletedLevel[0],
     });
   } catch (error) {
-    console.error('Error deleting job level:', error);
+    logger.error('Error deleting job level:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const saveJob = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    if (!id || !userId) {
+      return res.status(400).json({ error: 'bad request' });
+    }
+
+    const savedJobResult = await db
+      .insert(jobSaved)
+      .values({
+        userId: userId,
+        jobId: id,
+      })
+      .returning();
+
+    if (savedJobResult.length === 0) {
+      return res.status(500).json({ error: 'Failed to save job' });
+    }
+
+    const savedJob = savedJobResult[0];
+    return res.status(200).json({ savedJob, message: 'Job saved successfully' });
+  } catch (error) {
+    logger.error('Error saving job:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+export const getcategories = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const categories = await db.select().from(jobCategory);
+    if (!categories) return res.status(400).json('Something went wrong');
+    return res.status(200).json(categories);
+  } catch (error) {
+    return res.status(500).json('Internal server error');
   }
 };

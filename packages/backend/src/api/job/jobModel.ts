@@ -9,7 +9,7 @@ export const JobSchema = z.object({
   level_id: z.number().optional(),
   category_id: z.number().optional(),
   location: z.string().optional(),
-  type_id: z.number(),
+  type_id: z.number().optional(),
   description: z.string().optional(),
   compensation: z.string().optional(),
   application_link: z.string().url().optional(),
