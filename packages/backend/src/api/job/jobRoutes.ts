@@ -23,7 +23,7 @@ import {
 const router = express.Router();
 
 router.route('/').get(getJobs).post(submitJobForApproval);
-router.route('/:id').get(getJobById).delete(deleteJobById).put(updateJob);
+router.route('/:id').get(getJobById).delete(deleteJobById).patch(updateJob);
 router.route('/:id/approve').post(approveJob);
 router.route('/:id/reject').post(rejectJob);
 router.route(':id/save/:userId').post(saveJob);
