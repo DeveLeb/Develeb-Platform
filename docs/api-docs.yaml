@@ -2893,7 +2893,35 @@ paths:
   #       '400':
   #         description: Invalid Id supplied
   #       '404':
-  #         description: Job not found      
+  #         description: Job not found   
+  /jobs/{id}/views:
+    get:
+      tags:
+        - job
+      summary: Get view count for a job
+      parameters:
+        - name: id
+          in: path
+          description: ID of resource
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                     resource_id:
+                       type: integer
+                     view_count:
+                       type: integer
+                       example: 1000
+        '404':
+          description: job not found
+
 components:
   schemas:
     Job:
