@@ -1,14 +1,18 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+import bcrypt from 'bcrypt';
+import bodyParser from 'body-parser';
 import express, { Request, Response, Router } from 'express';
+import jwt from 'jsonwebtoken';
+import passport from 'passport';
+import authenticate from 'src/common/middleware/authConfig/authentication';
+import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
+import { env } from 'src/common/utils/envConfig';
 import { z } from 'zod';
+
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
-import passport from 'passport';
-import authenticate from 'src/common/middleware/authConfig/authentication';
-import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
-import bodyParser from 'body-parser';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -24,7 +28,7 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(z.array(UserSchema), 'Success'),
   });
 
-  router.get('/', async (_req: Request, res: Response) => {
+  router.get('/', authenticate, authorizeRole('admin'), async (_req: Request, res: Response) => {
     const serviceResponse = await userService.findAll();
     handleServiceResponse(serviceResponse, res);
   });
@@ -37,18 +41,70 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(UserSchema, 'Success'),
   });
 
-  router.get(
-    '/:id',
-    authenticate,
-    authorizeRole('admin'),
-    validateRequest(GetUserSchema),
-    async (req: Request, res: Response) => {
-      //const id = parseInt(req.params.id as string, 10);
-      const id = req.params.id;
-      const serviceResponse = await userService.findById(id);
+  router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
+    //const id = parseInt(req.params.id as string, 10);
+    const id = req.params.id;
+    const serviceResponse = await userService.findById(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  router.post('/', async (req: Request, res: Response) => {
+    const { email, username, password, first_name, last_name, phone_number, level_id, category_id } = req.body;
+    const hashPassword = await bcrypt.hash(password, 1);
+    const serviceResponse = await userService.createUser(
+      email,
+      username,
+      hashPassword,
+      first_name,
+      last_name,
+      phone_number,
+      level_id,
+      category_id
+    );
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  router.delete('/:id', authenticate, async (req: Request, res: Response) => {
+    const id = req.params.id;
+    if (req.user && req.user.id === id) {
+      //making sure that the authenticated user is deleting his own account and not someone else's account
+      const serviceResponse = await userService.deleteUser(id);
       handleServiceResponse(serviceResponse, res);
+    } else {
+      res.status(401).json({ message: 'Unauthorized' }); //do like this or create a serviceResponse object, assign it the error code and message and send it to handleserviceresponse?
     }
-  );
+  });
+  router.put(':/id', authenticate, async (req: Request, res: Response) => {
+    const { full_name, level_id, category_id, tags } = req.body;
+    const id = req.params.id;
+    if (req.user && req.user.id === id) {
+      const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags);
+      handleServiceResponse(serviceResponse, res);
+    } else {
+      res.status(401).json({ message: 'Unauthorized' }); //do like this or create a serviceResponse object, assign it the error code and message and send it to handleserviceresponse?
+    }
+  });
+
+  router.post('/login', async (req, res, next) => {
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+      if (err || !user) {
+        return res.status(401).json({
+          message: 'Authentication failed',
+          error: info ? info.message : 'Login failed',
+        });
+      }
+      req.login(user, { session: false }, async (err) => {
+        if (err) {
+          return res.status(401).json({ message: 'Login failed', error: err });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET);
+
+        return res.json({ message: 'Login successful', token });
+      });
+    })(req, res, next);
+  });
 
   return router;
 })();

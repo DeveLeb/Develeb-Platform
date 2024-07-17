@@ -10,7 +10,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    console.log("user at authentication: ",user)
+    console.log('user at authentication: ', user);
     req.user = user;
     next();
   })(req, res, next);

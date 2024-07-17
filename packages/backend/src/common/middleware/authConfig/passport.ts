@@ -1,10 +1,10 @@
-import { Request } from 'express';
-import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy, StrategyOptions } from 'passport-jwt';
+import { Strategy as LocalStrategy } from 'passport-local';
 import { userRepository } from 'src/api/user/userRepository';
 
-import { env } from '../utils/envConfig';
+import { env } from '../../utils/envConfig';
 
 // Define your JWT payload type
 interface JwtPayload {
@@ -21,7 +21,6 @@ passport.use(
   new JwtStrategy(options, async (jwtPayload: JwtPayload, done) => {
     try {
       const user = await userRepository.findByIdAsync(jwtPayload.id);
-      console.log('user at passport: ', user)
       if (user) {
         return done(null, user);
       } else {
@@ -33,4 +32,27 @@ passport.use(
   })
 );
 
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email: string, password: string, done) => {
+      try {
+        const user = await userRepository.findByEmailAsync(email);
+        if (!user) {
+          return done(null, false, { message: 'Incorrect email.' });
+        }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          return done(null, false, { message: 'Incorrect password.' });
+        }
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  )
+);
 export default passport;
