@@ -2902,7 +2902,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of resource
+          description: ID of job
           required: true
           schema:
             type: integer
@@ -2914,11 +2914,15 @@ paths:
               schema:
                   type: object
                   properties:
-                     resource_id:
-                       type: integer
-                     view_count:
-                       type: integer
-                       example: 1000
+                    data:
+                      type: object
+                      properties:
+                        job_id: 
+                          type: string
+                          example: 1b4e28ba-2fa1-11d2-883f-0016d3cca427
+                        view_count:
+                          type: integer
+                          example: 1000
         '404':
           description: job not found
 
