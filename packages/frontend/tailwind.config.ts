@@ -16,7 +16,14 @@ const config = {
       screens: {
         ml: '820px',
       },
+      padding: {
+        xm: '1px',
+      },
+      boxShadow: {
+        'bottom-sm': '0 2px 4px rgba(0, 0, 0, 0.1)',
+      },
       colors: {
+        'jobs-gray': '#646464',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -74,6 +81,7 @@ const config = {
         '3xl': '1.75rem',
         '4xl': '2rem',
         '5xl': '2.25rem',
+        '6xl': '2.5rem',
         '7xl': '2.75rem',
       },
       fontFamily: {
@@ -81,6 +89,9 @@ const config = {
       },
       borderColor: {
         border: 'hsl(var(--border))',
+      },
+      gap: {
+        '1,5': '0.35rem',
       },
     },
   },
