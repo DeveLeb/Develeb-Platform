@@ -1,7 +1,6 @@
 import { Button } from '../atoms/button';
 import { Input } from '../atoms/input';
 import { FaMapMarkerAlt, FaSearch } from 'react-icons/fa';
-const locations = ['Near me', 'Remote job', 'Exact location', 'Within 15 km'];
 
 function SearchJobComponent() {
   return (
@@ -19,15 +18,6 @@ function SearchJobComponent() {
       </div>
 
       <Button className="rounded sm:rounded-tl-none sm:rounded-bl-none shadow-bottom-sm">Search job</Button>
-      {/* <select className="select-location sm:w-[30%] border sm:border-r-0 sm:border-l-0 rounded sm:rounded-none">
-        <option value="" disabled selected>
-          Location
-        </option>
-        {locations.map((location: string, i: number) => (
-          <option key={i}>{location}</option>
-        ))}
-      </select> */}
-      {/* <button className="search-job-button rounded sm:rounded-tl-none sm:rounded-bl-none">Search job</button> */}
     </div>
   );
 }
