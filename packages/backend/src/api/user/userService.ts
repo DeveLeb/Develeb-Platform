@@ -22,7 +22,7 @@ export const userService = {
   },
 
   // Retrieves a single user by their ID
-  findById: async (id: string): Promise<ServiceResponse<User | null>> => {
+  findById: async (id: string) => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
@@ -41,23 +41,21 @@ export const userService = {
     email: string,
     username: string,
     password: string,
-    first_name: string,
-    last_name: string,
+    full_name: string,
     phone_number: string,
     level_id: number,
     category_id: number
-  ): Promise<ServiceResponse<User | null>> => {
+  ) => {
     try {
       const user = await userRepository.findByEmailAsync(email);
-      if (user) {
+      if (user.length !== 0) {
         return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.CONFLICT);
       }
       const newUser = await userRepository.createUserAsync(
         email,
         username,
         password,
-        first_name,
-        last_name,
+        full_name,
         phone_number,
         level_id,
         category_id
@@ -70,13 +68,15 @@ export const userService = {
     }
   },
 
-  deleteUser: async (id: string): Promise<ServiceResponse<User | null>> => {
+  deleteUser: async (id: string) => {
     try {
+      console.log(id);
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
-      await userRepository.deleteUserAsync(user);
+      await userRepository.deleteUserAsync(id);
+      console.log('hrere');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User deleted', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}: ${(ex as Error).message}`;
@@ -84,24 +84,18 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  updateUser: async (
-    id: string,
-    full_name: string,
-    level_id: number,
-    category_id: number,
-    tags: string
-  ): Promise<ServiceResponse<User | null>> => {
+  updateUser: async (id: string, full_name: string, level_id: number, category_id: number, tags: string) => {
     try {
       const user = await userRepository.findByIdAsync(id);
-      if (!user) {
+      if (user.length == 0) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
-      await userRepository.updateUserAsync(user, full_name, level_id, category_id, tags);
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User updated', user, StatusCodes.OK);
+      const updatedUser = await userRepository.updateUserAsync(id, full_name, level_id, category_id, tags);
+      return new ServiceResponse<User>(ResponseStatus.Success, 'User updated', updatedUser, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-  }
+  },
 };
