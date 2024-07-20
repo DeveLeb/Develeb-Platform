@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 export const ResourceSchema = z.object({
+  id: z.string().uuid(),
   title: z.string(),
   description: z.string().optional(),
   link: z.string(),

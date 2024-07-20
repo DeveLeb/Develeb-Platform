@@ -12,6 +12,23 @@ resourceRegistry.register('Resource', ResourceSchema);
 
 export const resourceRouter: Router = (() => {
   const router = express.Router();
+  resourceRegistry.registerPath({
+    method: 'post',
+    path: '/resources',
+    tags: ['Resource'],
+    responses: createApiResponse(ResourceSchema, 'Success'),
+  });
+
+  router.get('/', async (req: Request, res: Response) => {
+    const { pageIndex, pageSize, type, title } = req.query;
+    const serviceResponse = await resouceService.findResources({
+      pageIndex: pageIndex as string,
+      pageSize: pageSize as string,
+      type: type as string,
+      title: title as string,
+    });
+    handleServiceResponse(serviceResponse, res);
+  });
 
   resourceRegistry.registerPath({
     method: 'post',

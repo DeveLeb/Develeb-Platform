@@ -1,33 +1,85 @@
-import { count, eq } from 'drizzle-orm';
-import { job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
+import { and, count, eq, SQL, sql } from 'drizzle-orm';
+import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
 import { Job, JobCategory, JobCategorySchema, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
 
 export const jobRepository = {
+  findJobsAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Job[]> => {
+    let baseQuery = db
+      .select()
+      .from(job)
+      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
+      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
+      .leftJoin(company, eq(job.companyId, company.id));
+
+    if (conditions.length > 0) {
+      baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+    }
+    const result = await baseQuery.limit(limit).offset(offset).execute();
+    const parsedJobs = result.map((row) => {
+      const jobData = {
+        ...row.job,
+        categoryTitle: row.job_category?.title,
+        levelTitle: row.job_level?.title,
+        companyName: row.company?.name,
+      };
+      const parsed = JobSchema.parse(jobData);
+      return parsed;
+    });
+
+    return parsedJobs;
+  },
+  /////////////////////////////////////
+  findJobsCountAsync: async (conditions: SQL[]): Promise<number> => {
+    const countQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(job)
+      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
+      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
+      .leftJoin(company, eq(job.companyId, company.id));
+
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+
+    const result = await countQuery.execute();
+    return result[0]?.count ?? 0;
+  },
+
+  ////////////////////////////////////////////////////
+
   findJobByIdAsync: async (id: string): Promise<Job | null> => {
-    const result = await db.select().from(job).where(eq(job.id, id)).limit(1);
+    const result = await db
+      .select()
+      .from(job)
+      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
+      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
+      .leftJoin(company, eq(job.companyId, company.id))
+      .where(eq(job.id, id))
+      .limit(1);
 
     if (result.length === 0) return null;
 
-    try {
-      return JobSchema.parse(result);
-    } catch (error) {
-      logger.error('Job validation failed:', error);
-      return null;
-    }
+    const row = result[0];
+
+    // Extract and structure the job data
+    const jobData = {
+      ...row.job,
+      categoryTitle: row.job_category?.title,
+      levelTitle: row.job_level?.title,
+      companyName: row.company?.name,
+    };
+    const parsedJob = JobSchema.parse(jobData) || null;
+    return parsedJob;
   },
 
   deleteJobByIdAsync: async (id: string): Promise<Job | null> => {
     const result = await db.delete(job).where(eq(job.id, id));
     if (result.length === 0) return null;
-    try {
-      return JobSchema.parse(result[0]);
-    } catch (error) {
-      logger.error('Job validation failed:', error);
-      return null;
-    }
+
+    return JobSchema.parse(result[0]) || null;
   },
 
   updateJobAsync: async (

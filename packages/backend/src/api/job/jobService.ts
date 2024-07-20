@@ -1,83 +1,64 @@
-import { eq } from 'drizzle-orm';
+import { eq, like, SQL } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
 import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
-import { job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
+import { company, job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
 import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
 
-// export const getJobs = async (req: Request, res: Response) => {
-//   try {
-//     const { pageIndex = '1', pageSize = '10', categoryId, levelId, companyName } = req.query;
-
-//     const page = parseInt(pageIndex as string, 10) || 1;
-//     const limit = parseInt(pageSize as string, 10) || 10;
-//     const offset = (page - 1) * limit;
-
-//     const conditions: SQL[] = [eq(job.isApproved, true)];
-
-//     if (categoryId) {
-//       conditions.push(eq(job.categoryId, parseInt(categoryId as string, 10)));
-//     }
-
-//     if (levelId) {
-//       conditions.push(eq(job.levelId, parseInt(levelId as string, 10)));
-//     }
-
-//     if (companyName) {
-//       conditions.push(like(company.name, `%${companyName as string}%`));
-//     }
-
-//     let baseQuery = db
-//       .select()
-//       .from(job)
-//       .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
-//       .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
-//       .leftJoin(company, eq(job.companyId, company.id));
-
-//     if (conditions.length > 0) {
-//       baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
-//     }
-
-//     const countQuery = db
-//       .select({ count: sql<number>`count(*)` })
-//       .from(job)
-//       .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
-//       .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
-//       .leftJoin(company, eq(job.companyId, company.id));
-
-//     if (conditions.length > 0) {
-//       countQuery.where(and(...conditions));
-//     }
-
-//     const finalQuery = baseQuery.limit(limit).offset(offset);
-
-//     const [totalCount, result] = await Promise.all([countQuery.execute(), finalQuery.execute()]);
-
-//     if (!totalCount || !result) {
-//       throw new Error('Failed to fetch jobs');
-//     }
-
-//     if (result.length === 0) return res.status(404).json('No job found');
-
-//     res.json({
-//       data: result,
-//       pagination: {
-//         currentPage: page,
-//         pageSize: limit,
-//         totalCount: totalCount[0].count,
-//         totalPages: Math.ceil(totalCount[0].count / limit),
-//       },
-//     });
-//   } catch (error) {
-//     console.error('Error fetching jobs:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// };
-
 export const jobService = {
+  findJobs: async (params: {
+    pageIndex: string;
+    pageSize: string;
+    categoryId?: string;
+    levelId?: string;
+    companyName?: string;
+  }): Promise<ServiceResponse<Job[] | null>> => {
+    try {
+      const page = parseInt(params.pageIndex, 10) || 1;
+      const limit = parseInt(params.pageSize, 10) || 10;
+      const offset = (page - 1) * limit;
+      const conditions: SQL[] = [eq(job.isApproved, true)];
+
+      if (params.categoryId) {
+        conditions.push(eq(job.categoryId, parseInt(params.categoryId, 10)));
+      }
+
+      if (params.levelId) {
+        conditions.push(eq(job.levelId, parseInt(params.levelId, 10)));
+      }
+
+      if (params.companyName) {
+        conditions.push(like(company.name, `%${params.companyName}%`));
+      }
+      const [totalCount, result] = await Promise.all([
+        jobRepository.findJobsCountAsync(conditions),
+        jobRepository.findJobsAsync(conditions, limit, offset),
+      ]);
+
+      if (result.length === 0) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No jobs found', null, StatusCodes.NOT_FOUND);
+      }
+
+      const paginationInfo = {
+        currentPage: page,
+        pageSize: limit,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      };
+
+      const successMessage = `Jobs fetched successfully. Page ${page} of ${paginationInfo.totalPages}. Total jobs: ${totalCount}`;
+
+      return new ServiceResponse(ResponseStatus.Success, successMessage, result, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error fetching jobs`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
   findJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
       const job = await jobRepository.findJobByIdAsync(id);
@@ -94,10 +75,11 @@ export const jobService = {
 
   deleteJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
-      const deleteJob = await jobRepository.deleteJobByIdAsync(id);
-      if (!deleteJob) {
+      const findJob = await jobRepository.findJobByIdAsync(id);
+      if (!findJob) {
         return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
+      const deleteJob = await jobRepository.deleteJobByIdAsync(id);
       return new ServiceResponse(ResponseStatus.Success, 'Job deleted', deleteJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting job with id ${id}:, ${(ex as Error).message}`;
@@ -189,7 +171,7 @@ export const jobService = {
         return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
 
-      if (findJob.is_approved) {
+      if (findJob.isApproved) {
         return new ServiceResponse(ResponseStatus.Failed, 'Job already approved', null, StatusCodes.CONFLICT);
       }
       const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
@@ -356,6 +338,10 @@ export const jobService = {
     id: string
   ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
     try {
+      const job = await jobRepository.findJobByIdAsync(id);
+      if (!job) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
       const totalViews = await jobRepository.findJobTotalViewsAsync(id);
       const data = { job_id: id, totalViews };
       return new ServiceResponse(ResponseStatus.Success, 'Total views found', data, StatusCodes.OK);

@@ -21,98 +21,15 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(z.array(JobSchema), 'Success'),
   });
 
-  // router.get('/', async (_req: Request, res: Response) => {
-  //   const serviceResponse = await jobService.findJ;
-  // }
-
-  jobRegistry.registerPath({
-    method: 'get',
-    path: '/jobs/{id}',
-    tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
-    responses: createApiResponse(JobSchema, 'Success'),
-  });
-
-  router.get('/:id', async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const serviceResponse = await jobService.findJobById(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  router.delete('/:id', async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const serviceResponse = await jobService.deleteJobById(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  router.put('/:id', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    const { id } = req.params;
-    const {
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-      isApproved,
-    } = req.body;
-    const serviceResponse = await jobService.updateJob(
-      id,
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-      isApproved
-    );
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  jobRegistry.registerPath({
-    method: 'post',
-    path: '/jobs/{id}/approve',
-    tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
-    responses: createApiResponse(JobSchema, 'Success'),
-  });
-
-  router.post('/:id/approve', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    const { id } = req.params;
-    const serviceResponse = await jobService.approveJob(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  jobRegistry.registerPath({
-    method: 'post',
-    path: '/jobs/{id}/reject',
-    tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
-    responses: createApiResponse(JobSchema, 'Success'),
-  });
-
-  router.post('/:id/reject', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    const { id } = req.params;
-    const serviceResponse = await jobService.rejectJob(id);
+  router.get('/', async (req: Request, res: Response) => {
+    const { pageIndex, pageSize, categoryId, levelId, companyName } = req.query;
+    const serviceResponse = await jobService.findJobs({
+      pageIndex: pageIndex as string,
+      pageSize: pageSize as string,
+      categoryId: categoryId as string,
+      levelId: levelId as string,
+      companyName: companyName as string,
+    });
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -256,5 +173,95 @@ export const jobRouter: Router = (() => {
     const serviceResponse = await jobService.findJobTotalViews(id);
     handleServiceResponse(serviceResponse, res);
   });
+  jobRegistry.registerPath({
+    method: 'get',
+    path: '/jobs/{id}',
+    tags: ['Job'],
+    request: { params: GetJobSchema.shape.params },
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
+
+  router.get('/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const serviceResponse = await jobService.findJobById(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  router.delete('/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const serviceResponse = await jobService.deleteJobById(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  router.put('/:id', async (req: Request, res: Response) => {
+    if (req.user?.role.toLowerCase() !== 'admin') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { id } = req.params;
+    const {
+      title,
+      levelId,
+      categoryId,
+      typeId,
+      location,
+      description,
+      compensation,
+      applicationLink,
+      isExternal,
+      companyId,
+      tags,
+      isApproved,
+    } = req.body;
+    const serviceResponse = await jobService.updateJob(
+      id,
+      title,
+      levelId,
+      categoryId,
+      typeId,
+      location,
+      description,
+      compensation,
+      applicationLink,
+      isExternal,
+      companyId,
+      tags,
+      isApproved
+    );
+    handleServiceResponse(serviceResponse, res);
+  });
+  jobRegistry.registerPath({
+    method: 'post',
+    path: '/jobs/{id}/approve',
+    tags: ['Job'],
+    request: { params: GetJobSchema.shape.params },
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
+
+  router.post('/:id/approve', async (req: Request, res: Response) => {
+    if (req.user?.role.toLowerCase() !== 'admin') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { id } = req.params;
+    const serviceResponse = await jobService.approveJob(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  jobRegistry.registerPath({
+    method: 'post',
+    path: '/jobs/{id}/reject',
+    tags: ['Job'],
+    request: { params: GetJobSchema.shape.params },
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
+
+  router.post('/:id/reject', async (req: Request, res: Response) => {
+    if (req.user?.role.toLowerCase() !== 'admin') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { id } = req.params;
+    const serviceResponse = await jobService.rejectJob(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
   return router;
 })();
