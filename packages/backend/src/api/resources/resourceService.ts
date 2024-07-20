@@ -219,7 +219,7 @@ export const saveResource = async (req: Request, res: Response) => {
 };
 
 export const resouceService = {
-  createResources: async (
+  createResource: async (
     title: string,
     description: string,
     link: string,

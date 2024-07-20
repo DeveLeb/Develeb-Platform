@@ -11,3 +11,12 @@ export const ResourceSchema = z.object({
   tags: z.string().optional(),
 });
 export type Resource = z.infer<typeof ResourceSchema>;
+
+export const GetResourceSchema = z.object({
+  params: z.object({ id: z.string().uuid('Invalid UUID format') }),
+});
+
+export const GetResourceViews = z.object({
+  id: z.string(),
+  totalViews: z.number(),
+});
