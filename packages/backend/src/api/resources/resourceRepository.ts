@@ -1,14 +1,44 @@
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq, SQL, sql } from 'drizzle-orm';
 import { resource, resourceSaved, resourceViews } from 'src/db/schema';
 
 import { db } from '../../db';
 import { Resource, ResourceSchema } from './resourceModel';
 
 export const resourceRepository = {
-  findResourcesAsync: async (): Promise<Resource[]> => {
-    const resources = await db.select().from(resource);
-    return ResourceSchema.array().parse(resources[0]);
+  findResourcesAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Resource[]> => {
+    let baseQuery = db.select().from(resource);
+    if (conditions.length > 0) {
+      baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+    }
+    const result = await baseQuery.limit(limit).offset(offset).execute();
+    console.log('Raw result from database:', JSON.stringify(result, null, 2));
+
+    let parsedResult: Resource[];
+    try {
+      if (Array.isArray(result)) {
+        parsedResult = result.map((item) => ResourceSchema.parse(item));
+      } else {
+        parsedResult = [ResourceSchema.parse(result)];
+      }
+    } catch (parseError) {
+      console.error('Error parsing result:', parseError);
+      throw parseError;
+    }
+    console.log('Parsed result:', JSON.stringify(parsedResult, null, 2));
+
+    return parsedResult;
   },
+  findResourcesCountAsync: async (conditions: SQL[]): Promise<number> => {
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(resource);
+
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+
+    const result = await countQuery.execute();
+    return result[0]?.count ?? 0;
+  },
+
   findResourceAsync: async (id: string): Promise<Resource | null> => {
     const foundResource = await db.select().from(resource).where(eq(resource.id, id)).limit(1);
     return ResourceSchema.parse(foundResource[0]) || null;
