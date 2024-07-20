@@ -1,61 +1,64 @@
-import { and, count, eq, SQL, sql } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { UniqueConstraint } from 'drizzle-orm/mysql-core';
 import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
 import { resource, resourceSaved, resourceViews } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
-import { ResourceSchema } from './resourceModel';
+import { Resource, ResourceSchema } from './resourceModel';
+import { resourceRepository } from './resourceRepository';
 
-export const getResources = async (req: Request, res: Response) => {
-  try {
-    const { pageIndex = '1', pageSize = '10', type, title } = req.query;
-    const page = parseInt(pageIndex as string, 10) || 1;
-    const limit = parseInt(pageSize as string, 10) || 10;
-    const offset = (page - 1) * limit;
-    const conditions: SQL[] = [];
+// export const getResources = async (req: Request, res: Response) => {
+//   try {
+//     const { pageIndex = '1', pageSize = '10', type, title } = req.query;
+//     const page = parseInt(pageIndex as string, 10) || 1;
+//     const limit = parseInt(pageSize as string, 10) || 10;
+//     const offset = (page - 1) * limit;
+//     const conditions: SQL[] = [];
 
-    if (typeof type === 'string') {
-      conditions.push(eq(resource.type, type));
-    }
-    if (typeof title === 'string') {
-      conditions.push(eq(resource.title, title));
-    }
+//     if (typeof type === 'string') {
+//       conditions.push(eq(resource.type, type));
+//     }
+//     if (typeof title === 'string') {
+//       conditions.push(eq(resource.title, title));
+//     }
 
-    let baseQuery = db.select().from(resource);
-    if (conditions.length > 0) {
-      baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
-    }
+//     let baseQuery = db.select().from(resource);
+//     if (conditions.length > 0) {
+//       baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
+//     }
 
-    const countQuery = db.select({ count: sql<number>`count(*)` }).from(resource);
-    if (conditions.length > 0) {
-      countQuery.where(and(...conditions));
-    }
+//     const countQuery = db.select({ count: sql<number>`count(*)` }).from(resource);
+//     if (conditions.length > 0) {
+//       countQuery.where(and(...conditions));
+//     }
 
-    const finalQuery = baseQuery.limit(limit).offset(offset);
+//     const finalQuery = baseQuery.limit(limit).offset(offset);
 
-    const [totalCount, result] = await Promise.all([countQuery.execute(), finalQuery.execute()]);
+//     const [totalCount, result] = await Promise.all([countQuery.execute(), finalQuery.execute()]);
 
-    if (!totalCount || !result) {
-      throw new Error('Failed to fetch resources');
-    }
+//     if (!totalCount || !result) {
+//       throw new Error('Failed to fetch resources');
+//     }
 
-    if (result.length === 0) return res.status(404).json('No resources found');
+//     if (result.length === 0) return res.status(404).json('No resources found');
 
-    res.json({
-      data: result,
-      pagination: {
-        currentPage: page,
-        pageSize: limit,
-        totalCount: totalCount[0].count,
-        totalPages: Math.ceil(totalCount[0].count / limit),
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching resources:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.json({
+//       data: result,
+//       pagination: {
+//         currentPage: page,
+//         pageSize: limit,
+//         totalCount: totalCount[0].count,
+//         totalPages: Math.ceil(totalCount[0].count / limit),
+//       },
+//     });
+//   } catch (error) {
+//     console.error('Error fetching resources:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
 
 export const createResource = async (req: Request, res: Response) => {
   try {
@@ -213,4 +216,124 @@ export const saveResource = async (req: Request, res: Response) => {
 
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+export const resouceService = {
+  createResources: async (
+    title: string,
+    description: string,
+    link: string,
+    publish: boolean,
+    type: string,
+    tags: string
+  ): Promise<ServiceResponse<Resource | null>> => {
+    try {
+      const createdResource = await resourceRepository.createResourceAsync(
+        title,
+        description,
+        link,
+        publish,
+        type,
+        tags
+      );
+      return new ServiceResponse(ResponseStatus.Success, 'Resource created', createdResource, StatusCodes.CREATED);
+    } catch (ex) {
+      const errorMessage = `Error creating resource: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  findResourceById: async (id: string): Promise<ServiceResponse<Resource | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(id);
+      if (!resource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No resouce found', null, StatusCodes.NOT_FOUND);
+      }
+      return new ServiceResponse(ResponseStatus.Success, 'Resource found', resource, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding resource with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  updateResource: async (
+    id: string,
+    title: string,
+    description: string,
+    link: string,
+    publish: boolean,
+    type: string,
+    tags: string
+  ): Promise<ServiceResponse<Resource | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(id);
+      if (!resource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No resouce found', null, StatusCodes.NOT_FOUND);
+      }
+      const updatedResource = await resourceRepository.updateResourceAsync(
+        id,
+        title,
+        description,
+        link,
+        publish,
+        type,
+        tags
+      );
+      return new ServiceResponse(ResponseStatus.Failed, 'No resouce found', updatedResource, StatusCodes.NOT_FOUND);
+    } catch (ex) {
+      const errorMessage = `Error updating resource with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  deleteResource: async (id: string): Promise<ServiceResponse<Resource | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(id);
+      if (!resource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No resouce found', null, StatusCodes.NOT_FOUND);
+      }
+      const deletedResource = await resourceRepository.deleteResourceAsync(id);
+      return new ServiceResponse(ResponseStatus.Failed, 'Resource deleted', deletedResource, StatusCodes.NOT_FOUND);
+    } catch (ex) {
+      const errorMessage = `Error deleting resource with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  findResourceViews: async (
+    id: string
+  ): Promise<ServiceResponse<{ resource_id: string; totalViews: number | null } | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(id);
+      if (!resource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+      }
+      const totalViews = await resourceRepository.findResourceTotalViewsAsync(id);
+      const resourceTotalViews = { resource_id: id, totalViews };
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'Resource views retrieved successfully',
+        resourceTotalViews,
+        StatusCodes.OK
+      );
+    } catch (ex) {
+      const errorMessage = `Error finding resource with id ${id}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  saveResourceForUser: async (resouceId: string, userId: string): Promise<ServiceResponse<Resource | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(resouceId);
+      if (!resource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+      }
+      const savedResource = await resourceRepository.saveResourceAsync(resouceId, userId);
+      return new ServiceResponse(ResponseStatus.Success, 'Resource saved successfully', savedResource, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error saving resource with id ${resouceId}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 };
