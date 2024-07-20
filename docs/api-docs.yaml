@@ -1085,8 +1085,8 @@ paths:
     post:
         tags:
           - resource
-        summary: Save an event for the user
-        description: Allows a user to save an event to their favorites
+        summary: Save an resource for the user
+        description: Allows a user to save an resource to their favorites
         security:
         - jwt: []
 
@@ -1095,7 +1095,7 @@ paths:
           - name: resourceId
             in: path
             required: true
-            description: The ID of the event to be saved
+            description: The ID of the resource to be saved
             schema:
               type: string
           - name: userId
@@ -1108,7 +1108,7 @@ paths:
         
         responses:
           '200':
-            description: Event saved as favorite
+            description: Resource saved as favorite
             content:
               application/json:
                 schema:
@@ -1116,7 +1116,7 @@ paths:
                   properties:
                     message:
                       type: string
-                      example: Event saved as favorite
+                      example: Resource saved as favorite
           '400':
             description: Invalid input 
             content:
@@ -1139,7 +1139,7 @@ paths:
                       example: "Unauthorized - Invalid credentials"            
                     
           '404':
-            description: Event not found or User not found
+            description: Resource not found or User not found
             content:
               application/json:
                 schema:
