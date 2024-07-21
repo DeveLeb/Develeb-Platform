@@ -8,7 +8,7 @@ extendZodWithOpenApi(z);
 export type User = z.infer<typeof UserSchema>;
 export const UserSchema = z.object({
   id: z.string(),
-  fullname: z.string(),
+  full_name: z.string(),
   email: z.string().email(),
   password: z.string(),
   username: z.string(),

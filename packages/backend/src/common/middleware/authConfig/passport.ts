@@ -20,7 +20,9 @@ const options: StrategyOptions = {
 passport.use(
   new JwtStrategy(options, async (jwtPayload: JwtPayload, done) => {
     try {
+      console.log(jwtPayload)
       const user = await userRepository.findByIdAsync(jwtPayload.id);
+     
       if (user) {
         return done(null, user);
       } else {
@@ -41,15 +43,16 @@ passport.use(
     async (email: string, password: string, done) => {
       try {
         const user = await userRepository.findByEmailAsync(email);
-        if (!user) {
+        if (user.length == 0) {
           return done(null, false, { message: 'Incorrect email.' });
         }
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user[0].password);
         if (!isMatch) {
           return done(null, false, { message: 'Incorrect password.' });
         }
         return done(null, user);
       } catch (error) {
+        console.log(error)
         return done(error);
       }
     }

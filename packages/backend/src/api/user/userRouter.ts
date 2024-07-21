@@ -41,22 +41,20 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(UserSchema, 'Success'),
   });
 
-  router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
-    //const id = parseInt(req.params.id as string, 10);
+  router.get('/:id', async (req: Request, res: Response) => {
     const id = req.params.id;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
   router.post('/', async (req: Request, res: Response) => {
-    const { email, username, password, first_name, last_name, phone_number, level_id, category_id } = req.body;
+    const { email, username, password, full_name, phone_number, level_id, category_id } = req.body;
     const hashPassword = await bcrypt.hash(password, 1);
     const serviceResponse = await userService.createUser(
       email,
       username,
       hashPassword,
-      first_name,
-      last_name,
+      full_name,
       phone_number,
       level_id,
       category_id
@@ -74,7 +72,7 @@ export const userRouter: Router = (() => {
       res.status(401).json({ message: 'Unauthorized' }); //do like this or create a serviceResponse object, assign it the error code and message and send it to handleserviceresponse?
     }
   });
-  router.put(':/id', authenticate, async (req: Request, res: Response) => {
+  router.put('/:id', authenticate, async (req: Request, res: Response) => {
     const { full_name, level_id, category_id, tags } = req.body;
     const id = req.params.id;
     if (req.user && req.user.id === id) {
@@ -98,12 +96,37 @@ export const userRouter: Router = (() => {
           return res.status(401).json({ message: 'Login failed', error: err });
         }
 
-        // Generate JWT token
-        const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET);
+        const token = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_SECRET, { expiresIn: '1h' });
 
-        return res.json({ message: 'Login successful', token });
+        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        return res.json({ message: 'Login successful', token, refreshToken });
       });
     })(req, res, next);
+  });
+
+  router.post('/refresh-token', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Refresh token is required' });
+    }
+
+    try {
+      const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET);
+
+      const user = await userService.findById(decoded.id);
+
+      if (!user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+
+      // Generate new JWT token
+      const accessToken = jwt.sign({ id: user.id, email: user.email }, env.JWT_SECRET, { expiresIn: '15m' });
+
+      return res.json({ accessToken });
+    } catch (err) {
+      return res.status(403).json({ message: 'Invalid refresh token' });
+    }
   });
 
   return router;
