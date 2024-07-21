@@ -4,7 +4,7 @@ import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResp
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
-
+import bcrypt from 'bcrypt';
 export const userService = {
   // Retrieves all users from the database
   findAll: async () => {
@@ -98,13 +98,22 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  resetPassword: async (id: string, password: string) => {
+  resetPassword: async (id: string, password: string, hashPassword: string) => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (user.length == 0) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
-      const returnedUser = await userRepository.resetPasswordAsync(id, password);
+      const currentPassword = await userRepository.getPasswordAsync(id);
+      if (await bcrypt.compare(password, currentPassword)) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'New password cannot be the same as the old password',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
       return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;

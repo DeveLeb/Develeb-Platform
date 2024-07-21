@@ -50,4 +50,9 @@ export const userRepository = {
     const updatedAt = new Date();
     return await db.update(user).set({ password, updatedAt }).where(eq(user.id, id)).returning();
   },
+  getPasswordAsync: async (id: string) => {
+    const pass = await db.select({ password: user.password }).from(user).where(eq(user.id, id));
+    console.log(pass)
+    return pass[0].password;
+  },
 };

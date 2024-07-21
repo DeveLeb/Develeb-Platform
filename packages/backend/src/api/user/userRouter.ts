@@ -135,7 +135,7 @@ export const userRouter: Router = (() => {
     const { id, password } = req.body;
     if (req.user && req.user.id === id) {
       const hashPassword = await bcrypt.hash(password, 1);
-      const serviceResponse = await userService.resetPassword(id, hashPassword);
+      const serviceResponse = await userService.resetPassword(id,password, hashPassword);
       handleServiceResponse(serviceResponse, res);
     } else {
       res.status(401).json({ message: 'Unauthorized' });
