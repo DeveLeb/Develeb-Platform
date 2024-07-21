@@ -38,7 +38,6 @@ export const resouceService = {
         resourceRepository.findResourcesCountAsync(conditions),
         resourceRepository.findResourcesAsync(conditions, limit, offset),
       ]);
-
       if (!Array.isArray(resources)) {
         resources = [resources as Resource];
       }

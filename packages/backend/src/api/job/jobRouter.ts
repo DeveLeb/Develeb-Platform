@@ -32,7 +32,38 @@ export const jobRouter: Router = (() => {
     });
     handleServiceResponse(serviceResponse, res);
   });
-
+  router.post('/', async (req: Request, res: Response) => {
+    let isApproved;
+    req.user?.role.toLowerCase() === 'admin' ? (isApproved = true) : (isApproved = false);
+    const {
+      title,
+      levelId,
+      categoryId,
+      typeId,
+      location,
+      description,
+      compensation,
+      applicationLink,
+      isExternal,
+      companyId,
+      tags,
+    } = req.body;
+    const serviceResponse = await jobService.submitJobForApproval(
+      title,
+      levelId,
+      categoryId,
+      typeId,
+      location,
+      description,
+      compensation,
+      applicationLink,
+      isExternal,
+      companyId,
+      tags,
+      isApproved
+    );
+    handleServiceResponse(serviceResponse, res);
+  });
   jobRegistry.registerPath({
     method: 'post',
     path: '/jobs/{jobId}/save/{userId}',
@@ -61,7 +92,7 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/category', async (req: Request, res: Response) => {
     if (req.user?.role.toLowerCase() !== 'admin') {
       return res.status(401).json({ message: 'Unauthorized' });
     }
