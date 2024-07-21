@@ -1,7 +1,7 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
-import express, { Request, Response, Router } from 'express';
+import express, { NextFunction, Request, Response, Router } from 'express';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import authenticate from 'src/common/middleware/authConfig/authentication';
@@ -83,7 +83,7 @@ export const userRouter: Router = (() => {
     }
   });
 
-  router.post('/login', async (req, res, next) => {
+  router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('local', { session: false }, (err, user, info) => {
       if (err || !user) {
         return res.status(401).json({
@@ -98,13 +98,15 @@ export const userRouter: Router = (() => {
 
         const token = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_SECRET, { expiresIn: '1h' });
 
-        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, {
+          expiresIn: '7d',
+        });
         return res.json({ message: 'Login successful', token, refreshToken });
       });
     })(req, res, next);
   });
 
-  router.post('/refresh-token', async (req, res) => {
+  router.post('/refresh-token', async (req: Request, res: Response) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
@@ -126,6 +128,17 @@ export const userRouter: Router = (() => {
       return res.json({ accessToken });
     } catch (err) {
       return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+  });
+
+  router.post('/reset-password', authenticate, async (req: Request, res: Response) => {
+    const { id, password } = req.body;
+    if (req.user && req.user.id === id) {
+      const hashPassword = await bcrypt.hash(password, 1);
+      const serviceResponse = await userService.resetPassword(id, hashPassword);
+      handleServiceResponse(serviceResponse, res);
+    } else {
+      res.status(401).json({ message: 'Unauthorized' });
     }
   });
 

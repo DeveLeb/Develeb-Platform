@@ -4,8 +4,6 @@ import { eq } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
 
-import { User } from '../user/userModel';
-
 export const userRepository = {
   findAllAsync: async () => {
     return await db.select().from(user);
@@ -47,5 +45,8 @@ export const userRepository = {
       .set({ fullName, levelId, categoryId, tags, updatedAt })
       .where(eq(user.id, id))
       .returning();
+  },
+  resetPasswordAsync: async (id: string, password: string) => {
+    return await db.update(user).set({ password }).where(eq(user.id, id)).returning();
   },
 };

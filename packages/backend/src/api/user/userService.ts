@@ -7,7 +7,7 @@ import { userRepository } from './userRepository';
 
 export const userService = {
   // Retrieves all users from the database
-  findAll: async (): Promise<ServiceResponse<User[] | null>> => {
+  findAll: async () => {
     try {
       const users = await userRepository.findAllAsync();
       if (!users) {
@@ -77,7 +77,7 @@ export const userService = {
       }
       await userRepository.deleteUserAsync(id);
       console.log('hrere');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User deleted', user, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'User deleted', null, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -94,6 +94,20 @@ export const userService = {
       return new ServiceResponse<User>(ResponseStatus.Success, 'User updated', updatedUser, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  resetPassword: async (id: string, password: string) => {
+    try {
+      const user = await userRepository.findByIdAsync(id);
+      if (user.length == 0) {
+        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      const returnedUser = await userRepository.resetPasswordAsync(id, password);
+      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
