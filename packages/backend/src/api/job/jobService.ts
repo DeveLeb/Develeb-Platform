@@ -103,6 +103,10 @@ export const jobService = {
     tags: string,
     isApproved: boolean
   ): Promise<ServiceResponse<Job | null>> => {
+    const job = await jobRepository.findJobByIdAsync(id);
+    if (!job) {
+      return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
+    }
     try {
       const updateJob = await jobRepository.updateJobAsync(
         id,
@@ -126,7 +130,6 @@ export const jobService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  // findJobs: async (): Promise<ServiceResponse<Job[] | null>> => {},
   submitJobForApproval: async (
     title: string,
     levelId: number,
@@ -267,7 +270,6 @@ export const jobService = {
   createJobLevel: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
       const existingLevel = await db.select().from(jobLevel).where(eq(jobLevel.title, title)).limit(1);
-
       if (existingLevel.length > 0) {
         return new ServiceResponse(ResponseStatus.Failed, 'Job Level already exists', null, StatusCodes.CONFLICT);
       }
