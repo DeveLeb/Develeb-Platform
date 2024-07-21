@@ -22,7 +22,6 @@ export const resouceService = {
     title?: string;
   }): Promise<ServiceResponse<{ resources: Resource[]; pagination: PaginationInfo } | null>> => {
     try {
-      console.log('findResources params:', params);
       const page = parseInt(params.pageIndex, 10) || 1;
       const limit = parseInt(params.pageSize, 10) || 10;
       const offset = (page - 1) * limit;
@@ -33,9 +32,7 @@ export const resouceService = {
       if (params.title) {
         conditions.push(eq(resource.title, params.title));
       }
-
       let totalCount: number, resources: Resource[];
-
       // eslint-disable-next-line prefer-const
       [totalCount, resources] = await Promise.all([
         resourceRepository.findResourcesCountAsync(conditions),
@@ -43,21 +40,17 @@ export const resouceService = {
       ]);
 
       if (!Array.isArray(resources)) {
-        console.warn('Resources is not an array, converting to array');
         resources = [resources as Resource];
       }
-
       if (resources.length === 0) {
         return new ServiceResponse(ResponseStatus.Failed, 'No resources found', null, StatusCodes.NOT_FOUND);
       }
-
       const paginationInfo: PaginationInfo = {
         currentPage: page,
         pageSize: limit,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / limit),
       };
-
       const successMessage = `Resources fetched successfully. Page ${page} of ${paginationInfo.totalPages}. Total resources: ${totalCount}`;
       const responseData = {
         resources: resources,
