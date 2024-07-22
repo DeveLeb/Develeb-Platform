@@ -7,7 +7,7 @@ export default defineConfig({
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: 'postgresql://postgres:letmein@localhost:5432/Develeb-platform',
+    url: process.env.DATABASE_URL as string,
   },
   verbose: true,
   strict: true,
