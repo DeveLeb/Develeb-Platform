@@ -32,6 +32,7 @@ export const jobRouter: Router = (() => {
     });
     handleServiceResponse(serviceResponse, res);
   });
+
   router.post('/', async (req: Request, res: Response) => {
     let isApproved;
     req.user?.role.toLowerCase() === 'admin' ? (isApproved = true) : (isApproved = false);

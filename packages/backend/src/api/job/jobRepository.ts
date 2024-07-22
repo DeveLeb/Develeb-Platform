@@ -1,6 +1,5 @@
 import { and, count, eq, SQL, sql } from 'drizzle-orm';
 import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
-import { logger } from 'src/server';
 
 import { db } from '../../db';
 import { Job, JobCategory, JobCategorySchema, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
@@ -181,12 +180,8 @@ export const jobRepository = {
   findCategoryByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobCategory).where(eq(jobCategory.id, id)).limit(1);
     if (result.length === 0) return null;
-    try {
-      return JobCategorySchema.parse(result[0]);
-    } catch (error) {
-      logger.error('Job category validation failed:', error);
-      return null;
-    }
+
+    return JobCategorySchema.parse(result[0]) || null;
   },
 
   findCategoriesAsync: async (): Promise<JobCategory[]> => {
@@ -195,13 +190,9 @@ export const jobRepository = {
   },
 
   createJobCategoryAsync: async (title: string): Promise<JobCategory | null> => {
-    try {
-      const createCategory = await db.insert(jobCategory).values({ title }).returning();
+    const createCategory = await db.insert(jobCategory).values({ title }).returning();
 
-      return JobCategorySchema.parse(createCategory[0]);
-    } catch (ex) {
-      return null;
-    }
+    return JobCategorySchema.parse(createCategory[0]) || null;
   },
 
   updateJobCatergoryAsync: async (id: number, title: string): Promise<JobCategory> => {
@@ -217,12 +208,8 @@ export const jobRepository = {
   findLevelByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobLevel).where(eq(jobLevel.id, id)).limit(1);
     if (result.length === 0) return null;
-    try {
-      return JobCategorySchema.parse(result[0]);
-    } catch (error) {
-      logger.error('Job level validation failed:', error);
-      return null;
-    }
+
+    return JobCategorySchema.parse(result[0]) || null;
   },
 
   findLevelsAsync: async (): Promise<JobCategory[] | null> => {

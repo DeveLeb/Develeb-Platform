@@ -5,7 +5,7 @@ import { db } from '../../db';
 import { Resource, ResourceSchema } from './resourceModel';
 
 export const resourceRepository = {
-  findResourcesAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Resource[]> => {
+  findResourcesAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Resource[] | null> => {
     let baseQuery = db.select().from(resource);
     if (conditions.length > 0) {
       baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
@@ -17,7 +17,7 @@ export const resourceRepository = {
     } else {
       parsedResult = [ResourceSchema.parse(result)];
     }
-    return parsedResult;
+    return parsedResult || null;
   },
   findResourcesCountAsync: async (conditions: SQL[]): Promise<number> => {
     const countQuery = db.select({ count: sql<number>`count(*)` }).from(resource);
