@@ -1,4 +1,4 @@
-export interface UpdateJobRequest {
+export interface JobRequest {
   title: string;
   levelId: number;
   categoryId: number;
@@ -10,5 +10,4 @@ export interface UpdateJobRequest {
   isExternal: boolean;
   companyId: string;
   tags: string;
-  isApproved: boolean;
 }
