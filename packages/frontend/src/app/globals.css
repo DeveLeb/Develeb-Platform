@@ -75,4 +75,10 @@
   * {
     @apply border-border;
   }
+.placeholder-custom::placeholder {
+  font-size: 1.125rem;
+  font-weight: 600;    
+  color: #031C30;        
+}
+
 }
