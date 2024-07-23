@@ -7,7 +7,7 @@ import { logger } from 'src/server';
 import { db } from '../../db';
 import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
-import { UpdateJobRequest } from './jobRequests';
+import { JobRequest } from './jobRequests';
 
 export const jobService = {
   findJobs: async (params: {
@@ -89,7 +89,7 @@ export const jobService = {
     }
   },
 
-  updateJob: async (id: string, updateJobrequest: UpdateJobRequest): Promise<ServiceResponse<Job | null>> => {
+  updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
     const job = await jobRepository.findJobByIdAsync(id);
     if (!job) {
       return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
@@ -104,34 +104,11 @@ export const jobService = {
     }
   },
   submitJobForApproval: async (
-    title: string,
-    levelId: number,
-    categoryId: number,
-    typeId: number,
-    location: string,
-    description: string,
-    compensation: string,
-    applicationLink: string,
-    isExternal: boolean,
-    companyId: string,
-    tags: string,
-    isApproved: boolean
+    createJobRequest: JobRequest,
+    isAdmin: boolean
   ): Promise<ServiceResponse<Job | null>> => {
     try {
-      const newJob = await jobRepository.createJobAsync(
-        title,
-        levelId,
-        categoryId,
-        typeId,
-        location,
-        description,
-        compensation,
-        applicationLink,
-        isExternal,
-        companyId,
-        tags,
-        isApproved
-      );
+      const newJob = await jobRepository.createJobAsync(createJobRequest, isAdmin);
       return new ServiceResponse(ResponseStatus.Success, 'Job created', newJob, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating job: ${(ex as Error).message}`;

@@ -27,7 +27,7 @@ export const JobSchema = z.object({
   companyName: z.string().nullable().optional(),
 });
 
-export const updateJobSchema = z.object({
+export const createJobSchema = z.object({
   title: z.string(),
   levelId: z.number(),
   categoryId: z.number(),
@@ -39,7 +39,6 @@ export const updateJobSchema = z.object({
   isExternal: z.boolean(),
   companyId: z.string(),
   tags: z.string(),
-  isApproved: z.boolean(),
 });
 
 export type JobCategory = z.infer<typeof JobCategorySchema>;

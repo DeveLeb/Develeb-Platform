@@ -7,12 +7,12 @@ import { z, ZodError } from 'zod';
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse } from '../../common/utils/httpHandlers';
 import {
+  createJobSchema,
   GetCategorySchema,
   GetJobSchema,
   GetJobViews,
   JobCategorySchema,
   JobSchema,
-  updateJobSchema,
 } from './jobModel';
 import { jobService } from './jobService';
 
@@ -43,36 +43,18 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/', async (req: Request, res: Response) => {
-    let isApproved;
-    req.user?.role.toLowerCase() === 'admin' ? (isApproved = true) : (isApproved = false);
-    const {
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-    } = req.body;
-    const serviceResponse = await jobService.submitJobForApproval(
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-      isApproved
-    );
-    handleServiceResponse(serviceResponse, res);
+    try {
+      let isAdmin;
+      req.user?.role.toLowerCase() === 'admin' ? (isAdmin = true) : (isAdmin = false);
+      const createJobParams = createJobSchema.parse(req.body);
+      const serviceResponse = await jobService.submitJobForApproval(createJobParams, isAdmin);
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
+        return handleServiceResponse(err, res);
+      }
+    }
   });
   jobRegistry.registerPath({
     method: 'post',
@@ -235,12 +217,12 @@ export const jobRouter: Router = (() => {
   });
 
   router.put('/:id', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     try {
       const { id } = req.params;
-      const updateJobParams = updateJobSchema.parse(req.body);
+      const updateJobParams = createJobSchema.parse(req.body);
       const serviceResponse = await jobService.updateJob(id, updateJobParams);
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
