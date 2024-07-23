@@ -222,7 +222,16 @@ export const jobService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-
+  findCategories: async (): Promise<ServiceResponse<JobCategory[] | null>> => {
+    try {
+      const categories = await jobRepository.findCategoriesAsync();
+      return new ServiceResponse(ResponseStatus.Success, 'Categories found', categories, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding categories: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
   findJobCategory: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
     try {
       const category = await jobRepository.findCategoryByIdAsync(id);
@@ -303,7 +312,7 @@ export const jobService = {
       if (!level) {
         return new ServiceResponse(ResponseStatus.Failed, 'Job level not found', null, StatusCodes.NOT_FOUND);
       }
-      const updatedJobLevel = await jobRepository.updateJobCatergoryAsync(id, title);
+      const updatedJobLevel = await jobRepository.updateJobLevelAsync(id, title);
       return new ServiceResponse(ResponseStatus.Success, 'Job level updated', updatedJobLevel, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job level with id ${id}:, ${(ex as Error).message}`;
@@ -326,16 +335,7 @@ export const jobService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  findCategories: async (): Promise<ServiceResponse<JobCategory[] | null>> => {
-    try {
-      const categories = await jobRepository.findCategoriesAsync();
-      return new ServiceResponse(ResponseStatus.Success, 'Categories found', categories, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error finding categories: ${(ex as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
+
   findJobTotalViews: async (
     id: string
   ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
