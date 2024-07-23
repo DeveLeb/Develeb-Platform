@@ -3,6 +3,7 @@ import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/
 
 import { db } from '../../db';
 import { Job, JobCategory, JobCategorySchema, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
+import { UpdateJobRequest } from './jobRequests';
 
 export const jobRepository = {
   findJobsAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Job[]> => {
@@ -81,41 +82,8 @@ export const jobRepository = {
     return JobSchema.parse(result[0]) || null;
   },
 
-  updateJobAsync: async (
-    id: string,
-    title: string,
-    levelId: number,
-    categoryId: number,
-    typeId: number,
-    location: string,
-    description: string,
-    compensation: string,
-    applicationLink: string,
-    isExternal: boolean,
-    companyId: string,
-    tags: string,
-    isApproved: boolean
-  ): Promise<Job> => {
-    const updateJob = await db
-      .update(job)
-      .set({
-        title,
-        levelId,
-        categoryId,
-        typeId,
-        location,
-        description,
-        compensation,
-        applicationLink,
-        isExternal,
-        companyId,
-        updatedAt: new Date(),
-        postedAt: new Date(),
-        tags,
-        isApproved,
-      })
-      .where(eq(job.id, id))
-      .returning();
+  updateJobAsync: async (id: string, updateJobRequest: UpdateJobRequest): Promise<Job> => {
+    const updateJob = await db.update(job).set(updateJobRequest).where(eq(job.id, id)).returning();
 
     return JobSchema.parse(updateJob[0]);
   },

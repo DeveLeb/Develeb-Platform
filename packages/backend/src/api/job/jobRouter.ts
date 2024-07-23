@@ -1,10 +1,19 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { StatusCodes } from 'http-status-codes';
+import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
+import { z, ZodError } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse } from '../../common/utils/httpHandlers';
-import { GetCategorySchema, GetJobSchema, GetJobViews, JobCategorySchema, JobSchema } from './jobModel';
+import {
+  GetCategorySchema,
+  GetJobSchema,
+  GetJobViews,
+  JobCategorySchema,
+  JobSchema,
+  updateJobSchema,
+} from './jobModel';
 import { jobService } from './jobService';
 
 export const jobRegistry = new OpenAPIRegistry();
@@ -229,37 +238,17 @@ export const jobRouter: Router = (() => {
     if (req.user?.role.toLowerCase() !== 'admin') {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    const { id } = req.params;
-    const {
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-      isApproved,
-    } = req.body;
-    const serviceResponse = await jobService.updateJob(
-      id,
-      title,
-      levelId,
-      categoryId,
-      typeId,
-      location,
-      description,
-      compensation,
-      applicationLink,
-      isExternal,
-      companyId,
-      tags,
-      isApproved
-    );
-    handleServiceResponse(serviceResponse, res);
+    try {
+      const { id } = req.params;
+      const updateJobParams = updateJobSchema.parse(req.body);
+      const serviceResponse = await jobService.updateJob(id, updateJobParams);
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
+        return handleServiceResponse(err, res);
+      }
+    }
   });
   jobRegistry.registerPath({
     method: 'post',
