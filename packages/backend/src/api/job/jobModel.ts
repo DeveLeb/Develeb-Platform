@@ -4,24 +4,6 @@ import { z } from 'zod';
 
 extendZodWithOpenApi(z);
 
-// export const JobSchema = z.object({
-//   id: z.string().uuid(),
-//   title: z.string(),
-//   levelId: z.number(),
-//   categoryId: z.number(),
-//   typeId: z.number(),
-//   location: z.string(),
-//   description: z.string(),
-//   compensation: z.string(),
-//   applicationLink: z.string(), // Removed .url() to allow any string
-//   isExternal: z.boolean(),
-//   companyId: z.string().nullable(),
-//   createdAt: z.string(),
-//   updatedAt: z.string(),
-//   postedAt: z.string().datetime().nullable(),
-//   tags: z.string(),
-//   isApproved: z.boolean(),
-// });
 export type Job = z.infer<typeof JobSchema>;
 export const JobSchema = z.object({
   id: z.string().uuid(),
@@ -44,9 +26,22 @@ export const JobSchema = z.object({
   levelTitle: z.string().optional(),
   companyName: z.string().nullable().optional(),
 });
-//////////////////////////
 
-//////////////////////////////////////
+export const updateJobSchema = z.object({
+  title: z.string(),
+  levelId: z.number(),
+  categoryId: z.number(),
+  typeId: z.number(),
+  location: z.string(),
+  description: z.string(),
+  compensation: z.string(),
+  applicationLink: z.string(),
+  isExternal: z.boolean(),
+  companyId: z.string(),
+  tags: z.string(),
+  isApproved: z.boolean(),
+});
+
 export type JobCategory = z.infer<typeof JobCategorySchema>;
 export const JobCategorySchema = z.object({
   id: z.number().optional(),

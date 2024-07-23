@@ -7,6 +7,7 @@ import { logger } from 'src/server';
 import { db } from '../../db';
 import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
+import { UpdateJobRequest } from './jobRequests';
 
 export const jobService = {
   findJobs: async (params: {
@@ -88,41 +89,13 @@ export const jobService = {
     }
   },
 
-  updateJob: async (
-    id: string,
-    title: string,
-    levelId: number,
-    categoryId: number,
-    typeId: number,
-    location: string,
-    description: string,
-    compensation: string,
-    applicationLink: string,
-    isExternal: boolean,
-    companyId: string,
-    tags: string,
-    isApproved: boolean
-  ): Promise<ServiceResponse<Job | null>> => {
+  updateJob: async (id: string, updateJobrequest: UpdateJobRequest): Promise<ServiceResponse<Job | null>> => {
     const job = await jobRepository.findJobByIdAsync(id);
     if (!job) {
       return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
     }
     try {
-      const updateJob = await jobRepository.updateJobAsync(
-        id,
-        title,
-        levelId,
-        categoryId,
-        typeId,
-        location,
-        description,
-        compensation,
-        applicationLink,
-        isExternal,
-        companyId,
-        tags,
-        isApproved
-      );
+      const updateJob = await jobRepository.updateJobAsync(id, updateJobrequest);
       return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
