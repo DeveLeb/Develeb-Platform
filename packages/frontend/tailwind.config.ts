@@ -14,6 +14,7 @@ const config = {
     },
     extend: {
       screens: {
+        sm: '640px',
         ml: '820px',
       },
       colors: {
@@ -52,7 +53,8 @@ const config = {
         },
         main: {
           green: '#01C38D',
-          darkGreen:'#008E67'
+          darkGreen:'#008E67',
+          darkBlue:'#031C30'
         },
       },
       borderRadius: {
