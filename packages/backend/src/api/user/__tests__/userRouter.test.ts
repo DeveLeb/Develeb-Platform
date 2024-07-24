@@ -18,9 +18,7 @@ describe('User API Endpoints', () => {
       expect(responseBody.success).toBeTruthy();
       expect(responseBody.message).toContain('Users found');
       expect(responseBody.responseObject.length).toEqual(users.length);
-      responseBody.responseObject.forEach((user, index) =>
-        compareUsers(users[index] as User, user),
-      );
+      responseBody.responseObject.forEach((user, index) => compareUsers(users[index] as User, user));
     });
   });
 
@@ -38,8 +36,7 @@ describe('User API Endpoints', () => {
       expect(response.statusCode).toEqual(StatusCodes.OK);
       expect(responseBody.success).toBeTruthy();
       expect(responseBody.message).toContain('User found');
-      if (!expectedUser)
-        throw new Error('Invalid test data: expectedUser is undefined');
+      if (!expectedUser) throw new Error('Invalid test data: expectedUser is undefined');
       compareUsers(expectedUser, responseBody.responseObject);
     });
 

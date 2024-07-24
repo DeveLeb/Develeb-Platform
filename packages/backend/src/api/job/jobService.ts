@@ -1,428 +1,327 @@
 import { eq } from 'drizzle-orm';
-import { Request, Response } from 'express';
-import { job, jobCategory, jobLevel } from 'src/drizzle/schema';
+import { StatusCodes } from 'http-status-codes';
+import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
+import { job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
 import { logger } from 'src/server';
-import { z, ZodError } from 'zod';
 
-import { db } from '../../drizzle/db';
-import { createJobSchema, JobCategorySchema, JobSchema } from './jobModel';
+import { db } from '../../db';
+import { Job, JobCategory, JobRequest, JobSchema, SavedJob } from './jobModel';
+import { jobRepository } from './jobRepository';
 
-export const getJobById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+export const jobService = {
+  findJobs: async (params: {
+    pageIndex: string;
+    pageSize: string;
+    categoryId?: string;
+    levelId?: string;
+    companyName?: string;
+  }): Promise<ServiceResponse<Job[] | null>> => {
+    try {
+      const page = parseInt(params.pageIndex, 10) || 1;
+      const limit = parseInt(params.pageSize, 10) || 10;
+      const offset = (page - 1) * limit;
 
-    if (!id) {
-      return res.status(500).json({ message: 'Job ID is required' });
-    }
+      const queryParams: Record<string, string | undefined> = {};
+      if (params.categoryId !== undefined) queryParams.categoryId = params.categoryId;
+      if (params.levelId !== undefined) queryParams.levelId = params.levelId;
+      if (params.companyName !== undefined) queryParams.companyName = params.companyName;
 
-    const foundJob = await db.query.job.findFirst({
-      where: eq(job.id, id),
-    });
-
-    if (!foundJob) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    return res.status(200).json(foundJob);
-  } catch (error) {
-    logger.error('Error fetching job', error);
-    return res.status(500).json({
-      message: 'Internal Server Error',
-      error: (error as Error).message,
-    });
-  }
-};
-
-export const deleteJobById = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(500).json({ message: 'Job ID is required' });
-    }
-
-    const result = await db.delete(job).where(eq(job.id, id));
-    if (result === undefined || result.length === 0) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-    res.status(204).json(result);
-  } catch (error) {
-    logger.error('Error deleting job', error);
-    return res.status(500).json({
-      message: 'Internal Server Error',
-      error: (error as Error).message,
-    });
-  }
-};
-
-export const updateJob = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  try {
-    const { jobId } = req.params;
-
-    if (!z.string().uuid().safeParse(jobId).success) {
-      return res.status(400).json({ error: 'Invalid job ID format' });
-    }
-
-    const jobData = JobSchema.parse(req.body);
-
-    const updatedJob = await db
-      .update(job)
-      .set({
-        ...jobData,
-        updatedAt: new Date(),
-      })
-      .where(eq(job.id, jobId))
-      .returning();
-
-    if (updatedJob.length === 0) {
-      return res.status(404).json({ error: 'Job not found' });
-    }
-
-    res.status(200).json(updatedJob[0]);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(422).json({ error: 'Validation exception', msg: error.errors });
-    } else {
-      logger.error('Error updating job:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-};
-
-export const patchJob = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  try {
-    const jobId = req.params.jobId;
-
-    if (!z.string().uuid().safeParse(jobId).success) {
-      return res.status(400).json({ error: 'Invalid job ID format' });
-    }
-
-    const jobPatchData = JobSchema.parse(req.body);
-
-    const existingJob = await db.select().from(job).where(eq(job.id, jobId));
-
-    if (existingJob.length === 0) {
-      return res.status(404).json({ error: 'Job not found' });
-    }
-
-    const updatedJobData = { ...jobPatchData, updatedAt: new Date() };
-
-    const updatedJob = await db.update(job).set(updatedJobData).where(eq(job.id, jobId)).returning();
-
-    res.status(200).json(updatedJob[0]);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(422).json({ error: 'Validation exception', msg: error.errors });
-    } else {
-      console.error('Error updating job:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-};
-
-// export const getAllJobs = async (req: Request, res: Response) => {
-//   try {
-//     const { categoryId, levelId, companyName, popular } = req.query;
-
-//     let query: PgSelect = db.select().from(job);
-//     const conditions: SQL[] = [];
-
-//     if (categoryId) {
-//       conditions.push(eq(job.categoryId, categoryId as string));
-//     }
-
-//     if (levelId) {
-//       conditions.push(eq(job.levelId, levelId as string));
-//     }
-
-//     if (companyName) {
-//       conditions.push(eq(job.companyId,company.id));
-//     }
-
-//     if (conditions.length > 0) {
-//       query = query.where(and(...conditions));
-//     }
-
-//     const jobResults = await query;
-
-//     if (jobResults.length === 0) {
-//       return res.status(404).json({ message: 'No jobs found' });
-//     }
-
-//     res.status(200).json(jobResults);
-//   } catch (error) {}
-// };
-
-export const submitJobForApproval = async (req: Request, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    let isAdmin;
-    req.user.role.toLowerCase() === 'admin' ? (isAdmin = true) : (isAdmin = false);
-    const jobData = createJobSchema.safeParse(req.body);
-
-    if (!jobData.success) {
-      return res.status(422).json({
-        message: 'Validation error',
-        errors: jobData.error.errors,
-      });
-    }
-    const newJob = await db
-      .insert(job)
-      .values({
-        title: jobData.data.title,
-        levelId: jobData.data.level_id,
-        categoryId: jobData.data.category_id,
-        typeId: jobData.data.type_id,
-        location: jobData.data.location,
-        description: jobData.data.description,
-        compensation: jobData.data.compensation,
-        applicationLink: jobData.data.application_link,
-        isExternal: jobData.data.is_external,
-        companyId: jobData.data.company_id,
-        tags: jobData.data.tags,
-        isApproved: isAdmin,
-      })
-      .returning();
-
-    res.status(202).json({
-      message: 'Job submitted for approval',
-      jobId: newJob[0].id,
-    });
-  } catch (error) {
-    logger.error('Error submitting job for approval:', error);
-    res.status(400).json({ message: 'Invalid input' });
-  }
-};
-
-export const approveJob = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  const { jobId } = req.params;
-
-  try {
-    if (!jobId) {
-      return res.status(400).json({ message: 'Invalid job ID' });
-    }
-
-    const result = await db.update(job).set({ isApproved: true }).where(eq(job.id, jobId)).returning({ id: job.id });
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-
-    res.status(200).json({
-      message: 'Job approved successfully',
-      jobId: result[0].id,
-    });
-  } catch (error) {
-    logger.error('Error approving job:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-export const rejectJob = async (req: Request, res: Response) => {
-  if (!req.user || req.user.role.toLocaleLowerCase() != 'admin') {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  try {
-    const { jobId } = req.params;
-    if (!jobId) {
-      return res.status(400).json({ message: 'Invalid job ID' });
-    }
-    const rejectedJob = await db.delete(job).where(eq(job.id, jobId)).returning();
-    if (rejectedJob.length === 0) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-    res.status(200).json({ message: 'Job rejected successfully', jobId: rejectedJob[0] });
-  } catch (error) {
-    logger.error('Error rejecting job:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-export const createJobCategory = async (req: Request, res: Response) => {
-  const { title } = JobCategorySchema.parse(req.body);
-  try {
-    const newCategory = await db
-      .insert(jobCategory)
-      .values({ title })
-      .returning()
-      .catch((error) => {
-        throw new error('Job category already exist');
+      const result = await jobRepository.findJobsAsync({
+        limit,
+        offset,
+        ...queryParams,
       });
 
-    res.status(201).json({
-      message: 'Job category created successfully',
-      category: newCategory[0],
-    });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
-    }
-    if ((error as Error).message === 'Job category already exists') {
-      return res.status(409).json({ message: (error as Error).message });
-    }
-    logger.error('Error creating job category:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+      if (result.jobs.length === 0) {
+        return new ServiceResponse(ResponseStatus.Success, 'No jobs found', null, StatusCodes.NOT_FOUND);
+      }
 
-export const getCategoryById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const categoryID = parseInt(id, 10);
-    const categoryFound = await db.select().from(jobCategory).where(eq(jobCategory.id, categoryID));
-    if (categoryFound.length === 0) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-    res.status(200).json({ category: categoryFound[0] });
-  } catch (error) {
-    logger.error('Error fetching job category', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+      const paginationInfo = {
+        currentPage: page,
+        pageSize: limit,
+        totalCount: result.totalCount,
+        totalPages: Math.ceil(result.totalCount / limit),
+      };
 
-export const upadteJobCategory = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const categoryID = parseInt(id, 10);
-    const { title } = JobCategorySchema.parse(req.body);
-    const updatedCategory = await db
-      .update(jobCategory)
-      .set({ title })
-      .where(eq(jobCategory.id, categoryID))
-      .returning();
-    if (updatedCategory.length === 0) {
-      return res.status(404).json({ message: 'Job category not found' });
-    }
-    res.status(200).json({
-      message: 'Job category updated successfully',
-      category: updatedCategory[0],
-    });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
-    }
-    if (error instanceof Error && error.message.includes('unique constraint')) {
-      return res.status(409).json({ message: 'A job category with this title already exists' });
-    }
-    logger.error('Error updating job category:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+      const appliedFilters = Object.entries(queryParams)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
 
-export const deleteJobCategoryById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const categoryID = parseInt(id, 10);
-    const deletedCategory = await db.delete(jobCategory).where(eq(jobCategory.id, categoryID)).returning();
-    if (deletedCategory.length === 0) {
-      return res.status(404).json({ error: 'Job category not found' });
-    }
-    return res.status(200).json({
-      message: 'Job category deleted successfully',
-      category: deletedCategory[0],
-    });
-  } catch (error) {
-    console.error('Error deleting job category:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
+      const successMessage = `Jobs fetched successfully. Page ${page} of ${paginationInfo.totalPages}. Total jobs: ${result.totalCount}. Applied filters: ${appliedFilters || 'None'}`;
 
-export const createJobLevel = async (req: Request, res: Response) => {
-  try {
-    const { title } = JobCategorySchema.parse(req.body);
-    const newLevel = await db
-      .insert(jobLevel)
-      .values({ title })
-      .returning()
-      .catch((error) => {
-        throw error('Job category already exist');
-      });
+      return new ServiceResponse(ResponseStatus.Success, successMessage, result.jobs, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error fetching jobs`;
+      logger.error(errorMessage, ex);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 
-    res.status(201).json({
-      message: 'Job category created successfully',
-      category: newLevel[0],
-    });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+  findJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
+    try {
+      const job = await jobRepository.findJobByIdAsync(id);
+      if (!job) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      return new ServiceResponse(ResponseStatus.Success, 'Job found', job, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding job with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    if ((error as Error).message === 'Job category already exists') {
-      return res.status(409).json({ message: (error as Error).message });
-    }
-    logger.error('Error creating job category:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+  },
 
-export const getJobLevelById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const levelID = parseInt(id, 10);
-    const levelFound = await db.select().from(jobLevel).where(eq(jobLevel.id, levelID));
-    if (levelFound.length === 0) {
-      return res.status(404).json({ message: 'Category not found' });
+  deleteJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
+    try {
+      const findJob = await jobRepository.findJobByIdAsync(id);
+      if (!findJob) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      const deleteJob = await jobRepository.deleteJobByIdAsync(id);
+      return new ServiceResponse(ResponseStatus.Success, 'Job deleted', deleteJob, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error deleting job with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    res.status(200).json({ category: levelFound[0] });
-  } catch (error) {
-    logger.error('Error fetching job category', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+  },
 
-export const updateJobLevelById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const levelID = parseInt(id, 10);
-    const { title } = JobCategorySchema.parse(req.body);
-    const updatedLevel = await db.update(jobLevel).set({ title }).where(eq(jobLevel.id, levelID)).returning();
-    if (updatedLevel.length === 0) {
-      return res.status(404).json({ message: 'Job level not found' });
+  updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
+    console.log('Updating job with id:', id);
+    const job = await jobRepository.findJobByIdAsync(id);
+    console.log('Job found:', job);
+    if (!job) {
+      console.log('Job not found');
+      return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
     }
-    res.status(200).json({
-      message: 'Job level updated successfully',
-      level: updatedLevel[0],
-    });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+    try {
+      console.log('Updating job with id:', id, ', updating fields:', updateJobrequest);
+      const updateJob = await jobRepository.updateJobAsync(id, updateJobrequest);
+      console.log('Job updated successfully:', updateJob);
+      return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
+      console.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    if (error instanceof Error && error.message.includes('unique constraint')) {
-      return res.status(409).json({ message: 'A job level with this title already exists' });
+  },
+  submitJobForApproval: async (
+    createJobRequest: JobRequest,
+    isAdmin: boolean
+  ): Promise<ServiceResponse<Job | null>> => {
+    try {
+      const newJob = await jobRepository.createJobAsync(createJobRequest, isAdmin);
+      return new ServiceResponse(ResponseStatus.Success, 'Job created', newJob, StatusCodes.CREATED);
+    } catch (ex) {
+      const errorMessage = `Error creating job: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    logger.error('Error updating job level:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
+  },
 
-export const deleteJobLevelById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const levelID = parseInt(id, 10);
-    const deletedLevel = await db.delete(jobLevel).where(eq(jobLevel.id, levelID)).returning();
-    if (deletedLevel.length === 0) {
-      return res.status(404).json({ error: 'Job level not found' });
+  approveJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
+    try {
+      const findJob = await jobRepository.findJobByIdAsync(id);
+      if (!findJob) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+
+      if (findJob.isApproved) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job already approved', null, StatusCodes.CONFLICT);
+      }
+      const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'Job approved',
+        JobSchema.parse(approvedJob[0]),
+        StatusCodes.OK
+      );
+    } catch (ex) {
+      const errorMessage = `Error approving job with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
-    return res.status(200).json({
-      message: 'Job level deleted successfully',
-      level: deletedLevel[0],
-    });
-  } catch (error) {
-    console.error('Error deleting job level:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+  },
+
+  rejectJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
+    try {
+      const findJob = await jobRepository.findJobByIdAsync(id);
+      if (!findJob) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      const rejectedJob = await jobRepository.deleteJobByIdAsync(id);
+      return new ServiceResponse(ResponseStatus.Success, 'Job rejected', JobSchema.parse(rejectedJob), StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error rejecting job with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  createJobCategory: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const existingCategory = await db.select().from(jobCategory).where(eq(jobCategory.title, title)).limit(1);
+
+      if (existingCategory.length > 0) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job category already exists', null, StatusCodes.CONFLICT);
+      }
+
+      const newCategory = await jobRepository.createJobCategoryAsync(title);
+      return new ServiceResponse(ResponseStatus.Success, 'category created!', newCategory, StatusCodes.CREATED);
+    } catch (ex) {
+      const errorMessage = `Error creating job category: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  findCategories: async (): Promise<ServiceResponse<JobCategory[] | null>> => {
+    try {
+      const categories = await jobRepository.findCategoriesAsync();
+      return new ServiceResponse(ResponseStatus.Success, 'Categories found', categories, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding categories: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  findJobCategory: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const category = await jobRepository.findCategoryByIdAsync(id);
+      if (!category) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
+      }
+      return new ServiceResponse(ResponseStatus.Success, 'Job category found', category, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding job category with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  updateJobCategory: async (id: number, title: string): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const category = await jobRepository.findCategoryByIdAsync(id);
+      if (!category) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
+      }
+      const updatedJobCategory = await jobRepository.updateJobCatergoryAsync(id, title);
+      return new ServiceResponse(ResponseStatus.Success, 'Job category updated', updatedJobCategory, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error updating job category with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  deleteJobCategory: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const category = await jobRepository.findCategoryByIdAsync(id);
+      if (!category) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
+      }
+      const deletedCategory = await jobRepository.deleteJobCategoryAsync(id);
+      return new ServiceResponse(ResponseStatus.Success, 'Job category deleted', deletedCategory, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error deleting job category with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  createJobLevel: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const existingLevel = await db.select().from(jobLevel).where(eq(jobLevel.title, title)).limit(1);
+      if (existingLevel.length > 0) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job Level already exists', null, StatusCodes.CONFLICT);
+      }
+
+      const newLevel = await jobRepository.createJobLevelAsync(title);
+      return new ServiceResponse(ResponseStatus.Success, 'Level created!', newLevel, StatusCodes.CREATED);
+    } catch (ex) {
+      const errorMessage = `Error creating job Level: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  findJoblevel: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const level = await jobRepository.findLevelByIdAsync(id);
+      if (!level) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
+      }
+      return new ServiceResponse(ResponseStatus.Success, 'Job level found', level, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding job level with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  updateJobLevel: async (id: number, title: string): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const level = await jobRepository.findLevelByIdAsync(id);
+      if (!level) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
+      }
+      const updatedJobLevel = await jobRepository.updateJobLevelAsync(id, title);
+      return new ServiceResponse(ResponseStatus.Success, 'Job level updated', updatedJobLevel, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error updating job level with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  deleteJobLevel: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
+    try {
+      const level = await jobRepository.findLevelByIdAsync(id);
+      if (!level) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
+      }
+      const deletedLevel = await jobRepository.deleteJobLevelAsync(id);
+      return new ServiceResponse(ResponseStatus.Success, 'Job level deleted', deletedLevel, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error deleting job level with id ${id}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  findJobTotalViews: async (
+    id: string
+  ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
+    try {
+      const job = await jobRepository.findJobByIdAsync(id);
+      if (!job) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      const totalViews = await jobRepository.findJobTotalViewsAsync(id);
+      const data = { job_id: id, totalViews };
+      return new ServiceResponse(ResponseStatus.Success, 'Total views found', data, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding total views: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  saveJob: async (jobId: string, userId: string): Promise<ServiceResponse<SavedJob | null>> => {
+    try {
+      const findJob = await jobRepository.findJobByIdAsync(jobId);
+      if (!findJob) {
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      const searchJob = await db.select().from(jobSaved).where(eq(jobSaved.jobId, jobId));
+      if (searchJob.length > 0) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job already saved', null, StatusCodes.CONFLICT);
+      }
+
+      const savedJob = await jobRepository.saveJobAsync(jobId, userId);
+      return new ServiceResponse(ResponseStatus.Success, 'Job saved', savedJob, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error saving job with id ${jobId}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 };

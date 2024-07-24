@@ -64,9 +64,7 @@ describe('userService', () => {
 
     it('handles errors for findAllAsync', async () => {
       // Arrange
-      (userRepository.findAllAsync as Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (userRepository.findAllAsync as Mock).mockRejectedValue(new Error('Database error'));
 
       // Act
       const result = await userService.findAll();
@@ -99,9 +97,7 @@ describe('userService', () => {
     it('handles errors for findByIdAsync', async () => {
       // Arrange
       const testId = 1;
-      (userRepository.findByIdAsync as Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (userRepository.findByIdAsync as Mock).mockRejectedValue(new Error('Database error'));
 
       // Act
       const result = await userService.findById(testId);

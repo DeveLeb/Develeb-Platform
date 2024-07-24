@@ -125,7 +125,7 @@ export const jobViews = pgTable(
       .notNull()
       .references(() => job.id),
     userId: uuid('user_id').references(() => user.id),
-    sessionId: integer('session_id').references(() => session.id),
+    sessionId: uuid('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
   (table) => ({
@@ -200,7 +200,7 @@ export const resourceViews = pgTable(
     id: serial('id').primaryKey(),
     userId: uuid('user_id').references(() => user.id),
     resourceId: uuid('resource_id').references(() => resource.id),
-    sessionId: integer('session_id').references(() => session.id),
+    sessionId: uuid('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
   (table) => ({

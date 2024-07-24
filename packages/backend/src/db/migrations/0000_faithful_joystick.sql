@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS "job_views" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"job_id" uuid NOT NULL,
 	"user_id" uuid,
-	"session_id" integer,
+	"session_id" uuid,
 	"last_viewed_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "resource_views" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" uuid,
 	"resource_id" uuid,
-	"session_id" integer,
+	"session_id" uuid,
 	"last_viewed_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint

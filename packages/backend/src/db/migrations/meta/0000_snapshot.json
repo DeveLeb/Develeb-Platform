@@ -1,5 +1,5 @@
 {
-  "id": "2a7c62e1-ef72-4d65-98a0-6fe4756129e6",
+  "id": "b2365dac-0a82-4621-884f-8981e85a87de",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1002,7 +1002,7 @@
         },
         "session_id": {
           "name": "session_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1289,7 +1289,7 @@
         },
         "session_id": {
           "name": "session_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
