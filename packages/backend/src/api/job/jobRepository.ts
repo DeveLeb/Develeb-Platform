@@ -1,37 +1,59 @@
-import { and, count, eq, SQL, sql } from 'drizzle-orm';
+import { and, count, eq, like, SQL, sql } from 'drizzle-orm';
 import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
 
 import { db } from '../../db';
 import { Job, JobCategory, JobCategorySchema, JobRequest, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
-//import { JobRequest } from './jobRequests';
 
 export const jobRepository = {
-  findJobsAsync: async (conditions: SQL[], limit: number, offset: number): Promise<Job[]> => {
-    let baseQuery = db
+  findJobsAsync: async (params: {
+    limit: number;
+    offset: number;
+    categoryId?: string;
+    levelId?: string;
+    companyName?: string;
+  }): Promise<{ jobs: Job[]; totalCount: number }> => {
+    const conditions: SQL[] = [eq(job.isApproved, true)];
+
+    if (params.categoryId !== undefined) {
+      conditions.push(eq(job.categoryId, parseInt(params.categoryId, 10)));
+    }
+
+    if (params.levelId !== undefined) {
+      conditions.push(eq(job.levelId, parseInt(params.levelId, 10)));
+    }
+
+    if (params.companyName !== undefined) {
+      conditions.push(like(company.name, `%${params.companyName}%`));
+    }
+
+    const baseQuery = db
       .select()
       .from(job)
       .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
       .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
-      .leftJoin(company, eq(job.companyId, company.id));
+      .leftJoin(company, eq(job.companyId, company.id))
+      .where(and(...conditions));
 
-    if (conditions.length > 0) {
-      baseQuery = baseQuery.where(and(...conditions)) as typeof baseQuery;
-    }
-    const result = await baseQuery.limit(limit).offset(offset).execute();
-    const parsedJobs = result.map((row) => {
+    const [totalCountResult, result] = await Promise.all([
+      db.select({ count: sql`count(*)` }).from(baseQuery.as('subquery')),
+      baseQuery.limit(params.limit).offset(params.offset).execute(),
+    ]);
+
+    const parsedJobs = result.map((row: any) => {
       const jobData = {
         ...row.job,
         categoryTitle: row.job_category?.title,
         levelTitle: row.job_level?.title,
         companyName: row.company?.name,
       };
-      const parsed = JobSchema.parse(jobData);
-      return parsed;
+      return JobSchema.parse(jobData);
     });
 
-    return parsedJobs;
+    return {
+      jobs: parsedJobs,
+      totalCount: Number(totalCountResult[0].count),
+    };
   },
-
   findJobsCountAsync: async (conditions: SQL[]): Promise<number> => {
     const countQuery = db
       .select({ count: sql<number>`count(*)` })
