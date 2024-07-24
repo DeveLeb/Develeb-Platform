@@ -87,21 +87,16 @@ export const jobService = {
   },
 
   updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
-    console.log('Updating job with id:', id);
     const job = await jobRepository.findJobByIdAsync(id);
-    console.log('Job found:', job);
     if (!job) {
-      console.log('Job not found');
       return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
     }
     try {
-      console.log('Updating job with id:', id, ', updating fields:', updateJobrequest);
       const updateJob = await jobRepository.updateJobAsync(id, updateJobrequest);
-      console.log('Job updated successfully:', updateJob);
+
       return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
-      console.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
