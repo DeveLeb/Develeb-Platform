@@ -5,9 +5,9 @@ import { company, job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
-import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
+import { Job, JobCategory, JobRequest, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
-import { JobRequest } from './jobRequests';
+//import { JobRequest } from './jobRequests';
 
 export const jobService = {
   findJobs: async (params: {
@@ -90,16 +90,21 @@ export const jobService = {
   },
 
   updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
+    console.log('Updating job with id:', id);
     const job = await jobRepository.findJobByIdAsync(id);
+    console.log('Job found:', job);
     if (!job) {
+      console.log('Job not found');
       return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
     }
     try {
+      console.log('Updating job with id:', id, ', updating fields:', updateJobrequest);
       const updateJob = await jobRepository.updateJobAsync(id, updateJobrequest);
+      console.log('Job updated successfully:', updateJob);
       return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
+      console.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
