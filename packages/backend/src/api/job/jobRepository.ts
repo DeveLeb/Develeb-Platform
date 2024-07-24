@@ -98,8 +98,6 @@ export const jobRepository = {
   },
 
   updateJobAsync: async (id: string, updateJobRequest: JobRequest): Promise<Job> => {
-    console.log('update');
-
     const updateJob = await db
       .update(job)
       .set({
