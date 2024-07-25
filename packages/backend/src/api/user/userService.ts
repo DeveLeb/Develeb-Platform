@@ -1,9 +1,10 @@
 import { StatusCodes } from 'http-status-codes';
-
+import bcrypt from 'bcrypt';
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
+import { createUserRequest, CreateUserRequest } from './userRequest/createUserRequest';
 
 export const userService = {
   // Retrieves all users from the database
@@ -37,29 +38,19 @@ export const userService = {
   },
 
   // Creates a new user
-  createUser: async (
-    email: string,
-    username: string,
-    password: string,
-    full_name: string,
-    phone_number: string,
-    level_id: number,
-    category_id: number
-  ) => {
+  createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
-      const user = await userRepository.findByEmailAsync(email);
-      if (user.length !== 0) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.CONFLICT);
+      const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
+      if (userEmail) {
+        return new ServiceResponse(ResponseStatus.Success, 'Email already in use.', null, StatusCodes.CONFLICT);
       }
-      const newUser = await userRepository.createUserAsync(
-        email,
-        username,
-        password,
-        full_name,
-        phone_number,
-        level_id,
-        category_id
-      );
+      const userUsername = await userRepository.findByUsernameAsync(createUserRequest.username);
+      if (userUsername) {
+        return new ServiceResponse(ResponseStatus.Success, 'Username already in use.', null, StatusCodes.CONFLICT);
+      }
+      const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
+      createUserRequest.password = hashPassword;
+      const newUser = await userRepository.createUserAsync(createUserRequest);
       return new ServiceResponse<User>(ResponseStatus.Success, 'User created', newUser, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating user: ${(ex as Error).message}`;

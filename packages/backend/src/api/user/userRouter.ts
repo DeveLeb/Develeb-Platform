@@ -13,6 +13,7 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
+import {createUserRequest} from  './userRequest/createUserRequest';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -48,17 +49,9 @@ export const userRouter: Router = (() => {
   });
 
   router.post('/', async (req: Request, res: Response) => {
-    const { email, username, password, full_name, phone_number, level_id, category_id } = req.body;
-    const hashPassword = await bcrypt.hash(password, 1);
-    const serviceResponse = await userService.createUser(
-      email,
-      username,
-      hashPassword,
-      full_name,
-      phone_number,
-      level_id,
-      category_id
-    );
+    const RequestObject = createUserRequest.parse(req.body);
+    //const hashPassword = await bcrypt.hash(createUserRequest.password, 1);
+    const serviceResponse = await userService.createUser(RequestObject);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -98,7 +91,9 @@ export const userRouter: Router = (() => {
 
         const token = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_SECRET, { expiresIn: '1h' });
 
-        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, {
+          expiresIn: '7d',
+        });
         return res.json({ message: 'Login successful', token, refreshToken });
       });
     })(req, res, next);
