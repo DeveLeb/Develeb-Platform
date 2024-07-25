@@ -1,10 +1,11 @@
-import { StatusCodes } from 'http-status-codes';
 import bcrypt from 'bcrypt';
+import { StatusCodes } from 'http-status-codes';
+
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
-import { createUserRequest, CreateUserRequest } from './userRequest/createUserRequest';
+import { CreateUserRequest,createUserRequest } from './userRequest/createUserRequest';
 
 export const userService = {
   // Retrieves all users from the database
@@ -40,17 +41,21 @@ export const userService = {
   // Creates a new user
   createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
+      logger.info('Checking for conflicts...');
       const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
       if (userEmail) {
         return new ServiceResponse(ResponseStatus.Success, 'Email already in use.', null, StatusCodes.CONFLICT);
       }
+      logger.info('No email conflicts found. Checking for username...');
       const userUsername = await userRepository.findByUsernameAsync(createUserRequest.username);
       if (userUsername) {
         return new ServiceResponse(ResponseStatus.Success, 'Username already in use.', null, StatusCodes.CONFLICT);
       }
+      logger.info('No conflicts found. Creating user...');
       const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
       createUserRequest.password = hashPassword;
       const newUser = await userRepository.createUserAsync(createUserRequest);
+      logger.info('User created successfully');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User created', newUser, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating user: ${(ex as Error).message}`;

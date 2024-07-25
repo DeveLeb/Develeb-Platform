@@ -7,13 +7,14 @@ import passport from 'passport';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
 import { env } from 'src/common/utils/envConfig';
+import { logger } from 'src/server';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
-import {createUserRequest} from  './userRequest/createUserRequest';
+import { createUserRequest } from './userRequest/createUserRequest';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -50,7 +51,7 @@ export const userRouter: Router = (() => {
 
   router.post('/', async (req: Request, res: Response) => {
     const RequestObject = createUserRequest.parse(req.body);
-    //const hashPassword = await bcrypt.hash(createUserRequest.password, 1);
+    logger.info('Parsed RequestObject: ', RequestObject);
     const serviceResponse = await userService.createUser(RequestObject);
     handleServiceResponse(serviceResponse, res);
   });
