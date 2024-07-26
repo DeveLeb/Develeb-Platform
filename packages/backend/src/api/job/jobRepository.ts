@@ -17,11 +17,9 @@ export const jobRepository = {
     if (params.categoryId !== undefined) {
       conditions.push(eq(job.categoryId, parseInt(params.categoryId, 10)));
     }
-
     if (params.levelId !== undefined) {
       conditions.push(eq(job.levelId, parseInt(params.levelId, 10)));
     }
-
     if (params.companyName !== undefined) {
       conditions.push(like(company.name, `%${params.companyName}%`));
     }
@@ -54,21 +52,6 @@ export const jobRepository = {
       totalCount: Number(totalCountResult[0].count),
     };
   },
-  findJobsCountAsync: async (conditions: SQL[]): Promise<number> => {
-    const countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(job)
-      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
-      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
-      .leftJoin(company, eq(job.companyId, company.id));
-
-    if (conditions.length > 0) {
-      countQuery.where(and(...conditions));
-    }
-
-    const result = await countQuery.execute();
-    return result[0]?.count ?? 0;
-  },
 
   findJobByIdAsync: async (id: string): Promise<Job | null> => {
     const result = await db
@@ -87,17 +70,23 @@ export const jobRepository = {
       levelTitle: row.job_level?.title,
       companyName: row.company?.name,
     };
-    const parsedJob = JobSchema.parse(jobData) || null;
-    return parsedJob;
+    return JobSchema.parse(jobData);
   },
+  findSavedJobAsync: async (jobId: string, userId: string): Promise<SavedJob | null> => {
+    const result = await db
+      .select()
+      .from(jobSaved)
+      .where(and(eq(jobSaved.jobId, jobId), eq(jobSaved.userId, userId)))
+      .limit(1);
 
+    return result.length > 0 ? JobSavedSchema.parse(result[0]) : null;
+  },
   deleteJobByIdAsync: async (id: string): Promise<Job | null> => {
-    const result = await db.delete(job).where(eq(job.id, id));
-    if (result.length === 0) return null;
-    return JobSchema.parse(result[0]) || null;
+    const result = await db.delete(job).where(eq(job.id, id)).returning();
+    return result.length > 0 ? JobSchema.parse(result[0]) : null;
   },
 
-  updateJobAsync: async (id: string, updateJobRequest: JobRequest): Promise<Job> => {
+  updateJobAsync: async (id: string, updateJobRequest: JobRequest): Promise<Job | null> => {
     const updateJob = await db
       .update(job)
       .set({
@@ -106,7 +95,7 @@ export const jobRepository = {
       })
       .where(eq(job.id, id))
       .returning();
-    return JobSchema.parse(updateJob[0]);
+    return updateJob.length > 0 ? JobSchema.parse(updateJob[0]) : null;
   },
 
   createJobAsync: async (createJobRequest: JobRequest, isAdmin: boolean): Promise<Job | null> => {
@@ -114,12 +103,12 @@ export const jobRepository = {
       .insert(job)
       .values({ ...createJobRequest, isApproved: isAdmin })
       .returning();
-    return JobSchema.parse(createdJob[0]);
+    return createdJob.length > 0 ? JobSchema.parse(createdJob[0]) : null;
   },
 
   findJobTotalViewsAsync: async (id: string): Promise<number | null> => {
     const result = await db.select({ totalViews: count() }).from(jobViews).where(eq(jobViews.jobId, id));
-    return result[0].totalViews || null;
+    return result.length > 0 ? result[0].totalViews : null;
   },
 
   saveJobAsync: async (jobId: string, userId: string): Promise<SavedJob> => {
@@ -135,8 +124,7 @@ export const jobRepository = {
 
   findCategoryByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobCategory).where(eq(jobCategory.id, id)).limit(1);
-    if (result.length === 0) return null;
-    return JobCategorySchema.parse(result[0]) || null;
+    return result.length > 0 ? JobCategorySchema.parse(result[0]) : null;
   },
 
   findCategoriesAsync: async (): Promise<JobCategory[]> => {
@@ -146,22 +134,22 @@ export const jobRepository = {
 
   createJobCategoryAsync: async (title: string): Promise<JobCategory | null> => {
     const createCategory = await db.insert(jobCategory).values({ title }).returning();
-    return JobCategorySchema.parse(createCategory[0]) || null;
+    return createCategory.length > 0 ? JobCategorySchema.parse(createCategory[0]) : null;
   },
 
-  updateJobCatergoryAsync: async (id: number, title: string): Promise<JobCategory> => {
+  updateJobCatergoryAsync: async (id: number, title: string): Promise<JobCategory | null> => {
     const updateCategory = await db.update(jobCategory).set({ title }).where(eq(jobCategory.id, id)).returning();
-    return JobCategorySchema.parse(updateCategory[0]);
+    return updateCategory.length > 0 ? JobCategorySchema.parse(updateCategory[0]) : null;
   },
 
-  deleteJobCategoryAsync: async (id: number): Promise<JobCategory> => {
+  deleteJobCategoryAsync: async (id: number): Promise<JobCategory | null> => {
     const deleteCategory = await db.delete(jobCategory).where(eq(jobCategory.id, id)).returning();
-    return JobCategorySchema.parse(deleteCategory[0]);
+    return deleteCategory.length > 0 ? JobCategorySchema.parse(deleteCategory[0]) : null;
   },
 
   findLevelByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobLevel).where(eq(jobLevel.id, id)).limit(1);
-    return JobCategorySchema.parse(result[0]) || null;
+    return result.length > 0 ? JobCategorySchema.parse(result[0]) : null;
   },
 
   findLevelsAsync: async (): Promise<JobCategory[] | null> => {
@@ -169,18 +157,30 @@ export const jobRepository = {
     return JobCategorySchema.array().parse(result);
   },
 
-  createJobLevelAsync: async (title: string): Promise<JobCategory> => {
+  createJobLevelAsync: async (title: string): Promise<JobCategory | null> => {
     const createJobLevel = await db.insert(jobLevel).values({ title }).returning();
-    return JobCategorySchema.parse(createJobLevel[0]);
+    return createJobLevel.length > 0 ? JobCategorySchema.parse(createJobLevel[0]) : null;
   },
 
-  updateJobLevelAsync: async (id: number, title: string): Promise<JobCategory> => {
+  updateJobLevelAsync: async (id: number, title: string): Promise<JobCategory | null> => {
     const updateLevel = await db.update(jobLevel).set({ title }).where(eq(jobLevel.id, id)).returning();
-    return JobCategorySchema.parse(updateLevel[0]);
+    return updateLevel.length > 0 ? JobCategorySchema.parse(updateLevel[0]) : null;
   },
 
-  deleteJobLevelAsync: async (id: number): Promise<JobCategory> => {
+  deleteJobLevelAsync: async (id: number): Promise<JobCategory | null> => {
     const deleteLevel = await db.delete(jobLevel).where(eq(jobLevel.id, id)).returning();
-    return JobCategorySchema.parse(deleteLevel[0]);
+    return deleteLevel.length > 0 ? JobCategorySchema.parse(deleteLevel[0]) : null;
+  },
+
+  findSavedJobsAsync: async (userId: string): Promise<Job[] | null> => {
+    const result = await db
+      .select({
+        job: job,
+      })
+      .from(job)
+      .leftJoin(jobSaved, eq(jobSaved.jobId, job.id))
+      .where(eq(jobSaved.userId, userId));
+
+    return result.length > 0 ? result.map((row) => JobSchema.parse(row.job)) : null;
   },
 };

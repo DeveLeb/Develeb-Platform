@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
 import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
-import { job, jobCategory, jobLevel, jobSaved } from 'src/db/schema';
+import { job, jobCategory, jobLevel } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
@@ -17,6 +17,7 @@ export const jobService = {
     companyName?: string;
   }): Promise<ServiceResponse<Job[] | null>> => {
     try {
+      logger.info('Params:', params);
       const page = parseInt(params.pageIndex, 10) || 1;
       const limit = parseInt(params.pageSize, 10) || 10;
       const offset = (page - 1) * limit;
@@ -31,7 +32,7 @@ export const jobService = {
         offset,
         ...queryParams,
       });
-
+      logger.info('Result:', result);
       if (result.jobs.length === 0) {
         return new ServiceResponse(ResponseStatus.Success, 'No jobs found', null, StatusCodes.NOT_FOUND);
       }
@@ -49,6 +50,7 @@ export const jobService = {
 
       const successMessage = `Jobs fetched successfully. Page ${page} of ${paginationInfo.totalPages}. Total jobs: ${result.totalCount}. Applied filters: ${appliedFilters || 'None'}`;
 
+      logger.info('Success message:', successMessage);
       return new ServiceResponse(ResponseStatus.Success, successMessage, result.jobs, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error fetching jobs`;
@@ -59,10 +61,14 @@ export const jobService = {
 
   findJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      logger.info(`Finding job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
+      logger.info(`Job found: ${JSON.stringify(job)}`);
       if (!job) {
+        logger.info(`Job not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info('Job found');
       return new ServiceResponse(ResponseStatus.Success, 'Job found', job, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding job with id ${id}:, ${(ex as Error).message}`;
@@ -73,11 +79,15 @@ export const jobService = {
 
   deleteJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      logger.info(`Deleting job with id ${id}`);
       const findJob = await jobRepository.findJobByIdAsync(id);
+      logger.info(`Job found: ${JSON.stringify(findJob)}`);
       if (!findJob) {
+        logger.info(`Job not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
       const deleteJob = await jobRepository.deleteJobByIdAsync(id);
+      logger.info(`Job deleted with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job deleted', deleteJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting job with id ${id}:, ${(ex as Error).message}`;
@@ -87,13 +97,16 @@ export const jobService = {
   },
 
   updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
+    logger.info(`Updating job with id ${id}`);
     const job = await jobRepository.findJobByIdAsync(id);
     if (!job) {
+      logger.info(`Job not found with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
     }
     try {
+      logger.info(`Updating job with data: ${JSON.stringify(updateJobrequest)}`);
       const updateJob = await jobRepository.updateJobAsync(id, updateJobrequest);
-
+      logger.info(`Job updated successfully with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
@@ -105,7 +118,12 @@ export const jobService = {
     isAdmin: boolean
   ): Promise<ServiceResponse<Job | null>> => {
     try {
+      logger.info(`Creating job with data: ${JSON.stringify(createJobRequest)}`);
       const newJob = await jobRepository.createJobAsync(createJobRequest, isAdmin);
+      if (!newJob) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Job creation failed', null, StatusCodes.BAD_REQUEST);
+      }
+      logger.info(`Job created successfully with id ${newJob.id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job created', newJob, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating job: ${(ex as Error).message}`;
@@ -116,15 +134,21 @@ export const jobService = {
 
   approveJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      logger.info(`Approving job with id ${id}`);
       const findJob = await jobRepository.findJobByIdAsync(id);
+      logger.info(`Find job result: ${JSON.stringify(findJob)}`);
       if (!findJob) {
+        logger.info(`Job not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
 
       if (findJob.isApproved) {
+        logger.info(`Job already approved with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job already approved', null, StatusCodes.CONFLICT);
       }
       const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
+      logger.info(`Approved job result: ${JSON.stringify(approvedJob)}`);
+      logger.info(`Job approved successfully with id ${id}`);
       return new ServiceResponse(
         ResponseStatus.Success,
         'Job approved',
@@ -140,11 +164,17 @@ export const jobService = {
 
   rejectJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      logger.info(`Rejecting job with id ${id}`);
+      logger.info('Beginning job rejection process');
       const findJob = await jobRepository.findJobByIdAsync(id);
+      logger.info(`Job found: ${JSON.stringify(findJob)}`);
       if (!findJob) {
+        logger.info(`Job not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
       const rejectedJob = await jobRepository.deleteJobByIdAsync(id);
+      logger.info(`Job rejected with id ${id}`);
+      logger.info(`Job rejection process complete`);
       return new ServiceResponse(ResponseStatus.Success, 'Job rejected', JobSchema.parse(rejectedJob), StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error rejecting job with id ${id}:, ${(ex as Error).message}`;
@@ -155,13 +185,20 @@ export const jobService = {
 
   createJobCategory: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Creating job category with title ${title}`);
+      logger.info('Beginning job category creation process');
       const existingCategory = await db.select().from(jobCategory).where(eq(jobCategory.title, title)).limit(1);
+      logger.info(`Existing category: ${JSON.stringify(existingCategory)}`);
 
       if (existingCategory.length > 0) {
+        logger.info(`Job category already exists with title ${title}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job category already exists', null, StatusCodes.CONFLICT);
       }
 
       const newCategory = await jobRepository.createJobCategoryAsync(title);
+      logger.info(`Job category created successfully with title ${title}`);
+      logger.info(`Created category: ${JSON.stringify(newCategory)}`);
+      logger.info('Job category creation process complete');
       return new ServiceResponse(ResponseStatus.Success, 'category created!', newCategory, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating job category: ${(ex as Error).message}`;
@@ -171,20 +208,28 @@ export const jobService = {
   },
   findCategories: async (): Promise<ServiceResponse<JobCategory[] | null>> => {
     try {
+      logger.info('Beginning category finding process');
+      logger.info('Finding categories...');
       const categories = await jobRepository.findCategoriesAsync();
+      logger.info(`Categories found: ${JSON.stringify(categories)}`);
+      logger.info('Category finding process complete');
       return new ServiceResponse(ResponseStatus.Success, 'Categories found', categories, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding categories: ${(ex as Error).message}`;
       logger.error(errorMessage);
+      logger.info('Category finding process failed');
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
   findJobCategory: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Finding job category with id ${id}`);
       const category = await jobRepository.findCategoryByIdAsync(id);
       if (!category) {
+        logger.info(`Job category not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job category found: ${JSON.stringify(category)}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job category found', category, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding job category with id ${id}:, ${(ex as Error).message}`;
@@ -195,11 +240,15 @@ export const jobService = {
 
   updateJobCategory: async (id: number, title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Updating job category with id ${id} and title ${title}`);
       const category = await jobRepository.findCategoryByIdAsync(id);
       if (!category) {
+        logger.info(`Job category not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job category found with id ${id}`);
       const updatedJobCategory = await jobRepository.updateJobCatergoryAsync(id, title);
+      logger.info(`Job category updated with id ${id} and title ${title}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job category updated', updatedJobCategory, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job category with id ${id}:, ${(ex as Error).message}`;
@@ -210,11 +259,15 @@ export const jobService = {
 
   deleteJobCategory: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Deleting job category with id ${id}`);
       const category = await jobRepository.findCategoryByIdAsync(id);
       if (!category) {
+        logger.info(`Job category not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job category not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job category found with id ${id}`);
       const deletedCategory = await jobRepository.deleteJobCategoryAsync(id);
+      logger.info(`Job category deleted with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job category deleted', deletedCategory, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting job category with id ${id}:, ${(ex as Error).message}`;
@@ -225,12 +278,17 @@ export const jobService = {
 
   createJobLevel: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Creating job level with title ${title}`);
       const existingLevel = await db.select().from(jobLevel).where(eq(jobLevel.title, title)).limit(1);
+      logger.info(`Existing level: ${JSON.stringify(existingLevel)}`);
       if (existingLevel.length > 0) {
+        logger.info(`Job Level already exists with title ${title}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job Level already exists', null, StatusCodes.CONFLICT);
       }
 
       const newLevel = await jobRepository.createJobLevelAsync(title);
+      logger.info(`Job Level created successfully with title ${title}`);
+      logger.info(`Created level: ${JSON.stringify(newLevel)}`);
       return new ServiceResponse(ResponseStatus.Success, 'Level created!', newLevel, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating job Level: ${(ex as Error).message}`;
@@ -241,10 +299,14 @@ export const jobService = {
 
   findJoblevel: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Finding job level with id ${id}`);
       const level = await jobRepository.findLevelByIdAsync(id);
+      logger.info(`Job level found: ${JSON.stringify(level)}`);
       if (!level) {
+        logger.info(`Job level not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job level found with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job level found', level, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding job level with id ${id}:, ${(ex as Error).message}`;
@@ -255,11 +317,15 @@ export const jobService = {
 
   updateJobLevel: async (id: number, title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Updating job level with id ${id} and title ${title}`);
       const level = await jobRepository.findLevelByIdAsync(id);
       if (!level) {
+        logger.info(`Job level not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job level found with id ${id}`);
       const updatedJobLevel = await jobRepository.updateJobLevelAsync(id, title);
+      logger.info(`Job level updated with id ${id} and title ${title}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job level updated', updatedJobLevel, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating job level with id ${id}:, ${(ex as Error).message}`;
@@ -270,11 +336,15 @@ export const jobService = {
 
   deleteJobLevel: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
     try {
+      logger.info(`Deleting job level with id ${id}`);
       const level = await jobRepository.findLevelByIdAsync(id);
       if (!level) {
+        logger.info(`Job level not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job level found with id ${id}`);
       const deletedLevel = await jobRepository.deleteJobLevelAsync(id);
+      logger.info(`Job level deleted with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job level deleted', deletedLevel, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting job level with id ${id}:, ${(ex as Error).message}`;
@@ -287,12 +357,16 @@ export const jobService = {
     id: string
   ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
     try {
+      logger.info(`Finding total views for job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
+      logger.info(`Job found: ${JSON.stringify(job)}`);
       if (!job) {
+        logger.info(`Job not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
       const totalViews = await jobRepository.findJobTotalViewsAsync(id);
       const data = { job_id: id, totalViews };
+      logger.info(`Total views found for job with id ${id}: ${data.totalViews}`);
       return new ServiceResponse(ResponseStatus.Success, 'Total views found', data, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding total views: ${(ex as Error).message}`;
@@ -302,19 +376,44 @@ export const jobService = {
   },
   saveJob: async (jobId: string, userId: string): Promise<ServiceResponse<SavedJob | null>> => {
     try {
+      logger.info(`Saving job with id ${jobId} for user ${userId}`);
       const findJob = await jobRepository.findJobByIdAsync(jobId);
+      logger.info(`Job found: ${JSON.stringify(findJob)}`);
       if (!findJob) {
-        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+        logger.info(`Job not found with id ${jobId}`);
+        return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
-      const searchJob = await db.select().from(jobSaved).where(eq(jobSaved.jobId, jobId));
-      if (searchJob.length > 0) {
+      const searchJob = await jobRepository.findSavedJobAsync(jobId, userId);
+      logger.info(`Saved job found: ${JSON.stringify(searchJob)}`);
+      if (searchJob !== null) {
+        logger.info(`Job already saved with id ${jobId} for user ${userId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job already saved', null, StatusCodes.CONFLICT);
       }
-
       const savedJob = await jobRepository.saveJobAsync(jobId, userId);
+      logger.info(`Saved job result: ${JSON.stringify(savedJob)}`);
+      logger.info(`Job saved with id ${jobId} for user ${userId}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job saved', savedJob, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error saving job with id ${jobId}:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  findSavedJobs: async (userId: string): Promise<ServiceResponse<Job[] | null>> => {
+    try {
+      //first we want to check if there are user but we dont have the user repo for now
+      logger.info(`userId: ${userId}`);
+      const result = await jobRepository.findSavedJobsAsync(userId);
+      logger.info(`jobs: ${JSON.stringify(result)}`);
+      if (!result) {
+        logger.info(`No jobs saved!`);
+        return new ServiceResponse(ResponseStatus.Success, 'No jobs saved!', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info(`Jobs found`);
+      return new ServiceResponse(ResponseStatus.Success, 'Jobs found', result, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding saved jobs: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
