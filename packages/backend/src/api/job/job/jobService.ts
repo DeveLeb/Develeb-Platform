@@ -399,4 +399,23 @@ export const jobService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
+
+  findSavedJobs: async (userId: string): Promise<ServiceResponse<Job[] | null>> => {
+    try {
+      //first we want to check if there are user but we dont have the user repo for now
+      logger.info(`userId: ${userId}`);
+      const result = await jobRepository.findSavedJobsAsync(userId);
+      logger.info(`jobs: ${JSON.stringify(result)}`);
+      if (!result) {
+        logger.info(`No jobs saved!`);
+        return new ServiceResponse(ResponseStatus.Success, 'No jobs saved!', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info(`Jobs found`);
+      return new ServiceResponse(ResponseStatus.Success, 'Jobs found', result, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding saved jobs: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 };
