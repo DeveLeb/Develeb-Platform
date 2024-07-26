@@ -56,6 +56,7 @@ export const jobRouter: Router = (() => {
       }
     }
   });
+
   jobRegistry.registerPath({
     method: 'post',
     path: '/jobs/{jobId}/save/{userId}',
@@ -64,9 +65,9 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/:jobId/save/:userId', async (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (!req.user) {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const { jobId, userId } = req.params;
     const serviceResponse = await jobService.saveJob(jobId, userId);
     handleServiceResponse(serviceResponse, res);
@@ -85,9 +86,9 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/category', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const title = req.body.title;
     const serviceResponse = await jobService.createJobCategory(title);
     handleServiceResponse(serviceResponse, res);
@@ -109,9 +110,9 @@ export const jobRouter: Router = (() => {
   });
 
   router.put('/category/:id', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const { id } = req.params;
     const categoryId = parseInt(id, 10);
     const title = req.body.title;
@@ -120,9 +121,9 @@ export const jobRouter: Router = (() => {
   });
 
   router.delete('/category/:id', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const { id } = req.params;
     const categoryId = parseInt(id, 10);
     const serviceResponse = await jobService.deleteJobCategory(categoryId);
@@ -196,6 +197,7 @@ export const jobRouter: Router = (() => {
     const serviceResponse = await jobService.findJobTotalViews(id);
     handleServiceResponse(serviceResponse, res);
   });
+
   jobRegistry.registerPath({
     method: 'get',
     path: '/jobs/{id}',
@@ -232,6 +234,7 @@ export const jobRouter: Router = (() => {
       }
     }
   });
+
   jobRegistry.registerPath({
     method: 'post',
     path: '/jobs/{id}/approve',
@@ -241,9 +244,9 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/:id/approve', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const { id } = req.params;
     const serviceResponse = await jobService.approveJob(id);
     handleServiceResponse(serviceResponse, res);
@@ -258,11 +261,24 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/:id/reject', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // if (req.user?.role.toLowerCase() !== 'admin') {
+    //   return res.status(401).json({ message: 'Unauthorized' });
+    // }
     const { id } = req.params;
     const serviceResponse = await jobService.rejectJob(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  jobRegistry.registerPath({
+    method: 'get',
+    path: '/jobs/{userId}/saved/jobs',
+    tags: ['Job'],
+    request: { params: GetJobSchema.shape.params },
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
+  router.get('/:userId/saved/jobs', async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const serviceResponse = await jobService.findSavedJobs(userId);
     handleServiceResponse(serviceResponse, res);
   });
 
