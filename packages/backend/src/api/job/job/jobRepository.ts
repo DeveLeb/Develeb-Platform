@@ -53,22 +53,6 @@ export const jobRepository = {
     };
   },
 
-  findJobsCountAsync: async (conditions: SQL[]): Promise<number> => {
-    const countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(job)
-      .leftJoin(jobCategory, eq(job.categoryId, jobCategory.id))
-      .leftJoin(jobLevel, eq(job.levelId, jobLevel.id))
-      .leftJoin(company, eq(job.companyId, company.id));
-
-    if (conditions.length > 0) {
-      countQuery.where(and(...conditions));
-    }
-
-    const result = await countQuery.execute();
-    return result[0]?.count ?? 0;
-  },
-
   findJobByIdAsync: async (id: string): Promise<Job | null> => {
     const result = await db
       .select()
@@ -186,5 +170,31 @@ export const jobRepository = {
   deleteJobLevelAsync: async (id: number): Promise<JobCategory | null> => {
     const deleteLevel = await db.delete(jobLevel).where(eq(jobLevel.id, id)).returning();
     return deleteLevel.length > 0 ? JobCategorySchema.parse(deleteLevel[0]) : null;
+  },
+
+  findSavedJobsAsync: async (userId: string): Promise<Job[] | null> => {
+    const result = await db
+      .select({
+        id: job.id,
+        title: job.title,
+        levelId: job.levelId,
+        categoryId: job.categoryId,
+        typeId: job.typeId,
+        location: job.location,
+        description: job.description,
+        compensation: job.compensation,
+        applicationLink: job.applicationLink,
+        isExternal: job.isExternal,
+        companyId: job.companyId,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        postedAt: job.postedAt,
+        tags: job.tags,
+        isApproved: job.isApproved,
+      })
+      .from(job)
+      .leftJoin(jobSaved, eq(jobSaved.jobId, job.id))
+      .where(eq(jobSaved.userId, userId));
+    return result.length > 0 ? result.map((job) => JobSchema.parse(job)) : null;
   },
 };

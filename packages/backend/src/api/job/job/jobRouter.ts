@@ -269,5 +269,18 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
+  jobRegistry.registerPath({
+    method: 'get',
+    path: '/jobs/{userId}/saved/jobs',
+    tags: ['Job'],
+    request: { params: GetJobSchema.shape.params },
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
+  router.get('/:userId/saved/jobs', async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const serviceResponse = await jobService.findSavedJobs(userId);
+    handleServiceResponse(serviceResponse, res);
+  });
+
   return router;
 })();
