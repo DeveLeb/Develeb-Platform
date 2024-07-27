@@ -1,11 +1,12 @@
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
+import { validatePassword } from 'src/common/utils/commonValidation';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
-import { CreateUserRequest,createUserRequest } from './userRequest/createUserRequest';
+import { CreateUserRequest, createUserRequest } from './userRequest/createUser';
 
 export const userService = {
   // Retrieves all users from the database
@@ -42,6 +43,12 @@ export const userService = {
   // Creates a new user
   createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
+      logger.info('Validating password...');
+      const { valid, message } = validatePassword(createUserRequest.password);
+      if (!valid) {
+        logger.info(`Password validation failed: ${message}`);
+        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
+      }
       logger.info('Checking for conflicts...');
       const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
       if (userEmail) {

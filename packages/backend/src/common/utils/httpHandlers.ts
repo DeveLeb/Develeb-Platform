@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { ZodError, ZodSchema } from 'zod';
 
 import { ResponseStatus, ServiceResponse } from '../models/serviceResponse';
+import { logger } from 'src/server';
 
 export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, response: Response) => {
   return response.status(serviceResponse.statusCode).send(serviceResponse);
@@ -10,6 +11,7 @@ export const handleServiceResponse = (serviceResponse: ServiceResponse<any>, res
 
 export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
   try {
+    logger.info('Validating request');
     schema.parse({ body: req.body, query: req.query, params: req.params });
     next();
   } catch (err) {

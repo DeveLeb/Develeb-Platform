@@ -14,7 +14,7 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
-import { createUserRequest } from './userRequest/createUserRequest';
+import { createUserRequest } from './userRequest/createUser';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -49,10 +49,10 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', async (req: Request, res: Response) => {
-    const RequestObject = createUserRequest.parse(req.body);
+  router.post('/', validateRequest(createUserRequest), async (req: Request, res: Response) => {
+    const RequestObject = createUserRequest.parse({ body: req.body });
     logger.info('Parsed RequestObject: ', RequestObject);
-    const serviceResponse = await userService.createUser(RequestObject);
+    const serviceResponse = await userService.createUser(RequestObject.body);
     handleServiceResponse(serviceResponse, res);
   });
 
