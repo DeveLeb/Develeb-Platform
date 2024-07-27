@@ -1,12 +1,12 @@
 //import bcrypt from 'bcrypt';
 
 import { eq } from 'drizzle-orm';
-import { logger } from 'src/common/utils/logger';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
+import { logger } from 'src/server';
 
 import { User } from './userModel';
-import { CreateUserRequest} from './userRequest/createUserRequest';
+import { CreateUserRequest } from './userRequest/createUserRequest';
 export const userRepository = {
   findAllAsync: async () => {
     return await db.select().from(user);

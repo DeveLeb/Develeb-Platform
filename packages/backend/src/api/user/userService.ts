@@ -13,6 +13,7 @@ export const userService = {
     try {
       const users = await userRepository.findAllAsync();
       if (!users) {
+        logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Failed, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
@@ -44,11 +45,13 @@ export const userService = {
       logger.info('Checking for conflicts...');
       const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
       if (userEmail) {
+        logger.info('Email conflict found');
         return new ServiceResponse(ResponseStatus.Success, 'Email already in use.', null, StatusCodes.CONFLICT);
       }
       logger.info('No email conflicts found. Checking for username...');
       const userUsername = await userRepository.findByUsernameAsync(createUserRequest.username);
       if (userUsername) {
+        logger.info('Username conflict found');
         return new ServiceResponse(ResponseStatus.Success, 'Username already in use.', null, StatusCodes.CONFLICT);
       }
       logger.info('No conflicts found. Creating user...');
