@@ -32,7 +32,6 @@ app.use(requestLogger);
 app.use('/health-check', healthCheckRouter);
 app.use('/users', userRouter);
 app.use('/jobs', jobRouter);
-app.use('/resources', resourceRouter);
 
 // Swagger UI
 app.use(openAPIRouter);
