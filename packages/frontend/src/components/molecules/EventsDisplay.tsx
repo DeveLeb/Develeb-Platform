@@ -26,7 +26,7 @@ interface EventsDisplayProps {
 const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
   return (
     <div className="sm:min-h-screen sm:p-11 p-4">
-      <h3 className="text-3xl font-bold text-main-darkBlue mb-3 text-left">All Events</h3>
+      <h3 className="text-3xl font-bold text-[var(--dark-blue)] mb-3 text-left">All Events</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {events.map((event) => (
           <a href={`/event/${event.id}`} key={event.id} className="block">
@@ -34,12 +34,12 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
               className="shadow-lg h-[320px] sm:h-[380px] flex flex-col bg-cover bg-center relative transform transition-transform duration-300 hover:scale-105"
               style={{ backgroundImage: `url(${event.flyer_link})` }}
             >
-              <div className="flex-grow flex flex-col justify-end p-4 bg-main-darkBlue bg-opacity-70 hover:bg-opacity-80 relative">
-                <h4 className="text-xl font-bold text-white flex items-center">
-                  <CiCalendar className="text-white text-xl mr-2" />
+              <div className="flex-grow flex flex-col justify-end p-4">
+                <h4 className="text-xl font-bold text-[var(--white)] flex items-center">
+                  <CiCalendar className="text-[var(--white)] text-xl mr-2" />
                   {event.date}
                 </h4>
-                <p className="text-white mt-2">{event.description}</p>
+                <p className="text-[var(--white)] mt-2">{event.description}</p>
               </div>
             </Card>
           </a>
@@ -52,13 +52,13 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
             <PaginationItem>
               <PaginationPrevious
                 href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-main-darkBlue text-main-darkBlue hover:text-white border border-main-darkBlue rounded-none"
+                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
               />
             </PaginationItem>
             <PaginationItem>
               <PaginationLink
                 href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-main-darkBlue text-main-darkBlue hover:text-white border border-main-darkBlue rounded-none"
+                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
               >
                 1
               </PaginationLink>
@@ -66,7 +66,7 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
             <PaginationItem>
               <PaginationLink
                 href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-main-darkBlue text-main-darkBlue hover:text-white border border-main-darkBlue rounded-none"
+                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
               >
                 2
               </PaginationLink>
@@ -77,7 +77,7 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
             <PaginationItem>
               <PaginationNext
                 href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-main-darkBlue text-main-darkBlue hover:text-white border border-main-darkBlue rounded-none"
+                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
               />
             </PaginationItem>
           </PaginationContent>
