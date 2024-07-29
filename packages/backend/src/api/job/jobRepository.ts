@@ -2,7 +2,8 @@ import { and, count, eq, like, SQL, sql } from 'drizzle-orm';
 import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
 
 import { db } from '../../db';
-import { Job, JobCategory, JobCategorySchema, JobRequest, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
+import { Job, JobCategory, JobCategorySchema, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
+import { CreateJobRequest, PutJobRequest } from './jobRequest';
 
 export const jobRepository = {
   findJobsAsync: async (filters: {
@@ -86,7 +87,7 @@ export const jobRepository = {
     return result.length > 0 ? JobSchema.parse(result[0]) : null;
   },
 
-  updateJobAsync: async (id: string, updateJobRequest: JobRequest): Promise<Job | null> => {
+  updateJobAsync: async (id: string, updateJobRequest: PutJobRequest): Promise<Job | null> => {
     const updateJob = await db
       .update(job)
       .set({
@@ -98,7 +99,7 @@ export const jobRepository = {
     return updateJob.length > 0 ? JobSchema.parse(updateJob[0]) : null;
   },
 
-  createJobAsync: async (createJobRequest: JobRequest, isAdmin: boolean): Promise<Job | null> => {
+  createJobAsync: async (createJobRequest: CreateJobRequest, isAdmin: boolean): Promise<Job | null> => {
     const createdJob = await db
       .insert(job)
       .values({ ...createJobRequest, isApproved: isAdmin })

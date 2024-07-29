@@ -1,20 +1,27 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
-import { StatusCodes } from 'http-status-codes';
-import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
-import { z, ZodError } from 'zod';
+import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
+import { JobCategorySchema, JobSchema } from './jobModel';
 import {
-  createJobSchema,
-  GetCategorySchema,
-  GetJobSchema,
-  GetJobViews,
-  JobCategorySchema,
-  JobSchema,
-} from './jobModel';
-import { GetJobsSchema } from './jobRequest';
+  CreateJobCategoryRequest,
+  CreateJobCategorySchema,
+  CreateJobRequest,
+  CreateJobSchema,
+  DeleteJobCategoryRequest,
+  DeleteJobCategorySchema,
+  GetJobCategoryRequest,
+  GetJobCategorySchema,
+  GetJobsRequest,
+  GetJobsSchema,
+  PutJobCategoryRequest,
+  PutJobCategorySchema,
+  PutJobRequest,
+  PutJobSchema,
+} from './jobRequest';
+import { GetJobViewsSchema } from './jobResponse';
 import { jobService } from './jobService';
 
 export const jobRegistry = new OpenAPIRegistry();
@@ -32,9 +39,7 @@ export const jobRouter: Router = (() => {
   });
 
   router.get('/', validateRequest(GetJobsSchema), async (req: Request, res: Response) => {
-    const { pageIndex, pageSize, categoryId, levelId, companyName } = req.query as unknown as z.infer<
-      typeof GetJobsSchema
-    >['query'];
+    const { pageIndex, pageSize, categoryId, levelId, companyName } = req.query as unknown as GetJobsRequest;
     const serviceResponse = await jobService.findJobs({
       companyName: companyName,
       categoryId: categoryId,
@@ -45,19 +50,10 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', async (req: Request, res: Response) => {
-    try {
-      let isAdmin;
-      req.user?.role.toLowerCase() === 'admin' ? (isAdmin = true) : (isAdmin = false);
-      const createJobParams = createJobSchema.parse(req.body);
-      const serviceResponse = await jobService.submitJobForApproval(createJobParams, isAdmin);
-      handleServiceResponse(serviceResponse, res);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
-        return handleServiceResponse(err, res);
-      }
-    }
+  router.post('/', validateRequest(CreateJobSchema), async (req: Request, res: Response) => {
+    const createJobRequest = req.body as unknown as CreateJobRequest;
+    const serviceResponse = await jobService.submitJobForApproval(createJobRequest, true);
+    handleServiceResponse(serviceResponse, res);
   });
 
   jobRegistry.registerPath({
@@ -68,9 +64,7 @@ export const jobRouter: Router = (() => {
   });
 
   router.post('/:jobId/save/:userId', async (req: Request, res: Response) => {
-    // if (!req.user) {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
+    // TODO: implement auth
     const { jobId, userId } = req.params;
     const serviceResponse = await jobService.saveJob(jobId, userId);
     handleServiceResponse(serviceResponse, res);
@@ -78,7 +72,7 @@ export const jobRouter: Router = (() => {
 
   jobRegistry.registerPath({
     method: 'get',
-    path: 'jobs/category',
+    path: '/jobs/category',
     tags: ['Job'],
     responses: createApiResponse(z.array(JobCategorySchema), 'Success'),
   });
@@ -88,11 +82,9 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/category', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const title = req.body.title;
+  router.post('/category', validateRequest(CreateJobCategorySchema), async (req: Request, res: Response) => {
+    // TODO: user auth
+    const { title } = req.body as unknown as CreateJobCategoryRequest;
     const serviceResponse = await jobService.createJobCategory(title);
     handleServiceResponse(serviceResponse, res);
   });
@@ -101,35 +93,28 @@ export const jobRouter: Router = (() => {
     method: 'get',
     path: '/jobs/category/{categoryId}',
     tags: ['Job'],
-    request: { params: GetCategorySchema.shape.params },
+    request: { params: GetJobCategorySchema.shape.params },
     responses: createApiResponse(JobCategorySchema, 'Success'),
   });
 
-  router.get('/category/:id', async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const categoryId = parseInt(id, 10);
-    const serviceResponse = await jobService.findJobCategory(categoryId);
+  router.get('/category/:id', validateRequest(GetJobCategorySchema), async (req: Request, res: Response) => {
+    const { id } = req.params as unknown as GetJobCategoryRequest;
+    const serviceResponse = await jobService.findJobCategory(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/category/:id', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const { id } = req.params;
-    const categoryId = parseInt(id, 10);
-    const title = req.body.title;
-    const serviceResponse = await jobService.updateJobCategory(categoryId, title);
+  router.put('/category/:id', validateRequest(PutJobCategorySchema), async (req: Request, res: Response) => {
+    // TODO: auth
+    const { id } = req.params as unknown as PutJobCategoryRequest['params'];
+    const { title } = req.body as unknown as PutJobCategoryRequest['body'];
+    const serviceResponse = await jobService.updateJobCategory(id, title);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.delete('/category/:id', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const { id } = req.params;
-    const categoryId = parseInt(id, 10);
-    const serviceResponse = await jobService.deleteJobCategory(categoryId);
+  router.delete('/category/:id', validateRequest(DeleteJobCategorySchema), async (req: Request, res: Response) => {
+    // TODO: auth
+    const { id } = req.params as unknown as DeleteJobCategoryRequest;
+    const serviceResponse = await jobService.deleteJobCategory(id);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -153,7 +138,7 @@ export const jobRouter: Router = (() => {
     method: 'get',
     path: '/jobs/level/{levelId}',
     tags: ['Job'],
-    request: { params: GetCategorySchema.shape.params },
+    request: { params: GetJobCategorySchema.shape.params },
     responses: createApiResponse(JobCategorySchema, 'Success'),
   });
 
@@ -189,7 +174,7 @@ export const jobRouter: Router = (() => {
     method: 'get',
     path: '/jobs/{id}/views',
     tags: ['Job'],
-    responses: createApiResponse(GetJobViews, 'Success'),
+    responses: createApiResponse(GetJobViewsSchema, 'Success'),
   });
 
   router.get(':id/views', async (req: Request, res: Response) => {
@@ -205,7 +190,6 @@ export const jobRouter: Router = (() => {
     method: 'get',
     path: '/jobs/{id}',
     tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
@@ -221,28 +205,17 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/:id', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    try {
-      const { id } = req.params;
-      const updateJobParams = createJobSchema.parse(req.body);
-      const serviceResponse = await jobService.updateJob(id, updateJobParams);
-      handleServiceResponse(serviceResponse, res);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
-        return handleServiceResponse(err, res);
-      }
-    }
+  router.put('/:id', validateRequest(PutJobSchema), async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const putJobObject = req.body as unknown as PutJobRequest;
+    const serviceResponse = await jobService.updateJob(id, putJobObject);
+    handleServiceResponse(serviceResponse, res);
   });
 
   jobRegistry.registerPath({
     method: 'post',
     path: '/jobs/{id}/approve',
     tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
@@ -259,7 +232,6 @@ export const jobRouter: Router = (() => {
     method: 'post',
     path: '/jobs/{id}/reject',
     tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
@@ -276,7 +248,6 @@ export const jobRouter: Router = (() => {
     method: 'get',
     path: '/jobs/{userId}/saved/jobs',
     tags: ['Job'],
-    request: { params: GetJobSchema.shape.params },
     responses: createApiResponse(JobSchema, 'Success'),
   });
   router.get('/:userId/saved/jobs', async (req: Request, res: Response) => {
