@@ -2,8 +2,9 @@ import { and, count, eq, like, SQL, sql } from 'drizzle-orm';
 import { company, job, jobCategory, jobLevel, jobSaved, jobViews } from 'src/db/schema';
 
 import { db } from '../../db';
-import { Job, JobCategory, JobCategorySchema, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
+import { Job, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
 import { CreateJobRequest, PutJobRequest } from './jobRequest';
+import { JobCategory, JobCategorySchema, JobLevel, JobLevelSchema } from './jobResponse';
 
 export const jobRepository = {
   findJobsAsync: async (filters: {
@@ -153,9 +154,9 @@ export const jobRepository = {
     return result.length > 0 ? JobCategorySchema.parse(result[0]) : null;
   },
 
-  findLevelsAsync: async (): Promise<JobCategory[] | null> => {
+  findLevelsAsync: async (): Promise<JobLevel[] | null> => {
     const result = await db.select().from(jobLevel);
-    return JobCategorySchema.array().parse(result);
+    return JobLevelSchema.array().parse(result);
   },
 
   createJobLevelAsync: async (title: string): Promise<JobCategory | null> => {
