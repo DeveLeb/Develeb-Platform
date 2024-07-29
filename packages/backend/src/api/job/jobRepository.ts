@@ -5,23 +5,23 @@ import { db } from '../../db';
 import { Job, JobCategory, JobCategorySchema, JobRequest, JobSavedSchema, JobSchema, SavedJob } from '../job/jobModel';
 
 export const jobRepository = {
-  findJobsAsync: async (params: {
+  findJobsAsync: async (filters: {
     limit: number;
     offset: number;
-    categoryId?: string;
-    levelId?: string;
+    categoryId?: number;
+    levelId?: number;
     companyName?: string;
   }): Promise<{ jobs: Job[]; totalCount: number }> => {
     const conditions: SQL[] = [eq(job.isApproved, true)];
 
-    if (params.categoryId !== undefined) {
-      conditions.push(eq(job.categoryId, parseInt(params.categoryId, 10)));
+    if (filters.categoryId !== undefined) {
+      conditions.push(eq(job.categoryId, filters.categoryId));
     }
-    if (params.levelId !== undefined) {
-      conditions.push(eq(job.levelId, parseInt(params.levelId, 10)));
+    if (filters.levelId !== undefined) {
+      conditions.push(eq(job.levelId, filters.levelId));
     }
-    if (params.companyName !== undefined) {
-      conditions.push(like(company.name, `%${params.companyName}%`));
+    if (filters.companyName) {
+      conditions.push(like(company.name, `%${filters.companyName}%`));
     }
 
     const baseQuery = db
@@ -34,7 +34,7 @@ export const jobRepository = {
 
     const [totalCountResult, result] = await Promise.all([
       db.select({ count: sql`count(*)` }).from(baseQuery.as('subquery')),
-      baseQuery.limit(params.limit).offset(params.offset).execute(),
+      baseQuery.limit(filters.limit).offset(filters.offset).execute(),
     ]);
 
     const parsedJobs = result.map((row: any) => {

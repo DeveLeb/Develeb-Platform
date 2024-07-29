@@ -9,52 +9,40 @@ import { Job, JobCategory, JobRequest, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
 
 export const jobService = {
-  findJobs: async (params: {
-    pageIndex: string;
-    pageSize: string;
-    categoryId?: string;
-    levelId?: string;
+  findJobs: async (filters: {
+    pageIndex: number;
+    pageSize: number;
+    categoryId?: number;
+    levelId?: number;
     companyName?: string;
   }): Promise<ServiceResponse<Job[] | null>> => {
+    logger.info(`Fetching jobs with filters: ${JSON.stringify(filters)}`);
+    const { pageIndex, pageSize, categoryId, levelId, companyName } = filters;
+    const offset = (pageIndex - 1) * pageSize;
     try {
-      logger.info('Params:', params);
-      const page = parseInt(params.pageIndex, 10) || 1;
-      const limit = parseInt(params.pageSize, 10) || 10;
-      const offset = (page - 1) * limit;
-
-      const queryParams: Record<string, string | undefined> = {};
-      if (params.categoryId !== undefined) queryParams.categoryId = params.categoryId;
-      if (params.levelId !== undefined) queryParams.levelId = params.levelId;
-      if (params.companyName !== undefined) queryParams.companyName = params.companyName;
-
-      const result = await jobRepository.findJobsAsync({
-        limit,
+      const { jobs, totalCount } = await jobRepository.findJobsAsync({
+        limit: pageSize,
         offset,
-        ...queryParams,
+        categoryId,
+        levelId,
+        companyName,
       });
-      logger.info('Result:', result);
-      if (result.jobs.length === 0) {
+      if (jobs.length === 0) {
         return new ServiceResponse(ResponseStatus.Success, 'No jobs found', null, StatusCodes.NOT_FOUND);
       }
-
+      const totalPages = Math.ceil(totalCount / pageSize);
       const paginationInfo = {
-        currentPage: page,
-        pageSize: limit,
-        totalCount: result.totalCount,
-        totalPages: Math.ceil(result.totalCount / limit),
+        currentPage: pageIndex,
+        pageSize,
+        totalCount,
+        totalPages,
       };
-
-      const appliedFilters = Object.entries(queryParams)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(', ');
-
-      const successMessage = `Jobs fetched successfully. Page ${page} of ${paginationInfo.totalPages}. Total jobs: ${result.totalCount}. Applied filters: ${appliedFilters || 'None'}`;
-
-      logger.info('Success message:', successMessage);
-      return new ServiceResponse(ResponseStatus.Success, successMessage, result.jobs, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error fetching jobs`;
-      logger.error(errorMessage, ex);
+      const successMessage = `Jobs fetched successfully. Page ${paginationInfo.currentPage} of ${paginationInfo.totalPages}. Total jobs: ${paginationInfo.totalCount}.`;
+      logger.info(successMessage);
+      return new ServiceResponse(ResponseStatus.Success, successMessage, jobs, StatusCodes.OK);
+    } catch (error) {
+      const errorMessage = `Error fetching jobs: ${error}`;
+      logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
