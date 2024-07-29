@@ -5,7 +5,7 @@ import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceRespon
 import { z, ZodError } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
-import { handleServiceResponse } from '../../common/utils/httpHandlers';
+import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import {
   createJobSchema,
   GetCategorySchema,
@@ -14,6 +14,7 @@ import {
   JobCategorySchema,
   JobSchema,
 } from './jobModel';
+import { GetJobsSchema } from './jobRequest';
 import { jobService } from './jobService';
 
 export const jobRegistry = new OpenAPIRegistry();
@@ -30,14 +31,16 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(z.array(JobSchema), 'Success'),
   });
 
-  router.get('/', async (req: Request, res: Response) => {
-    const { pageIndex, pageSize, categoryId, levelId, companyName } = req.query;
+  router.get('/', validateRequest(GetJobsSchema), async (req: Request, res: Response) => {
+    const { pageIndex, pageSize, categoryId, levelId, companyName } = req.query as unknown as z.infer<
+      typeof GetJobsSchema
+    >['query'];
     const serviceResponse = await jobService.findJobs({
-      pageIndex: pageIndex as string,
-      pageSize: pageSize as string,
-      categoryId: categoryId as string,
-      levelId: levelId as string,
-      companyName: companyName as string,
+      companyName: companyName,
+      categoryId: categoryId,
+      levelId: levelId,
+      pageIndex: pageIndex,
+      pageSize: pageSize,
     });
     handleServiceResponse(serviceResponse, res);
   });
