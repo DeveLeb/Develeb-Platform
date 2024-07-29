@@ -43,12 +43,6 @@ export const JobSchema = z
     }
   );
 
-export type JobCategory = z.infer<typeof JobCategorySchema>;
-export const JobCategorySchema = z.object({
-  id: z.number(),
-  title: z.string().min(2),
-});
-
 export type SavedJob = z.infer<typeof JobSavedSchema>;
 export const JobSavedSchema = z.object({
   id: z.number(),

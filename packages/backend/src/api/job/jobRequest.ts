@@ -60,3 +60,20 @@ export const PutJobSchema = z.object({
   body: CreateJobSchema,
 });
 export type PutJobRequest = z.infer<typeof PutJobSchema>['body'];
+
+export const CreateJobLevelSchema = z.object({
+  body: z.object({
+    title: z.string(),
+  }),
+});
+export type CreateJobLevelRequest = z.infer<typeof CreateJobLevelSchema>['body'];
+
+export const UpdateJobLevelSchema = z.object({
+  params: z.object({
+    id: commonValidations.stringId,
+  }),
+  body: z.object({
+    title: z.string(),
+  }),
+});
+export type UpdateJobLevelRequest = z.infer<typeof UpdateJobLevelSchema>;

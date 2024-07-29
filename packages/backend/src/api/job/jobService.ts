@@ -5,9 +5,10 @@ import { job, jobCategory, jobLevel } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
-import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
+import { Job, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
 import { CreateJobRequest, PutJobRequest } from './jobRequest';
+import { JobCategory, JobLevel } from './jobResponse';
 
 export const jobService = {
   findJobs: async (filters: {
@@ -278,7 +279,25 @@ export const jobService = {
     }
   },
 
-  findJoblevel: async (id: number): Promise<ServiceResponse<JobCategory | null>> => {
+  findJoblevels: async (): Promise<ServiceResponse<JobLevel[] | null>> => {
+    try {
+      logger.info(`Finding job levels`);
+      const levels = await jobRepository.findLevelsAsync();
+      logger.info(`Job levels found.`);
+      if (levels?.length === 0) {
+        logger.info(`Job levels not found`);
+        return new ServiceResponse(ResponseStatus.Success, 'Job level not found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info(`Job levels found`);
+      return new ServiceResponse(ResponseStatus.Success, 'Job level found', levels, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error finding job levels:, ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  findJoblevel: async (id: number): Promise<ServiceResponse<JobLevel | null>> => {
     try {
       logger.info(`Finding job level with id ${id}`);
       const level = await jobRepository.findLevelByIdAsync(id);
