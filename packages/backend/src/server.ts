@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { pino } from 'pino';
 
 import { healthCheckRouter } from './api/healthCheck/healthCheckRouter';
+import { jobRouter } from './api/job/jobRouter';
 import { userRouter } from './api/user/userRouter';
 import { openAPIRouter } from './api-docs/openAPIRouter';
 import errorHandler from './common/middleware/errorHandler';
@@ -18,6 +19,7 @@ const app: Express = express();
 app.set('trust proxy', true);
 
 // Middlewares
+app.use(express.json());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(helmet());
 app.use(rateLimiter);
@@ -28,6 +30,7 @@ app.use(requestLogger);
 // Routes
 app.use('/health-check', healthCheckRouter);
 app.use('/users', userRouter);
+app.use('/jobs', jobRouter);
 
 // Swagger UI
 app.use(openAPIRouter);
