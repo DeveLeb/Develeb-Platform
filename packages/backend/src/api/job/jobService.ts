@@ -5,8 +5,9 @@ import { job, jobCategory, jobLevel } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
-import { Job, JobCategory, JobRequest, JobSchema, SavedJob } from './jobModel';
+import { Job, JobCategory, JobSchema, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
+import { CreateJobRequest, PutJobRequest } from './jobRequest';
 
 export const jobService = {
   findJobs: async (filters: {
@@ -84,7 +85,7 @@ export const jobService = {
     }
   },
 
-  updateJob: async (id: string, updateJobrequest: JobRequest): Promise<ServiceResponse<Job | null>> => {
+  updateJob: async (id: string, updateJobrequest: PutJobRequest): Promise<ServiceResponse<Job | null>> => {
     logger.info(`Updating job with id ${id}`);
     const job = await jobRepository.findJobByIdAsync(id);
     if (!job) {
@@ -102,7 +103,7 @@ export const jobService = {
     }
   },
   submitJobForApproval: async (
-    createJobRequest: JobRequest,
+    createJobRequest: CreateJobRequest,
     isAdmin: boolean
   ): Promise<ServiceResponse<Job | null>> => {
     try {
@@ -174,19 +175,13 @@ export const jobService = {
   createJobCategory: async (title: string): Promise<ServiceResponse<JobCategory | null>> => {
     try {
       logger.info(`Creating job category with title ${title}`);
-      logger.info('Beginning job category creation process');
       const existingCategory = await db.select().from(jobCategory).where(eq(jobCategory.title, title)).limit(1);
-      logger.info(`Existing category: ${JSON.stringify(existingCategory)}`);
-
       if (existingCategory.length > 0) {
         logger.info(`Job category already exists with title ${title}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job category already exists', null, StatusCodes.CONFLICT);
       }
-
       const newCategory = await jobRepository.createJobCategoryAsync(title);
       logger.info(`Job category created successfully with title ${title}`);
-      logger.info(`Created category: ${JSON.stringify(newCategory)}`);
-      logger.info('Job category creation process complete');
       return new ServiceResponse(ResponseStatus.Success, 'category created!', newCategory, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating job category: ${(ex as Error).message}`;
@@ -196,11 +191,9 @@ export const jobService = {
   },
   findCategories: async (): Promise<ServiceResponse<JobCategory[] | null>> => {
     try {
-      logger.info('Beginning category finding process');
       logger.info('Finding categories...');
       const categories = await jobRepository.findCategoriesAsync();
       logger.info(`Categories found: ${JSON.stringify(categories)}`);
-      logger.info('Category finding process complete');
       return new ServiceResponse(ResponseStatus.Success, 'Categories found', categories, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding categories: ${(ex as Error).message}`;
@@ -366,19 +359,17 @@ export const jobService = {
     try {
       logger.info(`Saving job with id ${jobId} for user ${userId}`);
       const findJob = await jobRepository.findJobByIdAsync(jobId);
-      logger.info(`Job found: ${JSON.stringify(findJob)}`);
       if (!findJob) {
         logger.info(`Job not found with id ${jobId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Job with id ${jobId} found.`);
       const searchJob = await jobRepository.findSavedJobAsync(jobId, userId);
-      logger.info(`Saved job found: ${JSON.stringify(searchJob)}`);
       if (searchJob !== null) {
-        logger.info(`Job already saved with id ${jobId} for user ${userId}`);
+        logger.error(`Job already saved with id ${jobId} for user ${userId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job already saved', null, StatusCodes.CONFLICT);
       }
       const savedJob = await jobRepository.saveJobAsync(jobId, userId);
-      logger.info(`Saved job result: ${JSON.stringify(savedJob)}`);
       logger.info(`Job saved with id ${jobId} for user ${userId}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job saved', savedJob, StatusCodes.OK);
     } catch (ex) {

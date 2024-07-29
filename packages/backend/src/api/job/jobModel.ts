@@ -1,5 +1,4 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { commonValidations } from 'src/common/utils/commonValidation';
 import { z } from 'zod';
 
 extendZodWithOpenApi(z);
@@ -44,29 +43,10 @@ export const JobSchema = z
     }
   );
 
-export type JobRequest = z.infer<typeof createJobSchema>;
-export const createJobSchema = z.object({
-  title: z.string(),
-  levelId: z.number(),
-  categoryId: z.number(),
-  typeId: z.number(),
-  location: z.string(),
-  description: z.string(),
-  compensation: z.string(),
-  applicationLink: z.string(),
-  isExternal: z.boolean(),
-  companyId: z.string(),
-  tags: z.string(),
-});
-
 export type JobCategory = z.infer<typeof JobCategorySchema>;
 export const JobCategorySchema = z.object({
-  id: z.number().optional(),
+  id: z.number(),
   title: z.string().min(2),
-});
-
-export const GetCategorySchema = z.object({
-  params: z.object({ id: commonValidations.id }),
 });
 
 export type SavedJob = z.infer<typeof JobSavedSchema>;
@@ -75,13 +55,4 @@ export const JobSavedSchema = z.object({
   jobId: z.string(),
   userId: z.string(),
   savedAt: z.date(),
-});
-
-export const GetJobSchema = z.object({
-  params: z.object({ id: z.string().uuid('Invalid UUID format') }),
-});
-
-export const GetJobViews = z.object({
-  id: z.string(),
-  totalViews: z.number(),
 });

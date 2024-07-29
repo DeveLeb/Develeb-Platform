@@ -2,11 +2,12 @@ import { z } from 'zod';
 
 // Schema definitions
 export const commonValidations = {
-  id: z
+  stringId: z
     .string()
     .refine((data) => !isNaN(Number(data)), 'Must be a numeric value')
     .transform(Number)
     .refine((num) => num > 0, 'ID must be a positive number'),
+  numId: z.number().refine((num) => num > 0, 'ID must be a positive number'),
   pageIndex: z
     .string()
     .default('1')
