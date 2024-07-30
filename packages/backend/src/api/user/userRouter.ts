@@ -14,7 +14,19 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
-import { createUserRequest } from './userRequest/createUser';
+import {
+  CreateUserRequest,
+  CreateUserSchema,
+  DeleteUserRequest,
+  DeleteUserSchema,
+  GetUserRequest,
+  GetUsersRequest,
+  GetUsersSchema,
+  LoginUserRequest,
+  LoginUserSchema,
+  UpdateUserRequest,
+  UpdateUserSchema,
+} from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -30,10 +42,16 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(z.array(UserSchema), 'Success'),
   });
 
-  router.get('/', authenticate, authorizeRole('admin'), async (_req: Request, res: Response) => {
-    const serviceResponse = await userService.findAll();
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.get(
+    '/',
+    validateRequest(GetUsersSchema),
+    authenticate,
+    authorizeRole('admin'),
+    async (_req: Request, res: Response) => {
+      const serviceResponse = await userService.findAll();
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   userRegistry.registerPath({
     method: 'get',
@@ -43,20 +61,20 @@ export const userRouter: Router = (() => {
     responses: createApiResponse(UserSchema, 'Success'),
   });
 
-  router.get('/:id', async (req: Request, res: Response) => {
+  router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
     const id = req.params.id;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', validateRequest(createUserRequest), async (req: Request, res: Response) => {
-    const RequestObject = createUserRequest.parse({ body: req.body });
+  router.post('/', validateRequest(CreateUserSchema), async (req: Request, res: Response) => {
+    const RequestObject = req.body as CreateUserRequest;
     logger.info('Parsed RequestObject: ', RequestObject);
-    const serviceResponse = await userService.createUser(RequestObject.body);
+    const serviceResponse = await userService.createUser(RequestObject);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.delete('/:id', authenticate, async (req: Request, res: Response) => {
+  router.delete('/:id', validateRequest(DeleteUserSchema), authenticate, async (req: Request, res: Response) => {
     const id = req.params.id;
     if (req.user && req.user.id === id) {
       //making sure that the authenticated user is deleting his own account and not someone else's account
@@ -66,7 +84,7 @@ export const userRouter: Router = (() => {
       res.status(401).json({ message: 'Unauthorized' }); //do like this or create a serviceResponse object, assign it the error code and message and send it to handleserviceresponse?
     }
   });
-  router.put('/:id', authenticate, async (req: Request, res: Response) => {
+  router.put('/:id', validateRequest(UpdateUserSchema), authenticate, async (req: Request, res: Response) => {
     const { full_name, level_id, category_id, tags } = req.body;
     const id = req.params.id;
     if (req.user && req.user.id === id) {
@@ -77,7 +95,7 @@ export const userRouter: Router = (() => {
     }
   });
 
-  router.post('/login', async (req, res, next) => {
+  router.post('/login', validateRequest(LoginUserSchema), async (req, res, next) => {
     passport.authenticate('local', { session: false }, (err, user, info) => {
       if (err || !user) {
         return res.status(401).json({

@@ -6,7 +6,7 @@ import { user } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { User } from './userModel';
-import { CreateUserRequest } from './userRequest/createUser';
+import { CreateUserRequest } from './userRequest';
 export const userRepository = {
   findAllAsync: async () => {
     return await db.select().from(user);

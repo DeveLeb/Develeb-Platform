@@ -6,7 +6,7 @@ import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResp
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
-import { CreateUserRequest, createUserRequest } from './userRequest/createUser';
+import { CreateUserRequest, createUserRequest } from './userRequest';
 
 export const userService = {
   // Retrieves all users from the database
