@@ -36,19 +36,3 @@ export const EventSchema = z.object({
     if (val) return new Date(val);
   }),
 });
-
-export type GetEventSchema = z.infer<typeof _GetEventSchema>;
-export const _GetEventSchema = z.object({
-  params: z.object({ id: z.string().uuid() }),
-});
-
-export type CreateEventSchema = z.infer<typeof _CreateEventSchema>;
-export const _CreateEventSchema = z.object({
-  body: EventSchema.omit({ id: true, createdAt: true, updatedAt: true, postedAt: true }),
-});
-
-export type UpdateEventSchema = z.infer<typeof _UpdateEventSchema>;
-export const _UpdateEventSchema = z.object({
-  params: z.object({ id: z.string().uuid() }),
-  body: EventSchema.omit({ id: true, createdAt: true, updatedAt: true, postedAt: true }).partial(),
-});

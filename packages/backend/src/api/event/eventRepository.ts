@@ -1,19 +1,53 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, like, SQL, sql } from 'drizzle-orm';
 import { db } from 'src/db';
-import { event as eventSchema, userEventRegistration } from 'src/db/schema';
+import { event as eventSchema, jobType, userEventRegistration } from 'src/db/schema';
 
-import { _CreateEventSchema, CreateEventSchema, Event, EventSchema, UpdateEventSchema } from '../event/eventModel';
+import { CreateEventRequest, Event, EventSchema, UpdateEventRequest } from '../event/eventModel';
 
 export const eventRepository = {
-  findAllAsync: async (): Promise<Event[]> => {
-    const query = db.select().from(eventSchema);
-    const events = await query;
-    if (!events) {
-      return [];
+  findAllAsync: async (filters: {
+    limit: number;
+    offset: number;
+    typeId?: number;
+    title?: string;
+  }): Promise<{ events: Event[]; totalCount: number }> => {
+    const conditions: SQL[] = [];
+
+    if (filters.typeId) {
+      conditions.push(eq(eventSchema.typeId, filters.typeId));
     }
-    return events.map((event: any) => {
-      return EventSchema.parse(event);
+
+    if (filters.title) {
+      conditions.push(like(eventSchema.title, `%${filters.title}%`));
+    }
+
+    const baseQuery = db
+      .select()
+      .from(eventSchema)
+      .leftJoin(jobType, eq(eventSchema.typeId, jobType.id))
+      .where(and(...conditions));
+
+    const [totalCountResult, result] = await Promise.all([
+      db.select({ count: sql`count(*)` }).from(baseQuery.as('subquery')),
+      baseQuery.limit(filters.limit).offset(filters.offset).execute(),
+    ]);
+
+    const parsedResult = result.map((row: any) => {
+      const eventData = {
+        ...row.event,
+        date: row.event.date.toISOString(),
+        createdAt: row.event.createdAt.toISOString(),
+        updatedAt: row.event.updatedAt.toISOString(),
+        postedAt: row.event.postedAt.toISOString(),
+      };
+      console.log('eventData', eventData);
+      return EventSchema.parse(eventData);
     });
+
+    return {
+      events: parsedResult,
+      totalCount: Number(totalCountResult[0].count),
+    };
   },
 
   findByIdAsync: async (id: string): Promise<Event | null> => {
@@ -24,7 +58,7 @@ export const eventRepository = {
     return events[0];
   },
 
-  createAsync: async (event: CreateEventSchema): Promise<Event> => {
+  createAsync: async (event: CreateEventRequest): Promise<Event> => {
     if (event.body.date) {
       if (new Date(event.body.date) < new Date()) {
         throw new Error('Cannot create an event in the past');
@@ -55,7 +89,7 @@ export const eventRepository = {
     return EventSchema.parse(parsedEvent);
   },
 
-  updateAsync: async (id: string, event: UpdateEventSchema): Promise<Event> => {
+  updateAsync: async (id: string, event: UpdateEventRequest): Promise<Event> => {
     const [updatedEvent] = await db
       .update(eventSchema)
       .set({

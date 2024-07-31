@@ -7,12 +7,13 @@ import { z, ZodError } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { _CreateEventSchema, _GetEventSchema, _UpdateEventSchema, EventSchema } from '../event/eventModel';
+import { EventSchema } from '../event/eventModel';
 import { eventService } from '../event/eventService';
+import { CreateEventSchema, GetEventsRequest, GetEventsSchema, UpdateEventSchema } from './eventRequest';
 
 export const eventRegistry = new OpenAPIRegistry();
 
-eventRegistry.register('Event', EventSchema);
+// eventRegistry.register('Event', EventSchema);
 
 export const eventRouter: Router = (() => {
   const router = express.Router();
@@ -21,27 +22,32 @@ export const eventRouter: Router = (() => {
     method: 'get',
     path: '/events/{id}',
     tags: ['Event'],
-    request: { params: _GetEventSchema.shape.params },
-    responses: createApiResponse(EventSchema, 'Success'),
+    responses: createApiResponse(z.array(EventSchema), 'Success'),
   });
 
-  router.get('/:id', validateRequest(_GetEventSchema), async (req: Request, res: Response) => {
+  router.get('/:id', validateRequest(GetEventsSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
     logger.info(`GET /events/${id}`);
     const serviceResponse = await eventService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  eventRegistry.registerPath({
-    method: 'get',
-    path: '/events',
-    tags: ['Event'],
-    responses: createApiResponse(z.array(EventSchema), 'Success'),
-  });
+  // eventRegistry.registerPath({
+  //   method: 'get',
+  //   path: '/events',
+  //   tags: ['Event'],
+  //   responses: createApiResponse(z.array(EventSchema), 'Success'),
+  // });
 
-  router.get('/', async (_req: Request, res: Response) => {
+  router.get('/', validateRequest(GetEventsSchema), async (req: Request, res: Response) => {
+    const { pageIndex, pageSize, typeId, title } = req.query as unknown as GetEventsRequest;
     logger.info('GET /events');
-    const serviceResponse = await eventService.findAll();
+    const serviceResponse = await eventService.findAll({
+      pageIndex,
+      pageSize,
+      typeId,
+      title,
+    });
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -61,7 +67,7 @@ export const eventRouter: Router = (() => {
   router.post('/', async (req: Request, res: Response) => {
     try {
       logger.info('POST /events');
-      const parsedEvent = _CreateEventSchema.parse({ body: req.body });
+      const parsedEvent = CreateEventSchema.parse({ body: req.body });
       const serviceResponse = await eventService.create(parsedEvent);
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
@@ -89,7 +95,7 @@ export const eventRouter: Router = (() => {
   router.put('/:id', async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
-      const parsedEvent = _UpdateEventSchema.parse(req);
+      const parsedEvent = UpdateEventSchema.parse(req);
       const serviceResponse = await eventService.update(id, parsedEvent);
       handleServiceResponse(serviceResponse, res);
     } catch (error) {

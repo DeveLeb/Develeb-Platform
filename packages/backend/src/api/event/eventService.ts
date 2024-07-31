@@ -2,22 +2,43 @@ import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
-import { CreateEventSchema, Event, UpdateEventSchema } from './eventModel';
+import { CreateEventRequest, Event, UpdateEventRequest } from './eventModel';
 import { eventRepository } from './eventRepository';
 
 export const eventService = {
-  findAll: async (): Promise<ServiceResponse<Event[] | null>> => {
+  findAll: async (filters: {
+    pageIndex: number;
+    pageSize: number;
+    typeId?: number;
+    title?: string;
+  }): Promise<ServiceResponse<Event[] | null>> => {
+    logger.info('Finding all events with filters:', JSON.stringify(filters));
+    const { pageIndex, pageSize, typeId, title } = filters;
+    const offset = (pageIndex - 1) * pageSize;
     try {
-      logger.info('Finding all events');
-      const events = await eventRepository.findAllAsync();
-      if (!events) {
+      const { events, totalCount } = await eventRepository.findAllAsync({
+        limit: pageSize,
+        offset,
+        typeId,
+        title,
+      });
+      if (events.length === 0) {
         logger.info('No events found');
         return new ServiceResponse(ResponseStatus.Failed, 'No Events found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info('Events found');
-      return new ServiceResponse<Event[]>(ResponseStatus.Success, 'Events found', events, StatusCodes.OK);
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const paginationInfo = {
+        currentPage: pageIndex,
+        pageSize,
+        totalCount,
+        totalPages,
+      };
+
+      const successMessage = `Events fetched successfully. Page ${paginationInfo.currentPage} of ${paginationInfo.totalPages}`;
+      logger.info(successMessage);
+      return new ServiceResponse<Event[]>(ResponseStatus.Success, successMessage, events, StatusCodes.OK);
     } catch (ex) {
-      const errorMessage = `Error finding all events: $${(ex as Error).message}`;
+      const errorMessage = `Error finding events: $${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -28,10 +49,10 @@ export const eventService = {
       logger.info(`Finding event with id ${id}`);
       const event = await eventRepository.findByIdAsync(id);
       if (!event) {
-        logger.info(`Event with id ${id} not found`);
+        logger.info(`Event not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info(`Event with id ${id} found`);
+      logger.info(`Event found with id ${id}`);
       return new ServiceResponse<Event>(ResponseStatus.Success, 'Event found', event, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding event with id ${id}:, ${(ex as Error).message}`;
@@ -40,7 +61,7 @@ export const eventService = {
     }
   },
 
-  create: async (event: CreateEventSchema): Promise<ServiceResponse<Event | null>> => {
+  create: async (event: CreateEventRequest): Promise<ServiceResponse<Event | null>> => {
     logger.info('Creating event with data:', JSON.stringify(event));
     if (!event) {
       return new ServiceResponse(ResponseStatus.Failed, 'Event not provided', null, StatusCodes.BAD_REQUEST);
@@ -54,7 +75,7 @@ export const eventService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  update: async (id: string, event: UpdateEventSchema): Promise<ServiceResponse<Event | null>> => {
+  update: async (id: string, event: UpdateEventRequest): Promise<ServiceResponse<Event | null>> => {
     if (!event) {
       return new ServiceResponse(ResponseStatus.Failed, 'Event not provided', null, StatusCodes.BAD_REQUEST);
     }
