@@ -9,11 +9,13 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { EventSchema } from '../event/eventModel';
 import { eventService } from '../event/eventService';
-import { CreateEventSchema, GetEventsRequest, GetEventsSchema, UpdateEventSchema } from './eventRequest';
+import { CreateEventSchema, GetEventRequest, GetEventSchema, UpdateEventSchema } from './eventRequest';
+import { EventRegistrationSchema } from './eventRespone';
 
 export const eventRegistry = new OpenAPIRegistry();
 
-// eventRegistry.register('Event', EventSchema);
+eventRegistry.register('Event', EventSchema);
+eventRegistry.register('UserEventRegistration', EventRegistrationSchema);
 
 export const eventRouter: Router = (() => {
   const router = express.Router();
@@ -25,22 +27,22 @@ export const eventRouter: Router = (() => {
     responses: createApiResponse(z.array(EventSchema), 'Success'),
   });
 
-  router.get('/:id', validateRequest(GetEventsSchema), async (req: Request, res: Response) => {
+  router.get('/:id', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
     logger.info(`GET /events/${id}`);
     const serviceResponse = await eventService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  // eventRegistry.registerPath({
-  //   method: 'get',
-  //   path: '/events',
-  //   tags: ['Event'],
-  //   responses: createApiResponse(z.array(EventSchema), 'Success'),
-  // });
+  eventRegistry.registerPath({
+    method: 'get',
+    path: '/events',
+    tags: ['Event'],
+    responses: createApiResponse(z.array(EventSchema), 'Success'),
+  });
 
-  router.get('/', validateRequest(GetEventsSchema), async (req: Request, res: Response) => {
-    const { pageIndex, pageSize, typeId, title } = req.query as unknown as GetEventsRequest;
+  router.get('/', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
+    const { pageIndex, pageSize, typeId, title } = req.query as unknown as GetEventRequest;
     logger.info('GET /events');
     const serviceResponse = await eventService.findAll({
       pageIndex,
@@ -51,18 +53,15 @@ export const eventRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  // eventRegistry.registerPath({
-  //   method: 'post',
-  //   path: '/events',
-  //   tags: ['Event'],
-  //   request: {
-  //     body: {
-  //       description: 'Event object',
-  //       content: GetEventSchema.shape.body,
-  //     },
-  //   },
-  //   responses: createApiResponse(EventSchema, 'Success'),
-  // });
+  eventRegistry.registerPath({
+    method: 'post',
+    path: '/events',
+    tags: ['Event'],
+    request: {
+      params: CreateEventSchema,
+    },
+    responses: createApiResponse(EventSchema, 'Success'),
+  });
 
   router.post('/', async (req: Request, res: Response) => {
     try {
@@ -78,19 +77,15 @@ export const eventRouter: Router = (() => {
     }
   });
 
-  // eventRegistry.registerPath({
-  //   method: 'put',
-  //   path: '/events/{id}',
-  //   tags: ['Event'],
-  //   request: {
-  //     params: GetEventSchema.shape.params,
-  //     body: {
-  //       description: 'Event object',
-  //       content: EventSchema,
-  //     },
-  //   },
-  //   responses: createApiResponse(EventSchema, 'Success'),
-  // });
+  eventRegistry.registerPath({
+    method: 'put',
+    path: '/events/{id}',
+    tags: ['Event'],
+    request: {
+      params: CreateEventSchema,
+    },
+    responses: createApiResponse(EventSchema, 'Success'),
+  });
 
   router.put('/:id', async (req: Request, res: Response) => {
     try {
@@ -107,16 +102,37 @@ export const eventRouter: Router = (() => {
     }
   });
 
+  eventRegistry.registerPath({
+    method: 'delete',
+    path: '/events/{id}',
+    tags: ['Event'],
+    responses: createApiResponse(z.object({}), 'Success'),
+  });
+
   router.delete('/:id', async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const serviceResponse = await eventService.delete(id);
     handleServiceResponse(serviceResponse, res);
   });
 
+  eventRegistry.registerPath({
+    method: 'get',
+    path: '/events/{eventId}/registrations',
+    tags: ['Event'],
+    responses: createApiResponse(z.array(EventSchema), 'Success'),
+  });
+
   router.get('/:eventId/registrations', async (req: Request, res: Response) => {
     const eventId = req.params.eventId as string;
     const serviceResponse = await eventService.getRegistrations(eventId);
     handleServiceResponse(serviceResponse, res);
+  });
+
+  eventRegistry.registerPath({
+    method: 'post',
+    path: '/events/{eventId}/register/{userId}',
+    tags: ['Event'],
+    responses: createApiResponse(z.array(EventRegistrationSchema), 'Success'),
   });
 
   router.post('/:eventId/register/:userId', async (req: Request, res: Response) => {

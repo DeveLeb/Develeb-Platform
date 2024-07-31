@@ -4,6 +4,7 @@ import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResp
 import { logger } from '../../server';
 import { CreateEventRequest, Event, UpdateEventRequest } from './eventModel';
 import { eventRepository } from './eventRepository';
+import { EventRegistrationRespone } from './eventRespone';
 
 export const eventService = {
   findAll: async (filters: {
@@ -98,7 +99,7 @@ export const eventService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  getRegistrations: async (eventId: string): Promise<ServiceResponse<any>> => {
+  getRegistrations: async (eventId: string): Promise<ServiceResponse<EventRegistrationRespone[] | null>> => {
     try {
       const registrations = await eventRepository.getRegistrationsAsync(eventId);
       return new ServiceResponse<any>(ResponseStatus.Success, 'Registrations found', registrations, StatusCodes.OK);

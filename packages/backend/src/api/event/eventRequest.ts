@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { EventSchema } from './eventModel';
 
-export const GetEventsSchema = z.object({
+export const GetEventSchema = z.object({
   query: z.object({
     pageIndex: commonValidations.pageIndex,
     pageSize: commonValidations.pageSize,
@@ -11,12 +11,7 @@ export const GetEventsSchema = z.object({
     title: z.string().optional(),
   }),
 });
-export type GetEventsRequest = z.infer<typeof GetEventsSchema>['query'];
-
-export type GetEventRequest = z.infer<typeof GetEventSchema>;
-export const GetEventSchema = z.object({
-  params: z.object({ id: z.string().uuid() }),
-});
+export type GetEventRequest = z.infer<typeof GetEventSchema>['query'];
 
 export type CreateEventRequest = z.infer<typeof CreateEventSchema>;
 export const CreateEventSchema = z.object({

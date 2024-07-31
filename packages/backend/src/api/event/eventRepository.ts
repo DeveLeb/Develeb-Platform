@@ -3,6 +3,7 @@ import { db } from 'src/db';
 import { event as eventSchema, jobType, userEventRegistration } from 'src/db/schema';
 
 import { CreateEventRequest, Event, EventSchema, UpdateEventRequest } from '../event/eventModel';
+import { EventRegistrationRespone, EventRegistrationSchema } from './eventRespone';
 
 export const eventRepository = {
   findAllAsync: async (filters: {
@@ -114,7 +115,7 @@ export const eventRepository = {
     await db.delete(eventSchema).where(eq(eventSchema.id, id));
   },
 
-  getRegistrationsAsync: async (eventId: string): Promise<any> => {
+  getRegistrationsAsync: async (eventId: string): Promise<EventRegistrationRespone[]> => {
     const event = await db.select().from(eventSchema).where(eq(eventSchema.id, eventId));
     if (!event) {
       throw new Error('Event not found');
@@ -123,7 +124,12 @@ export const eventRepository = {
       .select()
       .from(userEventRegistration)
       .where(eq(userEventRegistration.eventId, eventId));
-    return registrations;
+
+    const parsedRegistrations = registrations.map((registration) => {
+      return EventRegistrationSchema.parse(registration);
+    });
+
+    return parsedRegistrations;
   },
 
   newRegisterationAsync: async (eventId: string, userId: string, userType: string): Promise<void> => {
