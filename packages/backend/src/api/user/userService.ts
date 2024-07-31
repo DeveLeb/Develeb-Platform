@@ -1,9 +1,12 @@
+import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
+import { validatePassword } from 'src/common/utils/commonValidation';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
+import { CreateUserRequest, createUserRequest } from './userRequest/createUser';
 
 export const userService = {
   // Retrieves all users from the database
@@ -11,6 +14,7 @@ export const userService = {
     try {
       const users = await userRepository.findAllAsync();
       if (!users) {
+        logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Failed, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
@@ -37,33 +41,31 @@ export const userService = {
   },
 
   // Creates a new user
-  createUser: async (
-    email: string,
-    username: string,
-    password: string,
-    full_name: string,
-    phone_number: string,
-    level_id: number,
-    category_id: number
-  ) => {
+  createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
-      const userEmail = await userRepository.findByEmailAsync(email);
+      logger.info('Validating password...');
+      const { valid, message } = validatePassword(createUserRequest.password);
+      if (!valid) {
+        logger.info(`Password validation failed: ${message}`);
+        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
+      }
+      logger.info('Checking for conflicts...');
+      const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
       if (userEmail) {
-        return new ServiceResponse(ResponseStatus.Failed, 'Email already in use', null, StatusCodes.CONFLICT);
+        logger.info('Email conflict found');
+        return new ServiceResponse(ResponseStatus.Success, 'Email already in use.', null, StatusCodes.CONFLICT);
       }
-      const userUsername = await userRepository.findByUsernameAsync(username);
+      logger.info('No email conflicts found. Checking for username...');
+      const userUsername = await userRepository.findByUsernameAsync(createUserRequest.username);
       if (userUsername) {
-        return new ServiceResponse(ResponseStatus.Failed, 'Username already exists', null, StatusCodes.CONFLICT);
+        logger.info('Username conflict found');
+        return new ServiceResponse(ResponseStatus.Success, 'Username already in use.', null, StatusCodes.CONFLICT);
       }
-      const newUser = await userRepository.createUserAsync(
-        email,
-        username,
-        password,
-        full_name,
-        phone_number,
-        level_id,
-        category_id
-      );
+      logger.info('No conflicts found. Creating user...');
+      const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
+      createUserRequest.password = hashPassword;
+      const newUser = await userRepository.createUserAsync(createUserRequest);
+      logger.info('User created successfully');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User created', newUser, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating user: ${(ex as Error).message}`;

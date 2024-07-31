@@ -3,9 +3,10 @@
 import { eq } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
-
+import { logger } from 'src/server';
 import { UserResponse } from './userResponse';
-
+import { User } from './userModel';
+import { CreateUserRequest } from './userRequest/createUser';
 export const userRepository = {
   findAllAsync: async (): Promise<UserResponse[]> => {
     return (await db.select().from(user)) as UserResponse[];
@@ -62,3 +63,4 @@ export const userRepository = {
     return result[0] as UserResponse | undefined;
   },
 };
+

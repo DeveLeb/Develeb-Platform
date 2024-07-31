@@ -7,12 +7,14 @@ import passport from 'passport';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
 import { env } from 'src/common/utils/envConfig';
+import { logger } from 'src/server';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
+import { createUserRequest } from './userRequest/createUser';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -47,18 +49,10 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', async (req: Request, res: Response) => {
-    const { email, username, password, full_name, phone_number, level_id, category_id } = req.body;
-    const hashPassword = await bcrypt.hash(password, 1);
-    const serviceResponse = await userService.createUser(
-      email,
-      username,
-      hashPassword,
-      full_name,
-      phone_number,
-      level_id,
-      category_id
-    );
+  router.post('/', validateRequest(createUserRequest), async (req: Request, res: Response) => {
+    const RequestObject = createUserRequest.parse({ body: req.body });
+    logger.info('Parsed RequestObject: ', RequestObject);
+    const serviceResponse = await userService.createUser(RequestObject.body);
     handleServiceResponse(serviceResponse, res);
   });
 
@@ -98,7 +92,9 @@ export const userRouter: Router = (() => {
 
         const token = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_SECRET, { expiresIn: '1h' });
 
-        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        const refreshToken = jwt.sign({ id: user[0].id, role: user[0].role }, env.JWT_REFRESH_SECRET, {
+          expiresIn: '7d',
+        });
         return res.json({ message: 'Login successful', token, refreshToken });
       });
     })(req, res, next);
