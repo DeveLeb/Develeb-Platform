@@ -22,8 +22,10 @@ export const resourceService = {
     title?: string;
   }): Promise<ServiceResponse<{ resources: Resource[]; pagination: PaginationInfo } | null>> => {
     try {
+      logger.info('Received filters:', JSON.stringify(filters));
       const { pageIndex, pageSize, type, title } = filters;
       if (pageIndex < 1 || pageSize < 1) {
+        logger.info('Invalid pagination parameters');
         return new ServiceResponse(
           ResponseStatus.Failed,
           'Invalid pagination parameters',
@@ -43,9 +45,10 @@ export const resourceService = {
         title,
       });
 
-      logger.debug(`Repository returned ${resources.length} resources out of ${totalCount} total`);
+      logger.info(`Repository returned ${resources.length} resources out of ${totalCount} total`);
 
       if (resources.length === 0) {
+        logger.info('No resources found');
         return new ServiceResponse(ResponseStatus.Failed, 'No resources found', null, StatusCodes.NOT_FOUND);
       }
 
@@ -73,13 +76,15 @@ export const resourceService = {
       }
 
       const errorMessage = `Error finding resources: ${(ex as Error).message}`;
-      logger.error(errorMessage, { error: ex });
+      logger.error(errorMessage, ex);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
   createResource: async (createResource: CreateResourceRequest): Promise<ServiceResponse<Resource | null>> => {
     try {
+      logger.info('Attempting to create resource:', JSON.stringify(createResource));
       const createdResource = await resourceRepository.createResourceAsync(createResource);
+      logger.info('Resource created successfully:', JSON.stringify(createdResource));
       return new ServiceResponse(ResponseStatus.Success, 'Resource created', createdResource, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating resource: ${(ex as Error).message}`;
@@ -89,13 +94,16 @@ export const resourceService = {
   },
   findResourceById: async (id: string): Promise<ServiceResponse<Resource | null>> => {
     try {
+      logger.info(`Attempting to find resource with id ${id}`);
       const resource = await resourceRepository.findResourceAsync(id);
       if (!resource) {
+        logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Resource found with id ${id}:`, JSON.stringify(resource));
       return new ServiceResponse(ResponseStatus.Success, 'Resource found', resource, StatusCodes.OK);
     } catch (ex) {
-      const errorMessage = `Error finding resource with id ${id}:, ${(ex as Error).message}`;
+      const errorMessage = `Error finding resource with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -105,29 +113,37 @@ export const resourceService = {
     updateResourceRequest: PutResourceRequest
   ): Promise<ServiceResponse<Resource | null>> => {
     try {
+      logger.info(`Attempting to update resource with id ${id}`);
       const resource = await resourceRepository.findResourceAsync(id);
       if (!resource) {
+        logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Updating resource with id ${id} with data:`, JSON.stringify(updateResourceRequest));
       const updatedResource = await resourceRepository.updateResourceAsync(id, updateResourceRequest);
-      return new ServiceResponse(ResponseStatus.Failed, 'No resource found', updatedResource, StatusCodes.NOT_FOUND);
+      logger.info(`Resource updated successfully with id ${id}`);
+      return new ServiceResponse(ResponseStatus.Failed, 'Resource updated', updatedResource, StatusCodes.NOT_FOUND);
     } catch (ex) {
       const errorMessage = `Error updating resource with id ${id}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
+      logger.error(errorMessage, ex);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
   deleteResource: async (id: string): Promise<ServiceResponse<Resource | null>> => {
     try {
+      logger.info(`Attempting to delete resource with id ${id}`);
       const resource = await resourceRepository.findResourceAsync(id);
       if (!resource) {
+        logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info(`Resource found with id ${id}. About to delete...`);
       const deletedResource = await resourceRepository.deleteResourceAsync(id);
+      logger.info(`Resource deleted with id ${id}:`, JSON.stringify(deletedResource));
       return new ServiceResponse(ResponseStatus.Failed, 'Resource deleted', deletedResource, StatusCodes.NOT_FOUND);
     } catch (ex) {
       const errorMessage = `Error deleting resource with id ${id}:, ${(ex as Error).message}`;
-      logger.error(errorMessage);
+      logger.error(errorMessage, ex);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
@@ -135,12 +151,16 @@ export const resourceService = {
     id: string
   ): Promise<ServiceResponse<{ resource_id: string; totalViews: number | null } | null>> => {
     try {
+      logger.info(`Attempting to find resource views for resource with id ${id}`);
       const resource = await resourceRepository.findResourceAsync(id);
+      logger.info(`Resource found with id ${id}:`, JSON.stringify(resource));
       if (!resource) {
+        logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       const totalViews = await resourceRepository.findResourceTotalViewsAsync(id);
       const resourceTotalViews = { resource_id: id, totalViews };
+      logger.info(`Resource views found for resource with id ${id}:`, JSON.stringify(resourceTotalViews));
       return new ServiceResponse(
         ResponseStatus.Success,
         'Resource views retrieved successfully',
@@ -149,17 +169,21 @@ export const resourceService = {
       );
     } catch (ex) {
       const errorMessage = `Error finding resource with id ${id}: ${(ex as Error).message}`;
-      logger.error(errorMessage);
+      logger.error(errorMessage, ex);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
   saveResourceForUser: async (resourceId: string, userId: string): Promise<ServiceResponse<Resource | null>> => {
     try {
+      logger.info(`Attempting to save resource with id ${resourceId} for user with id ${userId}`);
       const resource = await resourceRepository.findResourceAsync(resourceId);
+      logger.info(`Resource found with id ${resourceId}:`, JSON.stringify(resource));
       if (!resource) {
+        logger.info(`No resource found with id ${resourceId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       const savedResource = await resourceRepository.saveResourceAsync(resourceId, userId);
+      logger.info(`Resource saved with id ${resourceId} for user with id ${userId}:`, JSON.stringify(savedResource));
       return new ServiceResponse(ResponseStatus.Success, 'Resource saved successfully', savedResource, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error saving resource with id ${resourceId}: ${(ex as Error).message}`;
@@ -169,19 +193,20 @@ export const resourceService = {
   },
   findSavedResources: async (userId: string): Promise<ServiceResponse<Resource[] | null>> => {
     try {
+      logger.info(`Attempting to find saved resources for user with id ${userId}`);
       //check userID
       logger.info(`userId: ${userId}`);
       const result = await resourceRepository.findSavedResourcesAsync(userId);
-      logger.info(`resources: ${JSON.stringify(result)}`);
+      logger.info(`Resources found for user with id ${userId}:`, JSON.stringify(result));
       if (!result) {
-        logger.info(`No resources saved!`);
+        logger.info(`No resources saved for user with id ${userId}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resources saved!', null, StatusCodes.NOT_FOUND);
       }
-      logger.info(`Resources found`);
+      logger.info(`Resources found for user with id ${userId}`);
       return new ServiceResponse(ResponseStatus.Success, 'Resources saved found', result, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding saved resources for user with id ${userId}: ${ex as Error}`;
-      logger.error(errorMessage);
+      logger.error(errorMessage, ex);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },

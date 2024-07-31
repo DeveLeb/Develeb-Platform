@@ -3,7 +3,7 @@ import express, { Request, Response, Router } from 'express';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { /* GetResourceViews,*/ ResourceSchema } from './resourceModel';
+import { ResourceSchema } from './resourceModel';
 import {
   CreateResourceRequest,
   CreateResourceSchema,
@@ -47,14 +47,53 @@ export const resourceRouter: Router = (() => {
   });
 
   router.post('/', validateRequest(CreateResourceSchema), async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   res.status(401).json({ message: 'Unauthorized' });
-    // }
+    //TODO auth implementation
     const createResourceRequest = req.body as unknown as CreateResourceRequest;
     const serviceResponse = await resourceService.createResource(createResourceRequest);
     handleServiceResponse(serviceResponse, res);
   });
 
+  resourceRegistry.registerPath({
+    method: 'get',
+    path: '/resources/{id}/views',
+    tags: ['Resource'],
+    responses: createApiResponse(GetResourceViewsSchema, 'Success'),
+  });
+
+  router.get('/:id/views', async (req: Request, res: Response) => {
+    //TODO auth implementation
+    const { id } = req.params;
+    const serviceResponse = await resourceService.findResourceViews(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  resourceRegistry.registerPath({
+    method: 'post',
+    path: '/resources/{resourceId}/save/{userId}',
+    tags: ['Resource'],
+    responses: createApiResponse(ResourceSchema, 'Success'),
+  });
+
+  router.post('/:resourceId/save/:userId', async (req: Request, res: Response) => {
+    //TODO auth implementation
+    const { resourceId, userId } = req.params;
+    const serviceResponse = await resourceService.saveResourceForUser(resourceId, userId);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  resourceRegistry.registerPath({
+    method: 'get',
+    path: '/resources/{userId}/saved/resources',
+    tags: ['Job'],
+    responses: createApiResponse(ResourceSchema, 'Success'),
+  });
+
+  router.get('/:userId/saved/resources', async (req: Request, res: Response) => {
+    //TODO auth implementation
+    const { userId } = req.params;
+    const serviceResponse = await resourceService.findSavedResources(userId);
+    handleServiceResponse(serviceResponse, res);
+  });
   resourceRegistry.registerPath({
     method: 'get',
     path: '/resources/{id}',
@@ -69,9 +108,7 @@ export const resourceRouter: Router = (() => {
   });
 
   router.put('/:id', validateRequest(PutResourceSchema), async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      res.status(401).json({ message: 'Unauthorized' });
-    }
+    //TODO auth implementation
     const { id } = req.params;
     const putResourceObject = req.body as unknown as PutResourceRequest;
     const serviceResponse = await resourceService.updateResource(id, putResourceObject);
@@ -79,43 +116,9 @@ export const resourceRouter: Router = (() => {
   });
 
   router.delete('/:id', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      res.status(401).json({ message: 'Unauthorized' });
-    }
+    //TODO auth implementation
     const { id } = req.params;
     const serviceResponse = await resourceService.deleteResource(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  resourceRegistry.registerPath({
-    method: 'get',
-    path: '/resources/{id}/views',
-    tags: ['Resource'],
-    responses: createApiResponse(GetResourceViewsSchema, 'Success'),
-  });
-
-  router.get('/:id/views', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const { id } = req.params;
-    const serviceResponse = await resourceService.findResourceViews(id);
-    handleServiceResponse(serviceResponse, res);
-  });
-
-  resourceRegistry.registerPath({
-    method: 'post',
-    path: '/resources/{resourceId}/save/{userId}',
-    tags: ['Resource'],
-    responses: createApiResponse(ResourceSchema, 'Success'),
-  });
-
-  router.post('/:resourceId/save/:userId', async (req: Request, res: Response) => {
-    // if (!req.user) {
-    //   return res.status(401).send('Unauthorized');
-    // }
-    const { resourceId, userId } = req.params;
-    const serviceResponse = await resourceService.saveResourceForUser(resourceId, userId);
     handleServiceResponse(serviceResponse, res);
   });
   return router;
