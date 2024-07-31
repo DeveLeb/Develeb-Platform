@@ -47,9 +47,13 @@ export const userService = {
     category_id: number
   ) => {
     try {
-      const user = await userRepository.findByEmailAsync(email);
-      if (user.length !== 0) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User already exists', null, StatusCodes.CONFLICT);
+      const userEmail = await userRepository.findByEmailAsync(email);
+      if (userEmail) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Email already in use', null, StatusCodes.CONFLICT);
+      }
+      const userUsername = await userRepository.findByUsernameAsync(username);
+      if (userUsername) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Username already exists', null, StatusCodes.CONFLICT);
       }
       const newUser = await userRepository.createUserAsync(
         email,
