@@ -1,0 +1,1 @@
+ALTER TABLE "event" ADD COLUMN "posted_at" timestamp DEFAULT now();
