@@ -2,6 +2,7 @@ import e from 'cors';
 import { param } from 'drizzle-orm';
 import { email } from 'envalid';
 import { commonValidations } from 'src/common/utils/commonValidation';
+import { tags } from 'src/db/schema';
 import { i } from 'vitest/dist/reporters-yx5ZTtEV';
 import { z } from 'zod';
 
@@ -44,12 +45,11 @@ export const UpdateUserSchema = z.object({
   }),
   body: z.object({
     full_name: z.string(),
-    phone_number: z.string(),
     level_id: z.number(),
     category_id: z.number(),
+    tags: z.string().optional(),
   }),
 });
-
 
 export type UpdateUserRequest = z.infer<typeof UpdateUserSchema>;
 
@@ -70,4 +70,10 @@ export const LoginUserSchema = z.object({
 
 export type LoginUserRequest = z.infer<typeof LoginUserSchema>['body'];
 
+export const UserRefreshTokenSchema = z.object({
+  body: z.object({
+    refreshToken: z.string(),
+  }),
+});
 
+export type UserRefreshRequest = z.infer<typeof UserRefreshTokenSchema>['body'];

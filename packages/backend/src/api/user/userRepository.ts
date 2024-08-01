@@ -1,61 +1,78 @@
 //import bcrypt from 'bcrypt';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, like } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { User } from './userModel';
 import { CreateUserRequest } from './userRequest';
+import { UserResponse } from './userResponse';
 export const userRepository = {
-  findAllAsync: async () => {
-    return await db.select().from(user);
+  findAllAsync: async (
+    pageIndex: number,
+    pageSize: number,
+    username?: string,
+    email?: string
+  ): Promise<UserResponse[]> => {
+    const offset = (pageIndex - 1) * pageSize;
+
+    const filters = [];
+    if (username) {
+      filters.push(like(user.username, `%${username}%`));
+    }
+    if (email) {
+      filters.push(like(user.email, `%${email}%`));
+    }
+    const query = db
+      .select()
+      .from(user)
+      .limit(pageSize)
+      .offset(offset)
+      .where(and(...filters));
+
+    return (await query) as UserResponse[];
   },
 
-  findByIdAsync: async (id: string) => {
-    return await db.select().from(user).where(eq(user.id, id));
+  findByIdAsync: async (id: string): Promise<UserResponse | undefined> => {
+    const result = await db.select().from(user).where(eq(user.id, id));
+    return result[0] as UserResponse | undefined;
   },
-  findByUsernameAsync: async (username: string): Promise<User | undefined> => {
-    try{
-      const result = await db.select().from(user).where(eq(user.username, username));
-      return result[0] as User | undefined;
-    } catch (err) {
-      logger.error(err);
-    }
+  findByEmailAsync: async (email: string): Promise<UserResponse | undefined> => {
+    const result = await db.select().from(user).where(eq(user.email, email));
+    return result[0] as UserResponse | undefined;
   },
-  findByEmailAsync: async (email: string): Promise<User | undefined> => {
-    try {
-      const result = await db.select().from(user).where(eq(user.email, email));
-      return result[0] as User | undefined;
-    } catch (err) {
-      logger.error(err);
-    }
+  findByUsernameAsync: async (username: string): Promise<UserResponse | undefined> => {
+    const result = await db.select().from(user).where(eq(user.username, username));
+    return result[0] as UserResponse | undefined;
   },
   createUserAsync: async (createUserRequest: CreateUserRequest): Promise<void> => {
-    try {
-      await db.insert(user).values({
-        email: createUserRequest.email,
-        username: createUserRequest.username,
-        password: createUserRequest.password,
-        fullName: createUserRequest.full_name,
-        phoneNumber: createUserRequest.phone_number,
-        levelId: createUserRequest.level_id,
-        categoryId: createUserRequest.category_id,
-      });
-    } catch (err) {
-      logger.error(err);
-    }
+    await db.insert(user).values({
+      email: createUserRequest.email,
+      username: createUserRequest.username,
+      password: createUserRequest.password,
+      fullName: createUserRequest.full_name,
+      phoneNumber: createUserRequest.phone_number,
+      levelId: createUserRequest.level_id,
+    });
   },
-  deleteUserAsync: async (id: string) => {
-    console.log('id: ', id);
-    return await db.delete(user).where(eq(user.id, id));
+  deleteUserAsync: async (id: string): Promise<void> => {
+    await db.delete(user).where(eq(user.id, id));
   },
-  updateUserAsync: async (id: string, fullName: string, levelId: number, categoryId: number, tags: string) => {
+  updateUserAsync: async (
+    id: string,
+    fullName: string,
+    levelId: number,
+    categoryId: number,
+    tags: string | undefined
+  ): Promise<UserResponse | undefined> => {
     const updatedAt = new Date();
-    return await db
+    const result = await db
       .update(user)
       .set({ fullName, levelId, categoryId, tags, updatedAt })
       .where(eq(user.id, id))
       .returning();
+
+    return result[0] as UserResponse | undefined;
   },
 };
