@@ -16,7 +16,6 @@ export const userRepository = {
     email?: string
   ): Promise<UserResponse[]> => {
     const offset = (pageIndex - 1) * pageSize;
-    // let query = db.select().from(user).limit(pageSize).offset(offset);
 
     const filters = [];
     if (username) {

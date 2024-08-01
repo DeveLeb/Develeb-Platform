@@ -34,6 +34,7 @@ export const userService = {
     }
   },
 
+
   findById: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
