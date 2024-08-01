@@ -11,7 +11,10 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
       return next(err);
     }
     if (!user) {
-      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
+      logger.info('User unauthorized');
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
     }
     req.user = user;
     logger.info('User authenticated')
