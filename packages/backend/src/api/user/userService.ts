@@ -10,10 +10,9 @@ import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResp
 import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
-import { CreateUserRequest, createUserRequest } from './userRequest';
+import { CreateUserRequest } from './userRequest';
 
 export const userService = {
-  // Retrieves all users from the database
   findAll: async (): Promise<ServiceResponse<User[] | null>> => {
     try {
       const users = await userRepository.findAllAsync();
@@ -21,6 +20,7 @@ export const userService = {
         logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Failed, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info('User found');
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
@@ -29,13 +29,13 @@ export const userService = {
     }
   },
 
-  // Retrieves a single user by their ID
-  findById: async (id: string) => {
+  findById: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
+      logger.info('User found');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
@@ -44,7 +44,6 @@ export const userService = {
     }
   },
 
-  // Creates a new user
   createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
       logger.info('Validating password...');
@@ -78,17 +77,19 @@ export const userService = {
     }
   },
 
-  deleteUser: async (id: string, currentUser: User | undefined) => {
+  deleteUser: async (id: string, currentUser: User | undefined): Promise<ServiceResponse<User | null>> => {
     try {
+      logger.info('Checking if user to be deleted is the current user');
       if (!currentUser || !(currentUser.id === id)) {
+        logger.info('Current user is not the user to be deleted');
         return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
       }
+      logger.info('User to be deleted is the current user, fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       await userRepository.deleteUserAsync(id);
-      console.log('hrere');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User deleted', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}: ${(ex as Error).message}`;
@@ -103,7 +104,7 @@ export const userService = {
     category_id: number,
     tags: string | undefined,
     currentUser: User | undefined
-  ) => {
+  ): Promise<ServiceResponse<{ message: string } | null>> => {
     try {
       logger.info('Checking if user to be edited is the current user');
       if (!currentUser || !(currentUser.id === id)) {
@@ -130,38 +131,47 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  userLogin: async (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-      if (err || !user) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          info ? info.message : 'Authentication failed',
-          null,
-          StatusCodes.UNAUTHORIZED
-        );
-      }
-      req.login(user, { session: false }, async (err) => {
-        if (err) {
-          return new ServiceResponse(
-            ResponseStatus.Failed,
-            'Login failed',
-            { error: err.message },
-            StatusCodes.UNAUTHORIZED
+  userLogin: (req: Request, res: Response, next: NextFunction): Promise<ServiceResponse<any>> => {
+    return new Promise((resolve) => {
+      passport.authenticate('local', { session: false }, (err, user, info) => {
+        if (err || !user) {
+          resolve(
+            new ServiceResponse(
+              ResponseStatus.Failed,
+              info ? info.message : 'Authentication failed',
+              null,
+              StatusCodes.UNAUTHORIZED
+            )
           );
+        } else {
+          req.login(user, { session: false }, async (err) => {
+            if (err) {
+              resolve(
+                new ServiceResponse(
+                  ResponseStatus.Failed,
+                  'Login failed',
+                  { error: err.message },
+                  StatusCodes.UNAUTHORIZED
+                )
+              );
+            } else {
+              const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
+
+              const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
+                expiresIn: '7d',
+              });
+              resolve(
+                new ServiceResponse(
+                  ResponseStatus.Success,
+                  'Login successful',
+                  { message: 'Login successful', token, refreshToken },
+                  StatusCodes.OK
+                )
+              );
+            }
+          });
         }
-
-        const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
-
-        const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
-          expiresIn: '7d',
-        });
-        return new ServiceResponse(
-          ResponseStatus.Success,
-          'Login successful',
-          { message: 'Login successful', token, refreshToken },
-          StatusCodes.OK
-        );
-      });
-    })(req, res, next);
+      })(req, res, next);
+    });
   },
 };

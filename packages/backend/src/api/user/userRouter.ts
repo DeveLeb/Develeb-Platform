@@ -1,11 +1,11 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
-import express, { Request, Response, Router } from 'express';
+import express, { NextFunction, Request, Response, Router } from 'express';
 import jwt from 'jsonwebtoken';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
-import passport from 'src/common/middleware/authConfig/passport'
+import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
 import { ServiceResponse } from 'src/common/models/serviceResponse';
 import { env } from 'src/common/utils/envConfig';
@@ -49,7 +49,7 @@ export const userRouter: Router = (() => {
     validateRequest(GetUsersSchema),
     authenticate,
     authorizeRole(Roles.ADMIN),
-    async (_req: Request, res: Response) => {
+    async (req: Request, res: Response) => {
       const serviceResponse = await userService.findAll();
       handleServiceResponse(serviceResponse, res);
     }
@@ -76,45 +76,24 @@ export const userRouter: Router = (() => {
   });
 
   router.delete('/:id', validateRequest(DeleteUserSchema), authenticate, async (req: Request, res: Response) => {
-    const id = req.params as unknown as DeleteUserRequest;
+    const { id } = req.params as unknown as DeleteUserRequest;
     const currentUser = req.user as User | undefined;
     const serviceResponse = await userService.deleteUser(id, currentUser);
     handleServiceResponse(serviceResponse, res);
   });
 
   router.put('/:id', validateRequest(UpdateUserSchema), authenticate, async (req: Request, res: Response) => {
-    const id = req.params as unknown as UpdateUserRequest['params'];
+    const { id } = req.params as unknown as UpdateUserRequest['params'];
     const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
     const currentUser = req.user as User | undefined;
     const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags, currentUser);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/login', validateRequest(LoginUserSchema), async (req, res, next) => {
-    // const respons = await userService.userLogin(req, res, next);
-    // handleServiceResponse(respons, res);
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-      if (err || !user) {
-        return res.status(401).json({
-          message: 'Authentication failed',
-          error: info ? info.message : 'Login failed',
-        });
-      }
-      req.login(user, { session: false }, async (err) => {
-        if (err) {
-          return res.status(401).json({ message: 'Login failed', error: err });
-        }
-
-        const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
-
-        const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
-          expiresIn: '7d',
-        });
-        return res.json({ message: 'Login successful', token, refreshToken });
-      });
-    })(req, res, next);
+  router.post('/login', validateRequest(LoginUserSchema), async (req: Request, res: Response, next: NextFunction) => {
+    const serviceResponse = await userService.userLogin(req, res, next);
+    handleServiceResponse(serviceResponse, res);
   });
-
   router.post('/refresh-token', async (req, res) => {
     const { refreshToken } = req.body;
 
