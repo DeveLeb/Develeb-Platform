@@ -174,4 +174,32 @@ export const userService = {
       })(req, res, next);
     });
   },
+  userRefreshToken: async (refreshToken: string): Promise<ServiceResponse<{ token: string } | null>> => {
+    logger.info('Checking if refresh token exists...')
+    try {
+      if (!refreshToken) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Refresh token is required', null, StatusCodes.BAD_REQUEST);
+      }
+      logger.info('Refresh token exists, finding user...');
+      const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { id: string; role: string };
+      const user = await userRepository.findByIdAsync(decoded.id);
+      if (!user) {
+        logger.info('User not found');
+        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info('User found, refreshing token...');
+      const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
+      logger.info('Token refreshed')
+      return new ServiceResponse<{ token: string }>(
+        ResponseStatus.Success,
+        'Token refreshed',
+        { token },
+        StatusCodes.OK
+      );
+    } catch (ex) {
+      const errorMessage = `Error refreshing token: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 };

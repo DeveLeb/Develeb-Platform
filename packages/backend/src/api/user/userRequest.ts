@@ -69,3 +69,11 @@ export const LoginUserSchema = z.object({
 });
 
 export type LoginUserRequest = z.infer<typeof LoginUserSchema>['body'];
+
+export const UserRefreshTokenSchema = z.object({
+  body: z.object({
+    refreshToken: z.string(),
+  }),
+});
+
+export type UserRefreshRequest = z.infer<typeof UserRefreshTokenSchema>['body'];

@@ -28,6 +28,8 @@ import {
   LoginUserSchema,
   UpdateUserRequest,
   UpdateUserSchema,
+  UserRefreshRequest,
+  UserRefreshTokenSchema,
 } from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
@@ -90,33 +92,14 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/login', validateRequest(LoginUserSchema), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/login', validateRequest(LoginUserSchema),  async (req: Request, res: Response, next: NextFunction) => {
     const serviceResponse = await userService.userLogin(req, res, next);
     handleServiceResponse(serviceResponse, res);
   });
-  router.post('/refresh-token', async (req, res) => {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(401).json({ message: 'Refresh token is required' });
-    }
-
-    try {
-      const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET);
-
-      const user = await userService.findById(decoded.id);
-
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
-      }
-
-      // Generate new JWT token
-      const accessToken = jwt.sign({ id: user.id, email: user.email }, env.JWT_SECRET, { expiresIn: '15m' });
-
-      return res.json({ accessToken });
-    } catch (err) {
-      return res.status(403).json({ message: 'Invalid refresh token' });
-    }
+  router.post('/refresh-token', validateRequest(UserRefreshTokenSchema), async (req: Request, res: Response) => {
+    const { refreshToken } = req.body as unknown as UserRefreshRequest;
+    const serviceResponse = await userService.userRefreshToken(refreshToken);
+    handleServiceResponse(serviceResponse, res);
   });
 
   return router;
