@@ -8,6 +8,7 @@ import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
 import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
 import { ServiceResponse } from 'src/common/models/serviceResponse';
+import { validatePassword } from 'src/common/utils/commonValidation';
 import { env } from 'src/common/utils/envConfig';
 import { logger } from 'src/server';
 import { z } from 'zod';
@@ -31,9 +32,8 @@ import {
   UserRefreshRequest,
   UserRefreshTokenSchema,
   UserResetPasswordRequest,
-  UserResetPasswordSchema
+  UserResetPasswordSchema,
 } from './userRequest';
-import { validatePassword } from 'src/common/utils/commonValidation';
 
 export const userRegistry = new OpenAPIRegistry();
 
@@ -55,7 +55,8 @@ export const userRouter: Router = (() => {
     authenticate,
     authorizeRole(Roles.ADMIN),
     async (req: Request, res: Response) => {
-      const serviceResponse = await userService.findAll();
+      const { pageIndex, pageSize, username, email } = req.query as unknown as GetUsersRequest;
+      const serviceResponse = await userService.findAll(pageIndex, pageSize, username, email);
       handleServiceResponse(serviceResponse, res);
     }
   );
