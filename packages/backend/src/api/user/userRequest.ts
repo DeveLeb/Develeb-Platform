@@ -45,7 +45,6 @@ export const UpdateUserSchema = z.object({
   }),
   body: z.object({
     full_name: z.string(),
-    phone_number: z.string(),
     level_id: z.number(),
     category_id: z.number(),
     tags: z.string().optional(),

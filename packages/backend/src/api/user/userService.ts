@@ -1,6 +1,10 @@
 import bcrypt from 'bcrypt';
+import { NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import jwt from 'jsonwebtoken';
+import passport from 'passport';
 import { validatePassword } from 'src/common/utils/commonValidation';
+import { env } from 'src/common/utils/envConfig';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
@@ -74,9 +78,11 @@ export const userService = {
     }
   },
 
-  deleteUser: async (id: string) => {
+  deleteUser: async (id: string, currentUser: User | undefined) => {
     try {
-      console.log(id);
+      if (!currentUser || !(currentUser.id === id)) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
+      }
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
@@ -90,18 +96,72 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  updateUser: async (id: string, full_name: string, level_id: number, category_id: number, tags: string) => {
+  updateUser: async (
+    id: string,
+    full_name: string,
+    level_id: number,
+    category_id: number,
+    tags: string | undefined,
+    currentUser: User | undefined
+  ) => {
     try {
+      logger.info('Checking if user to be edited is the current user');
+      if (!currentUser || !(currentUser.id === id)) {
+        logger.info('Current user is not the user to be edited');
+        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
+      }
+      logger.info('User to be edited is the current user, fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
-      if (user.length == 0) {
+      if (!user) {
+        logger.info('User not found by id.');
         return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       }
-      const updatedUser = await userRepository.updateUserAsync(id, full_name, level_id, category_id, tags);
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User updated', updatedUser, StatusCodes.OK);
+      logger.info('User found');
+      await userRepository.updateUserAsync(id, full_name, level_id, category_id, tags);
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'User updated',
+        { message: 'User successfully updated' },
+        StatusCodes.OK
+      );
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
+  },
+  userLogin: async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+      if (err || !user) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          info ? info.message : 'Authentication failed',
+          null,
+          StatusCodes.UNAUTHORIZED
+        );
+      }
+      req.login(user, { session: false }, async (err) => {
+        if (err) {
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Login failed',
+            { error: err.message },
+            StatusCodes.UNAUTHORIZED
+          );
+        }
+
+        const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
+
+        const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
+          expiresIn: '7d',
+        });
+        return new ServiceResponse(
+          ResponseStatus.Success,
+          'Login successful',
+          { message: 'Login successful', token, refreshToken },
+          StatusCodes.OK
+        );
+      });
+    })(req, res, next);
   },
 };

@@ -54,7 +54,7 @@ export const userRepository = {
     fullName: string,
     levelId: number,
     categoryId: number,
-    tags: string
+    tags: string | undefined
   ): Promise<UserResponse | undefined> => {
     const updatedAt = new Date();
     const result = await db

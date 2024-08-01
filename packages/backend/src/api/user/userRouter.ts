@@ -3,10 +3,11 @@ import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express, { Request, Response, Router } from 'express';
 import jwt from 'jsonwebtoken';
-import passport from 'passport';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
+import passport from 'src/common/middleware/authConfig/passport'
 import { Roles } from 'src/common/middleware/authConfig/roles';
+import { ServiceResponse } from 'src/common/models/serviceResponse';
 import { env } from 'src/common/utils/envConfig';
 import { logger } from 'src/server';
 import { z } from 'zod';
@@ -75,24 +76,23 @@ export const userRouter: Router = (() => {
   });
 
   router.delete('/:id', validateRequest(DeleteUserSchema), authenticate, async (req: Request, res: Response) => {
-    const id = req.params as unknown as DeleteUserRequest['id'];
-    const currentUser = req.user as User;
+    const id = req.params as unknown as DeleteUserRequest;
+    const currentUser = req.user as User | undefined;
     const serviceResponse = await userService.deleteUser(id, currentUser);
     handleServiceResponse(serviceResponse, res);
   });
 
   router.put('/:id', validateRequest(UpdateUserSchema), authenticate, async (req: Request, res: Response) => {
+    const id = req.params as unknown as UpdateUserRequest['params'];
     const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
-    const id = req.params as unknown as UpdateUserRequest['params']['id'];
-    if (req.user && req.user.id === id) {
-      const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags);
-      handleServiceResponse(serviceResponse, res);
-    } else {
-      res.status(401).json({ message: 'Unauthorized' }); //do like this or create a serviceResponse object, assign it the error code and message and send it to handleserviceresponse?
-    }
+    const currentUser = req.user as User | undefined;
+    const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags, currentUser);
+    handleServiceResponse(serviceResponse, res);
   });
 
   router.post('/login', validateRequest(LoginUserSchema), async (req, res, next) => {
+    // const respons = await userService.userLogin(req, res, next);
+    // handleServiceResponse(respons, res);
     passport.authenticate('local', { session: false }, (err, user, info) => {
       if (err || !user) {
         return res.status(401).json({

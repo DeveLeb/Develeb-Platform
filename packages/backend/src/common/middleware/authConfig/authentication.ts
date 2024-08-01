@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import passport from 'passport';
 import { User } from 'src/api/user/userModel';
+import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
 import { logger } from 'src/server';
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   logger.info('Authenticating user...');
@@ -9,7 +11,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
       return next(err);
     }
     if (!user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
     }
     req.user = user;
     logger.info('User authenticated')

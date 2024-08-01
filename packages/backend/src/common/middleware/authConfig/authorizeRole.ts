@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { User } from 'src/api/user/userModel';
+import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
 import { logger } from 'src/server';
 
 import { Roles } from './roles';
@@ -11,12 +13,12 @@ const authorizeRole = (role: Roles) => {
     logger.info('Checking if user is logged in');
     if (!currentUser) {
       logger.error('User is not logged in');
-      return res.status(401).json({ message: 'Unauthorized' });
+      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED)
     }
     logger.info('User logged in , checking if user has the correct role');
     if (currentUser.role !== role) {
       logger.info('User does not have the required role');
-      return res.status(403).json({ message: 'Forbidden' });
+      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.FORBIDDEN);
     }
     logger.info('User authorized');
     next();
