@@ -3,6 +3,7 @@ import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy, StrategyOptions } from 'passport-jwt';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { userRepository } from 'src/api/user/userRepository';
+import { logger } from 'src/server';
 
 import { env } from '../../utils/envConfig';
 
@@ -20,9 +21,8 @@ const options: StrategyOptions = {
 passport.use(
   new JwtStrategy(options, async (jwtPayload: JwtPayload, done) => {
     try {
-      console.log(jwtPayload)
       const user = await userRepository.findByIdAsync(jwtPayload.id);
-     
+
       if (user) {
         return done(null, user);
       } else {
@@ -42,17 +42,23 @@ passport.use(
     },
     async (email: string, password: string, done) => {
       try {
+        logger.info('Checking for email existence...');
         const user = await userRepository.findByEmailAsync(email);
-        if (user.length == 0) {
+        if (!user) {
+          logger.info('Email not found');
           return done(null, false, { message: 'Incorrect email.' });
         }
-        const isMatch = await bcrypt.compare(password, user[0].password);
+        logger.info('Email found');
+        logger.info('Comparing passwords...')
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+          logger.info('Password incorrect')
           return done(null, false, { message: 'Incorrect password.' });
         }
+        logger.info('Password matching');
         return done(null, user);
       } catch (error) {
-        console.log(error)
+        console.log(error);
         return done(error);
       }
     }
