@@ -21,9 +21,11 @@ const options: StrategyOptions = {
 passport.use(
   new JwtStrategy(options, async (jwtPayload: JwtPayload, done) => {
     try {
+      logger.info('Getting user from database by id...')
       const user = await userRepository.findByIdAsync(jwtPayload.id);
 
       if (user) {
+      logger.info('User found');
         return done(null, user);
       } else {
         return done(null, false);
