@@ -77,3 +77,12 @@ export const UserRefreshTokenSchema = z.object({
 });
 
 export type UserRefreshRequest = z.infer<typeof UserRefreshTokenSchema>['body'];
+
+export const UserResetPasswordSchema = z.object({
+  body: z.object({
+    id: z.string(),
+    password: z.string(),
+  }),
+});
+
+export type UserResetPasswordRequest = z.infer<typeof UserResetPasswordSchema>['body'];
