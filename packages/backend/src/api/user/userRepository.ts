@@ -4,9 +4,21 @@ import { eq } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
 import { logger } from 'src/server';
-import { UserResponse } from './userResponse';
+
 import { User } from './userModel';
-import { CreateUserRequest } from './userRequest/createUser';
+import {
+  CreateUserRequest,
+  CreateUserSchema,
+  DeleteUserRequest,
+  DeleteUserSchema,
+  GetUserRequest,
+  GetUserSchema,
+  GetUsersRequest,
+  GetUsersSchema,
+  UpdateUserRequest,
+  UpdateUserSchema,
+} from './userRequest';
+import { UserResponse } from './userResponse';
 export const userRepository = {
   findAllAsync: async (): Promise<UserResponse[]> => {
     return (await db.select().from(user)) as UserResponse[];
@@ -24,23 +36,14 @@ export const userRepository = {
     const result = await db.select().from(user).where(eq(user.username, username));
     return result[0] as UserResponse | undefined;
   },
-  createUserAsync: async (
-    email: string,
-    username: string,
-    password: string,
-    fullName: string,
-    phoneNumber: string,
-    levelId: number,
-    categoryId: number
-  ): Promise<void> => {
+  createUserAsync: async (createUserRequest: CreateUserRequest): Promise<void> => {
     await db.insert(user).values({
-      email,
-      username,
-      password,
-      fullName,
-      phoneNumber,
-      levelId,
-      categoryId,
+      email: createUserRequest.email,
+      username: createUserRequest.username,
+      password: createUserRequest.password,
+      fullName: createUserRequest.full_name,
+      phoneNumber: createUserRequest.phone_number,
+      levelId: createUserRequest.level_id,
     });
   },
   deleteUserAsync: async (id: string): Promise<void> => {
@@ -63,4 +66,3 @@ export const userRepository = {
     return result[0] as UserResponse | undefined;
   },
 };
-
