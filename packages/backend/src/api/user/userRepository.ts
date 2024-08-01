@@ -1,27 +1,37 @@
 //import bcrypt from 'bcrypt';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, like } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { User } from './userModel';
-import {
-  CreateUserRequest,
-  CreateUserSchema,
-  DeleteUserRequest,
-  DeleteUserSchema,
-  GetUserRequest,
-  GetUserSchema,
-  GetUsersRequest,
-  GetUsersSchema,
-  UpdateUserRequest,
-  UpdateUserSchema,
-} from './userRequest';
+import { CreateUserRequest } from './userRequest';
 import { UserResponse } from './userResponse';
 export const userRepository = {
-  findAllAsync: async (): Promise<UserResponse[]> => {
-    return (await db.select().from(user)) as UserResponse[];
+  findAllAsync: async (
+    pageIndex: number,
+    pageSize: number,
+    username?: string,
+    email?: string
+  ): Promise<UserResponse[]> => {
+    const offset = (pageIndex - 1) * pageSize;
+
+    const filters = [];
+    if (username) {
+      filters.push(like(user.username, `%${username}%`));
+    }
+    if (email) {
+      filters.push(like(user.email, `%${email}%`));
+    }
+    const query = db
+      .select()
+      .from(user)
+      .limit(pageSize)
+      .offset(offset)
+      .where(and(...filters));
+
+    return (await query) as UserResponse[];
   },
 
   findByIdAsync: async (id: string): Promise<UserResponse | undefined> => {

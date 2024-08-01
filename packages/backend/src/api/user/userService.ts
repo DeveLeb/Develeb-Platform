@@ -13,14 +13,19 @@ import { userRepository } from './userRepository';
 import { CreateUserRequest } from './userRequest';
 
 export const userService = {
-  findAll: async (): Promise<ServiceResponse<User[] | null>> => {
+  findAll: async (
+    pageIndex: number,
+    pageSize: number,
+    username: string | undefined,
+    email: string | undefined
+  ): Promise<ServiceResponse<User[] | null>> => {
     try {
-      const users = await userRepository.findAllAsync();
+      const users = await userRepository.findAllAsync(pageIndex, pageSize, username, email);
       if (!users) {
         logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Failed, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info('User found');
+      logger.info('Users found');
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
@@ -28,6 +33,7 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
+
 
   findById: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {

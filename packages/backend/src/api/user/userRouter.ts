@@ -52,7 +52,8 @@ export const userRouter: Router = (() => {
     authenticate,
     authorizeRole(Roles.ADMIN),
     async (req: Request, res: Response) => {
-      const serviceResponse = await userService.findAll();
+      const { pageIndex, pageSize, username, email } = req.query as unknown as GetUsersRequest;
+      const serviceResponse = await userService.findAll(pageIndex, pageSize, username, email);
       handleServiceResponse(serviceResponse, res);
     }
   );
