@@ -13,12 +13,16 @@ const authorizeRole = (role: Roles) => {
     logger.info('Checking if user is logged in');
     if (!currentUser) {
       logger.error('User is not logged in');
-      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED)
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
     }
     logger.info('User logged in , checking if user has the correct role');
     if (currentUser.role !== role) {
       logger.info('User does not have the required role');
-      return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.FORBIDDEN);
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
     }
     logger.info('User authorized');
     next();

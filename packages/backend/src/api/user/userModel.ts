@@ -17,7 +17,7 @@ export const UserSchema = z.object({
   categoryId: z.number().int().positive('Category ID must be a positive integer'),
   levelId: z.number().int().positive('Level ID must be a positive integer'),
   phoneNumber: z.string(),
-  createdAt: z.date().default(() => new Date()),
+  createdAt: z.date(),
   updatedAt: z.date(),
   tags: z.string().optional(),
   role: z.string(),
