@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes, UNAUTHORIZED } from 'http-status-codes';
 import { User } from 'src/api/user/userModel';
 import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
 import { logger } from 'src/server';
@@ -15,14 +15,21 @@ const authorizeRole = (role: Roles) => {
       logger.error('User is not logged in');
       return res
         .status(StatusCodes.UNAUTHORIZED)
-        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
+        .json(
+          new ServiceResponse(
+            ResponseStatus.Failed,
+            'Unauthorized',
+            { error: 'Unauthorized' },
+            StatusCodes.UNAUTHORIZED
+          )
+        );
     }
     logger.info('User logged in , checking if user has the correct role');
     if (currentUser.role !== role) {
       logger.info('User does not have the required role');
       return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
+        .status(StatusCodes.FORBIDDEN)
+        .json(new ServiceResponse(ResponseStatus.Failed, 'Forbidden', { error: 'Forbidden' }, StatusCodes.FORBIDDEN));
     }
     logger.info('User authorized');
     next();
