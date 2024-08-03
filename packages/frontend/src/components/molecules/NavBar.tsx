@@ -7,6 +7,8 @@ let pages = [
   { title: 'Home', path: '#' },
   { title: 'Jobs', path: '#' },
   { title: 'Events', path: '#' },
+  { title: 'Companies', path: '#' },
+  { title: 'About Us', path: '#' },
   { title: 'Contact us', path: '#' },
 ];
 interface NavBarProps {
