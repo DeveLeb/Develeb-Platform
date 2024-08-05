@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import EventsDisplay from '@/components/molecules/EventsDisplay';
 import EventSearchPanel from '@/components/molecules/EventSearchPanel';
+import EventService from '@/services/EventService';
 
 interface Event {
   id: number;
@@ -19,12 +20,8 @@ const EventPage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('/_data/MOCK_DATA.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setEvents(data);
+        const events = await EventService.getEvents();
+        setEvents(events);
       } catch (err) {
         setError((err as Error).message);
       }
@@ -33,8 +30,13 @@ const EventPage = () => {
     fetchEvents();
   }, []);
 
-  const handleSearch = () => {
-    alert('Searching for events...');
+  const handleSearch = async (filters: { title: string; tag: string; type: string }) => {
+    try {
+      const filteredEvents = await EventService.getEvents(filters.type, [filters.tag], filters.title);
+      setEvents(filteredEvents);
+    } catch (error) {
+      setError('Failed to fetch events');
+    }
   };
 
   if (error) {
