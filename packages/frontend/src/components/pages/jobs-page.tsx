@@ -1,6 +1,7 @@
 import React from 'react';
-import SearchJobComponent from '../molecules/search-job-component';
+
 import JobsList from '../molecules/jobs-list';
+import SearchJobComponent from '../molecules/search-job-component';
 function JobsPageComponent() {
   return (
     <div className="page-container text-primary">
