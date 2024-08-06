@@ -136,7 +136,7 @@ export const jobService = {
         logger.info(`Job already approved with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job already approved', null, StatusCodes.CONFLICT);
       }
-      const approvedJob = jobRepository.approveJobAsync(id);
+      const approvedJob = await jobRepository.approveJobAsync(id);
       logger.info(`Approved job result: ${JSON.stringify(approvedJob)}`);
       logger.info(`Job approved successfully with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job approved', JobSchema.parse(approvedJob), StatusCodes.OK);
