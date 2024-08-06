@@ -143,5 +143,26 @@ export const eventRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
+  ///events/{eventId}/save/{userId}
+
+  // eventRegistry.registerPath({
+  //   method: 'post',
+  //   path: '/events/{eventId}/save/{userId}',
+  //   tags: ['Event'],
+  //   responses: createApiResponse(
+  //     {
+  //       message: 'Event saved as favorite',
+  //     },
+  //     'Success'
+  //   ),
+  // });
+
+  router.post('/:eventId/save/:userId', async (req: Request, res: Response) => {
+    const eventId = req.params.eventId as string;
+    const userId = req.params.userId as string;
+    const serviceResponse = await eventService.saveEvent(eventId, userId);
+    handleServiceResponse(serviceResponse, res);
+  });
+
   return router;
 })();

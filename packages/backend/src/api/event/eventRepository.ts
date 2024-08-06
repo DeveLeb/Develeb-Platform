@@ -1,8 +1,9 @@
 import { and, eq, like, SQL, sql } from 'drizzle-orm';
 import { db } from 'src/db';
-import { event as eventSchema, jobType, userEventRegistration } from 'src/db/schema';
+import * as schema from 'src/db/schema';
 
-import { CreateEventRequest, Event, EventSchema, UpdateEventRequest } from '../event/eventModel';
+import { Event, EventSchema } from '../event/eventModel';
+import { CreateEventRequest, UpdateEventRequest } from './eventRequest';
 import { EventRegistrationRespone, EventRegistrationSchema } from './eventRespone';
 
 export const eventRepository = {
@@ -15,17 +16,17 @@ export const eventRepository = {
     const conditions: SQL[] = [];
 
     if (filters.typeId) {
-      conditions.push(eq(eventSchema.typeId, filters.typeId));
+      conditions.push(eq(schema.event.typeId, filters.typeId));
     }
 
     if (filters.title) {
-      conditions.push(like(eventSchema.title, `%${filters.title}%`));
+      conditions.push(like(schema.event.title, `%${filters.title}%`));
     }
 
     const baseQuery = db
       .select()
-      .from(eventSchema)
-      .leftJoin(jobType, eq(eventSchema.typeId, jobType.id))
+      .from(schema.event)
+      .leftJoin(schema.jobType, eq(schema.event.typeId, schema.jobType.id))
       .where(and(...conditions));
 
     const [totalCountResult, result] = await Promise.all([
@@ -52,7 +53,7 @@ export const eventRepository = {
   },
 
   findByIdAsync: async (id: string): Promise<Event | null> => {
-    const events: any = await db.select().from(eventSchema).where(eq(eventSchema.id, id));
+    const events: any = await db.select().from(schema.event).where(eq(schema.event.id, id));
     if (!events) {
       return null;
     }
@@ -67,7 +68,7 @@ export const eventRepository = {
     }
 
     const [createdEvent] = await db
-      .insert(eventSchema)
+      .insert(schema.event)
       .values({
         ...event.body,
         date: new Date(event.body.date!),
@@ -92,12 +93,12 @@ export const eventRepository = {
 
   updateAsync: async (id: string, event: UpdateEventRequest): Promise<Event> => {
     const [updatedEvent] = await db
-      .update(eventSchema)
+      .update(schema.event)
       .set({
         ...event.body,
         updatedAt: new Date(),
       })
-      .where(eq(eventSchema.id, id))
+      .where(eq(schema.event.id, id))
       .returning();
 
     const parsedEvent = {
@@ -112,18 +113,18 @@ export const eventRepository = {
   },
 
   deleteAsync: async (id: string): Promise<void> => {
-    await db.delete(eventSchema).where(eq(eventSchema.id, id));
+    await db.delete(schema.event).where(eq(schema.event.id, id));
   },
 
   getRegistrationsAsync: async (eventId: string): Promise<EventRegistrationRespone[]> => {
-    const event = await db.select().from(eventSchema).where(eq(eventSchema.id, eventId));
+    const event = await db.select().from(schema.event).where(eq(schema.event.id, eventId));
     if (!event) {
       throw new Error('Event not found');
     }
     const registrations = await db
       .select()
-      .from(userEventRegistration)
-      .where(eq(userEventRegistration.eventId, eventId));
+      .from(schema.userEventRegistration)
+      .where(eq(schema.userEventRegistration.eventId, eventId));
 
     const parsedRegistrations = registrations.map((registration) => {
       return EventRegistrationSchema.parse(registration);
@@ -134,11 +135,22 @@ export const eventRepository = {
 
   newRegisterationAsync: async (eventId: string, userId: string, userType: string): Promise<void> => {
     await db
-      .insert(userEventRegistration)
+      .insert(schema.userEventRegistration)
       .values({
         eventId,
         userId,
         userType,
+      })
+      .execute();
+  },
+
+  saveEventAsync: async (eventId: string, userId: string): Promise<void> => {
+    await db
+      .insert(schema.eventSaved)
+      .values({
+        eventId,
+        userId,
+        savedAt: new Date(),
       })
       .execute();
   },

@@ -2,8 +2,9 @@ import { StatusCodes } from 'http-status-codes';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
-import { CreateEventRequest, Event, UpdateEventRequest } from './eventModel';
+import { Event } from './eventModel';
 import { eventRepository } from './eventRepository';
+import { CreateEventRequest, UpdateEventRequest } from './eventRequest';
 import { EventRegistrationRespone } from './eventRespone';
 
 export const eventService = {
@@ -115,6 +116,17 @@ export const eventService = {
       return new ServiceResponse<any>(ResponseStatus.Success, 'Registered', registrations, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding registrations for event with id ${eventId}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  saveEvent: async (eventId: string, userId: string): Promise<ServiceResponse<any>> => {
+    try {
+      const savedEvent = await eventRepository.saveEventAsync(eventId, userId);
+      return new ServiceResponse<any>(ResponseStatus.Success, 'Event saved as favorite', savedEvent, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error saving event with id ${eventId}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
