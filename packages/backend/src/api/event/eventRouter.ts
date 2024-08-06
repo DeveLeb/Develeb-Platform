@@ -9,8 +9,8 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { EventSchema } from '../event/eventModel';
 import { eventService } from '../event/eventService';
-import { CreateEventSchema, GetEventRequest, GetEventSchema, UpdateEventSchema } from './eventRequest';
-import { EventRegistrationSchema } from './eventRespone';
+import { CreateEventSchema, GetEventRequest, GetEventSchema, SaveEventSchema, UpdateEventSchema } from './eventRequest';
+import { EventRegistrationSchema, EventSavedSchema } from './eventRespone';
 
 export const eventRegistry = new OpenAPIRegistry();
 
@@ -143,19 +143,15 @@ export const eventRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  ///events/{eventId}/save/{userId}
-
-  // eventRegistry.registerPath({
-  //   method: 'post',
-  //   path: '/events/{eventId}/save/{userId}',
-  //   tags: ['Event'],
-  //   responses: createApiResponse(
-  //     {
-  //       message: 'Event saved as favorite',
-  //     },
-  //     'Success'
-  //   ),
-  // });
+  eventRegistry.registerPath({
+    method: 'post',
+    path: '/events/{eventId}/save/{userId}',
+    tags: ['Event'],
+    request: {
+      params: SaveEventSchema,
+    },
+    responses: createApiResponse(EventSavedSchema, 'Success'),
+  });
 
   router.post('/:eventId/save/:userId', async (req: Request, res: Response) => {
     const eventId = req.params.eventId as string;

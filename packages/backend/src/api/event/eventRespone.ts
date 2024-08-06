@@ -8,3 +8,8 @@ export const EventRegistrationSchema = z.object({
   eventId: z.string().uuid(),
   userType: z.string(),
 });
+
+export type EventSavedRespone = z.infer<typeof EventSavedSchema>;
+export const EventSavedSchema = z.object({
+  message: z.string(),
+});

@@ -23,3 +23,11 @@ export const UpdateEventSchema = z.object({
   params: z.object({ id: z.string().uuid() }),
   body: EventSchema.omit({ id: true, createdAt: true, updatedAt: true, postedAt: true }).partial(),
 });
+
+export type SaveEventRequest = z.infer<typeof SaveEventSchema>;
+export const SaveEventSchema = z.object({
+  params: z.object({
+    eventId: z.string().uuid(),
+    userId: z.string().uuid(),
+  }),
+});
