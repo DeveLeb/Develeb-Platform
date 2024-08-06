@@ -1,4 +1,5 @@
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { commonValidations } from 'src/common/utils/commonValidation';
 import { z } from 'zod';
 
 extendZodWithOpenApi(z);
@@ -35,4 +36,11 @@ export const EventSchema = z.object({
   updatedAt: z.union([z.string().datetime(), z.string().date(), z.null()]).transform((val) => {
     if (val) return new Date(val);
   }),
+});
+
+export const RegisterationSchema = z.object({
+  id: commonValidations.numId,
+  eventId: z.string().uuid(),
+  userId: z.string().uuid(),
+  userType: z.string(),
 });

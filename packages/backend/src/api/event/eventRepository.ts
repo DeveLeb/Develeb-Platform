@@ -2,9 +2,9 @@ import { and, eq, like, SQL, sql } from 'drizzle-orm';
 import { db } from 'src/db';
 import * as schema from 'src/db/schema';
 
-import { Event, EventSchema } from '../event/eventModel';
+import { Event, EventSchema, RegisterationSchema } from '../event/eventModel';
 import { CreateEventRequest, UpdateEventRequest } from './eventRequest';
-import { EventRegistrationRespone, EventRegistrationSchema } from './eventRespone';
+import { RegisterationResponse } from './eventRespone';
 
 export const eventRepository = {
   findAllAsync: async (filters: {
@@ -112,11 +112,12 @@ export const eventRepository = {
     return EventSchema.parse(parsedEvent);
   },
 
-  deleteAsync: async (id: string): Promise<void> => {
-    await db.delete(schema.event).where(eq(schema.event.id, id));
+  deleteAsync: async (id: string): Promise<Event | null> => {
+    const result = await db.delete(schema.event).where(eq(schema.event.id, id));
+    return result.length > 0 ? EventSchema.parse(result[0]) : null;
   },
 
-  getRegistrationsAsync: async (eventId: string): Promise<EventRegistrationRespone[]> => {
+  getRegistrationsAsync: async (eventId: string): Promise<RegisterationResponse[]> => {
     const event = await db.select().from(schema.event).where(eq(schema.event.id, eventId));
     if (!event) {
       throw new Error('Event not found');
@@ -127,21 +128,40 @@ export const eventRepository = {
       .where(eq(schema.userEventRegistration.eventId, eventId));
 
     const parsedRegistrations = registrations.map((registration) => {
-      return EventRegistrationSchema.parse(registration);
+      return RegisterationSchema.parse(registration);
     });
 
     return parsedRegistrations;
   },
 
-  newRegisterationAsync: async (eventId: string, userId: string, userType: string): Promise<void> => {
-    await db
+  newRegisterationAsync: async (eventId: string, userId: string, userType: string): Promise<RegisterationResponse> => {
+    const registration = await db
       .insert(schema.userEventRegistration)
       .values({
         eventId,
         userId,
         userType,
       })
+      .returning()
       .execute();
+
+    return RegisterationSchema.parse(registration[0]);
+  },
+
+  getRegistrationByUserIdAndEventIdAsync: async (
+    eventId: string,
+    userId: string
+  ): Promise<RegisterationResponse | null> => {
+    const registration = await db
+      .select()
+      .from(schema.userEventRegistration)
+      .where(and(eq(schema.userEventRegistration.eventId, eventId), eq(schema.userEventRegistration.userId, userId)));
+
+    if (registration.length === 0) {
+      return null;
+    }
+
+    return RegisterationSchema.parse(registration[0]);
   },
 
   saveEventAsync: async (eventId: string, userId: string): Promise<void> => {
