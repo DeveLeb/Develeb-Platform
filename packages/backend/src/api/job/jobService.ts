@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
 import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
-import { job, jobCategory, jobLevel } from 'src/db/schema';
+import { jobCategory, jobLevel } from 'src/db/schema';
 import { logger } from 'src/server';
 
 import { db } from '../../db';
@@ -136,15 +136,10 @@ export const jobService = {
         logger.info(`Job already approved with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Job already approved', null, StatusCodes.CONFLICT);
       }
-      const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
+      const approvedJob = jobRepository.approveJobAsync(id);
       logger.info(`Approved job result: ${JSON.stringify(approvedJob)}`);
       logger.info(`Job approved successfully with id ${id}`);
-      return new ServiceResponse(
-        ResponseStatus.Success,
-        'Job approved',
-        JobSchema.parse(approvedJob[0]),
-        StatusCodes.OK
-      );
+      return new ServiceResponse(ResponseStatus.Success, 'Job approved', JobSchema.parse(approvedJob), StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error approving job with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage);

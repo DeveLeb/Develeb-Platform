@@ -108,6 +108,11 @@ export const jobRepository = {
     return createdJob.length > 0 ? JobSchema.parse(createdJob[0]) : null;
   },
 
+  approveJobAsync: async (id: string): Promise<Job | null> => {
+    const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
+    return approvedJob.length > 0 ? JobSchema.parse(approvedJob[0]) : null;
+  },
+
   findJobTotalViewsAsync: async (id: string): Promise<number | null> => {
     const result = await db.select({ totalViews: count() }).from(jobViews).where(eq(jobViews.jobId, id));
     return result.length > 0 ? result[0].totalViews : null;
