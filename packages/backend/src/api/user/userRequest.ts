@@ -72,3 +72,14 @@ export const UserRefreshTokenSchema = z.object({
 });
 
 export type UserRefreshRequest = z.infer<typeof UserRefreshTokenSchema>['body'];
+
+export const UserResetPasswordSchema = z.object({
+  params: z.object({
+    id: z.string(),
+  }),
+  body: z.object({
+    password: commonValidations.password,
+  }),
+});
+
+export type UserResetPasswordRequest = z.infer<typeof UserResetPasswordSchema>;

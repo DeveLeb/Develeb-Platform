@@ -115,6 +115,36 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
+  resetPassword: async (id: string, password: string): Promise<ServiceResponse<User | null>> => {
+    try {
+      logger.info('Fetching user from database...');
+      const user = await userRepository.findByIdAsync(id);
+      if (!user) {
+        logger.info('User not found by id.');
+        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info('User found, getting old user password');
+      const currentPassword = await userRepository.getPasswordAsync(id);
+      if (await bcrypt.compare(password, currentPassword)) {
+        logger.info('Password is the same as the current one');
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'New password cannot be the same as the old password',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      logger.info('Password is different from the current one, resetting password...');
+      const hashPassword = await bcrypt.hash(password, 4);
+      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
+      logger.info('Password reset');
+      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
   userLogin: (req: Request, res: Response, next: NextFunction): Promise<ServiceResponse<any>> => {
     return new Promise((resolve) => {
       passport.authenticate('local', { session: false }, (err, user, info) => {
@@ -159,7 +189,7 @@ export const userService = {
     });
   },
   userRefreshToken: async (refreshToken: string): Promise<ServiceResponse<{ token: string } | null>> => {
-    logger.info('Checking if refresh token exists...')
+    logger.info('Checking if refresh token exists...');
     try {
       if (!refreshToken) {
         return new ServiceResponse(ResponseStatus.Failed, 'Refresh token is required', null, StatusCodes.BAD_REQUEST);
@@ -173,7 +203,7 @@ export const userService = {
       }
       logger.info('User found, refreshing token...');
       const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
-      logger.info('Token refreshed')
+      logger.info('Token refreshed');
       return new ServiceResponse<{ token: string }>(
         ResponseStatus.Success,
         'Token refreshed',
