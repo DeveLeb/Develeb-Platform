@@ -20,14 +20,14 @@ export const userRepository = {
     if (email) {
       filters.push(like(user.email, `%${email}%`));
     }
-    const query = db
+    const query = await db
       .select()
       .from(user)
       .limit(pageSize)
       .offset(offset)
       .where(and(...filters));
 
-    return (await query) as UserResponse[];
+    return query as UserResponse[];
   },
 
   findByIdAsync: async (id: string): Promise<UserResponse | undefined> => {

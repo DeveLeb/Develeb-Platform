@@ -24,7 +24,7 @@ export const userService = {
         logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Success, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info('Users found');
+      logger.info('Users retuned successfully');
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
