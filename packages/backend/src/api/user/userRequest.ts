@@ -1,16 +1,11 @@
-import e from 'cors';
-import { param } from 'drizzle-orm';
-import { email } from 'envalid';
 import { commonValidations } from 'src/common/utils/commonValidation';
-import { tags } from 'src/db/schema';
-import { i } from 'vitest/dist/reporters-yx5ZTtEV';
 import { z } from 'zod';
 
 export const CreateUserSchema = z.object({
   body: z.object({
     email: z.string(),
     username: z.string(),
-    password: z.string(),
+    password: commonValidations.password,
     full_name: z.string(),
     phone_number: z.string(),
     level_id: z.number(),

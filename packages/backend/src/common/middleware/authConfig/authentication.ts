@@ -15,7 +15,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
       logger.info('User unauthorized');
       const serviceResponse = new ServiceResponse(
         ResponseStatus.Failed,
-        'Unauthorized', 
+        'Unauthorized',
         { error: info },
         StatusCodes.UNAUTHORIZED
       );

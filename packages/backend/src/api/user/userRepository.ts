@@ -1,11 +1,7 @@
-//import bcrypt from 'bcrypt';
-
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq, like, or } from 'drizzle-orm';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
-import { logger } from 'src/server';
 
-import { User } from './userModel';
 import { CreateUserRequest } from './userRequest';
 import { UserResponse } from './userResponse';
 export const userRepository = {
@@ -42,8 +38,11 @@ export const userRepository = {
     const result = await db.select().from(user).where(eq(user.email, email));
     return result[0] as UserResponse | undefined;
   },
-  findByUsernameAsync: async (username: string): Promise<UserResponse | undefined> => {
-    const result = await db.select().from(user).where(eq(user.username, username));
+  findByUsernameOrEmailAsync: async (username: string, email: string): Promise<UserResponse | undefined> => {
+    const result = await db
+      .select()
+      .from(user)
+      .where(or(eq(user.username, username), eq(user.email, email)));
     return result[0] as UserResponse | undefined;
   },
   createUserAsync: async (createUserRequest: CreateUserRequest): Promise<void> => {
