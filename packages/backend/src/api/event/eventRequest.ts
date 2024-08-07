@@ -3,14 +3,19 @@ import { z } from 'zod';
 
 import { EventSchema, RegisterationSchema } from './eventModel';
 
-export const GetEventSchema = z.object({
-  params: z.object({ id: z.string().uuid() }),
+export const GetAllEventSchema = z.object({
   query: z.object({
     pageIndex: commonValidations.pageIndex,
     pageSize: commonValidations.pageSize,
     typeId: commonValidations.stringId.optional(),
     title: z.string().optional(),
   }),
+});
+export type GetAllEventRequest = z.infer<typeof GetAllEventSchema>['query'];
+
+export const GetEventSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  query: GetAllEventSchema.shape.query,
 });
 export type GetEventRequest = z.infer<typeof GetEventSchema>['query'];
 

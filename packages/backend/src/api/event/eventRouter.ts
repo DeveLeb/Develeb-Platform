@@ -8,7 +8,14 @@ import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
 import { EventSchema, RegisterationSchema } from '../event/eventModel';
 import { eventService } from '../event/eventService';
-import { CreateEventSchema, GetEventRequest, GetEventSchema, SaveEventSchema, UpdateEventSchema } from './eventRequest';
+import {
+  CreateEventSchema,
+  GetAllEventSchema,
+  GetEventRequest,
+  GetEventSchema,
+  SaveEventSchema,
+  UpdateEventSchema,
+} from './eventRequest';
 import { EventSavedSchema } from './eventRespone';
 
 export const eventRegistry = new OpenAPIRegistry();
@@ -26,7 +33,7 @@ export const eventRouter: Router = (() => {
     responses: createApiResponse(z.array(EventSchema), 'Success'),
   });
 
-  router.get('/', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
+  router.get('/', validateRequest(GetAllEventSchema), async (req: Request, res: Response) => {
     const { pageIndex, pageSize, typeId, title } = req.query as unknown as GetEventRequest;
     const serviceResponse = await eventService.findAll({
       pageIndex,
