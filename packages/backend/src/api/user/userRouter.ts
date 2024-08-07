@@ -112,21 +112,15 @@ export const userRouter: Router = (() => {
   });
 
   router.post(
-    '/reset-password',
+    '/reset-password/:id',
     validateRequest(UserResetPasswordSchema),
     authenticate,
+    verifyUser,
     async (req: Request, res: Response) => {
-      const { id, password } = req.body as unknown as UserResetPasswordRequest;
-      const currentUser = req.user as User | undefined;
-      const serviceResponse = await userService.resetPassword(id, password, currentUser);
+      const { password } = req.body as unknown as UserResetPasswordRequest['body'];
+      const { id } = req.params as unknown as UserResetPasswordRequest['params'];
+      const serviceResponse = await userService.resetPassword(id, password);
       handleServiceResponse(serviceResponse, res);
-      // if (req.user && req.user.id === id) {
-      //   const hashPassword = await bcrypt.hash(password, 1);
-      //   const serviceResponse = await userService.resetPassword(id, password, hashPassword);
-      //   handleServiceResponse(serviceResponse, res);
-      // } else {
-      //   res.status(401).json({ message: 'Unauthorized' });
-      // }
     }
   );
 

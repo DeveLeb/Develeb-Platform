@@ -115,24 +115,9 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  resetPassword: async (
-    id: string,
-    password: string,
-    currentUser: User | undefined
-  ): Promise<ServiceResponse<User | null>> => {
+  resetPassword: async (id: string, password: string): Promise<ServiceResponse<User | null>> => {
     try {
-      logger.info('Checking if user to be edited is the current user');
-      if (!currentUser || !(currentUser.id === id)) {
-        logger.info('Current user is not the user to be edited');
-        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
-      }
-      logger.info('User to be edited is the current user, validating password');
-      const { valid, message } = validatePassword(password);
-      if (!valid) {
-        logger.info(`Password validation failed: ${message}`);
-        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
-      }
-      logger.info('Password validated, fetching user from database...');
+      logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         logger.info('User not found by id.');
