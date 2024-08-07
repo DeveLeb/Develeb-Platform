@@ -19,8 +19,5 @@
     "*.{json,css,md}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "root": "file:"
   }
 }
