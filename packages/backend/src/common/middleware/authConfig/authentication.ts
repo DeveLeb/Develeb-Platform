@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import passport from 'passport';
 import { User } from 'src/api/user/userModel';
 import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceResponse';
+import { handleServiceResponse } from 'src/common/utils/httpHandlers';
 import { logger } from 'src/server';
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   logger.info('Authenticating user...');
@@ -12,12 +13,16 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
     }
     if (!user) {
       logger.info('User unauthorized');
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json(new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', { error: info }, StatusCodes.UNAUTHORIZED));
+      const serviceResponse = new ServiceResponse(
+        ResponseStatus.Failed,
+        'Unauthorized',
+        { error: info },
+        StatusCodes.UNAUTHORIZED
+      );
+      return handleServiceResponse(serviceResponse, res);
     }
     req.user = user;
-    logger.info('User authenticated')
+    logger.info('User authenticated');
     next();
   })(req, res, next);
 };

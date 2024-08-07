@@ -1,21 +1,16 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express, { NextFunction, Request, Response, Router } from 'express';
-import jwt from 'jsonwebtoken';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
 import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
-import { ServiceResponse } from 'src/common/models/serviceResponse';
-import { validatePassword } from 'src/common/utils/commonValidation';
-import { env } from 'src/common/utils/envConfig';
-import { logger } from 'src/server';
+import { verifyUser } from 'src/common/middleware/verifyUser';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { GetUserSchema, User, UserSchema } from '../user/userModel';
+import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
 import {
   CreateUserRequest,
@@ -81,20 +76,30 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.delete('/:id', validateRequest(DeleteUserSchema), authenticate, async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as DeleteUserRequest;
-    const currentUser = req.user as User | undefined;
-    const serviceResponse = await userService.deleteUser(id, currentUser);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.delete(
+    '/:id',
+    validateRequest(DeleteUserSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as DeleteUserRequest;
+      const serviceResponse = await userService.deleteUser(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.put('/:id', validateRequest(UpdateUserSchema), authenticate, async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as UpdateUserRequest['params'];
-    const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
-    const currentUser = req.user as User | undefined;
-    const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags, currentUser);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/:id',
+    validateRequest(UpdateUserSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as UpdateUserRequest['params'];
+      const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
+      const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   router.post('/login', validateRequest(LoginUserSchema), async (req: Request, res: Response, next: NextFunction) => {
     const serviceResponse = await userService.userLogin(req, res, next);

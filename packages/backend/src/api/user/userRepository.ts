@@ -1,11 +1,8 @@
-//import bcrypt from 'bcrypt';
-
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
+import { calculateOffset, queryFilters } from 'src/common/utils/paginationHandler';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
-import { logger } from 'src/server';
 
-import { User } from './userModel';
 import { CreateUserRequest } from './userRequest';
 import { UserResponse } from './userResponse';
 export const userRepository = {
@@ -15,23 +12,16 @@ export const userRepository = {
     username?: string,
     email?: string
   ): Promise<UserResponse[]> => {
-    const offset = (pageIndex - 1) * pageSize;
-
-    const filters = [];
-    if (username) {
-      filters.push(like(user.username, `%${username}%`));
-    }
-    if (email) {
-      filters.push(like(user.email, `%${email}%`));
-    }
-    const query = db
+    const filters = queryFilters(user, { username, email });
+    const offset = calculateOffset(pageIndex, pageSize);
+    const query = await db
       .select()
       .from(user)
       .limit(pageSize)
       .offset(offset)
       .where(and(...filters));
 
-    return (await query) as UserResponse[];
+    return query as UserResponse[];
   },
 
   findByIdAsync: async (id: string): Promise<UserResponse | undefined> => {
@@ -42,8 +32,11 @@ export const userRepository = {
     const result = await db.select().from(user).where(eq(user.email, email));
     return result[0] as UserResponse | undefined;
   },
-  findByUsernameAsync: async (username: string): Promise<UserResponse | undefined> => {
-    const result = await db.select().from(user).where(eq(user.username, username));
+  findByUsernameOrEmailAsync: async (username: string, email: string): Promise<UserResponse | undefined> => {
+    const result = await db
+      .select()
+      .from(user)
+      .where(or(eq(user.username, username), eq(user.email, email)));
     return result[0] as UserResponse | undefined;
   },
   createUserAsync: async (createUserRequest: CreateUserRequest): Promise<void> => {
