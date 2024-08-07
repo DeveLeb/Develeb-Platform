@@ -96,6 +96,8 @@ export const jobService = {
       logger.info(`Job updated successfully with id ${id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job updated', updateJob, StatusCodes.OK);
     } catch (ex) {
+      if ((ex as Error).message.includes('insert or update on table'))
+        return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
       const errorMessage = `Error updating job with id ${id}:, ${(ex as Error).message}`;
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -113,6 +115,8 @@ export const jobService = {
       logger.info(`Job created successfully with id ${newJob.id}`);
       return new ServiceResponse(ResponseStatus.Success, 'Job created', newJob, StatusCodes.CREATED);
     } catch (ex) {
+      if ((ex as Error).message.includes('insert or update on table'))
+        return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
       const errorMessage = `Error creating job: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
