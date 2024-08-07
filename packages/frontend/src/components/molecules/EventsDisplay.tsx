@@ -1,16 +1,8 @@
 import React from 'react';
 import { CiCalendar } from 'react-icons/ci';
 
+import PaginationControls from '@/components/atoms/PaginationControls';
 import { Card } from '@/components/ui/card';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 
 interface Event {
   id: number;
@@ -21,9 +13,12 @@ interface Event {
 
 interface EventsDisplayProps {
   events: Event[];
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
 }
 
-const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
+const EventsDisplay: React.FC<EventsDisplayProps> = ({ events, currentPage, totalItems, itemsPerPage }) => {
   return (
     <div className="sm:min-h-screen sm:p-11 p-4">
       <h3 className="text-3xl font-bold text-[var(--dark-blue)] mb-3 text-left">All Events</h3>
@@ -46,43 +41,7 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
         ))}
       </div>
 
-      <div className="mt-8">
-        <Pagination>
-          <PaginationContent className="flex items-center space-x-2">
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
-              >
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
-              >
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis className="flex items-center justify-center p-2 sm:p-3" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                className="p-2 sm:p-3 bg-transparent hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)] border border-[var(--dark-blue)] rounded-none"
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <PaginationControls currentPage={currentPage} totalItems={totalItems} itemsPerPage={itemsPerPage} />
     </div>
   );
 };
