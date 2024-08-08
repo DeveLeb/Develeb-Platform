@@ -34,7 +34,6 @@ userRegistry.register('User', UserSchema);
 
 export const userRouter: Router = (() => {
   const router = express.Router();
-  router.use(bodyParser.json());
   userRegistry.registerPath({
     method: 'get',
     path: '/users',

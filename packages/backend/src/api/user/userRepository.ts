@@ -1,5 +1,5 @@
-import { and, eq, or } from 'drizzle-orm';
-import { calculateOffset, queryFilters } from 'src/common/utils/paginationHandler';
+import { and, eq, like, or } from 'drizzle-orm';
+import { calculateOffset } from 'src/common/utils/paginationHandler';
 import { db } from 'src/db';
 import { user } from 'src/db/schema';
 
@@ -12,8 +12,14 @@ export const userRepository = {
     username?: string,
     email?: string
   ): Promise<UserResponse[]> => {
-    const filters = queryFilters(user, { username, email });
     const offset = calculateOffset(pageIndex, pageSize);
+    const filters = [];
+    if (username) {
+      filters.push(like(user.username, `%${username}%`));
+    }
+    if (email) {
+      filters.push(like(user.email, `%${email}%`));
+    }
     const query = await db
       .select()
       .from(user)
