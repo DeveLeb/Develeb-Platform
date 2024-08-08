@@ -7,7 +7,8 @@
         "build": "next build",
         "lint": "next lint",
         "prepare": "husky",
-        "knip": "knip"
+        "knip": "knip",
+        "test": "jest"
     },
     "dependencies": {
         "@next/swc-darwin-arm64": "^14.2.5",
@@ -23,6 +24,9 @@
         "tailwindcss-animate": "^1.0.7"
     },
     "devDependencies": {
+        "@testing-library/jest-dom": "^6.4.8",
+        "@testing-library/react": "^16.0.0",
+        "@types/jest": "^29.5.12",
         "@types/node": "^20.14.9",
         "@types/react": "^18",
         "@types/react-dom": "^18",
@@ -31,6 +35,9 @@
         "eslint-config-next": "14.2.4",
         "eslint-config-prettier": "^9.1.0",
         "husky": "^9.0.11",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "jest-fetch-mock": "^3.0.3",
         "knip": "^5.23.0",
         "postcss": "^8.4.39",
         "tailwindcss": "^3.4.4",
