@@ -1,7 +1,7 @@
 import { commonValidations } from 'src/common/utils/commonValidation';
 import { z } from 'zod';
 
-import { EventSchema, RegisterationSchema } from './eventModel';
+import { EventSchema, RegistrationSchema, SaveEventSchema } from './eventModel';
 
 export const GetAllEventSchema = z.object({
   query: z.object({
@@ -30,10 +30,18 @@ export const UpdateEventSchema = z.object({
   body: EventSchema.omit({ id: true, createdAt: true, updatedAt: true, postedAt: true }).partial(),
 });
 
-export type SaveEventRequest = z.infer<typeof SaveEventSchema>;
-export const SaveEventSchema = z.object({
-  params: RegisterationSchema.omit({
-    id: true,
-    userType: true,
-  }),
+export type RegisterEventRequest = z.infer<typeof RegisterEventSchema>;
+export const RegisterEventSchema = z.object({
+  params: RegistrationSchema.omit({ id: true, userType: true }),
+  body: RegistrationSchema.pick({ userType: true }).partial(),
+});
+
+export type SaveEventRequest = z.infer<typeof SaveEventRequestSchema>;
+export const SaveEventRequestSchema = z.object({
+  params: SaveEventSchema.pick({ eventId: true, userId: true }),
+});
+
+export type GetRegistrationRequest = z.infer<typeof GetRegistrationSchema>;
+export const GetRegistrationSchema = z.object({
+  params: RegistrationSchema.pick({ eventId: true }),
 });

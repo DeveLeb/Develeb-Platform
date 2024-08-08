@@ -38,9 +38,17 @@ export const EventSchema = z.object({
   }),
 });
 
-export const RegisterationSchema = z.object({
+export type Registration = z.infer<typeof RegistrationSchema>;
+
+export const RegistrationSchema = z.object({
   id: commonValidations.numId,
   eventId: z.string().uuid(),
   userId: z.string().uuid(),
-  userType: z.string(),
+  // user type can only be "Attendee" and "Speaker"
+  userType: z.enum(['Attendee', 'Speaker']),
+});
+
+export type SaveEvent = z.infer<typeof SaveEventSchema>;
+export const SaveEventSchema = RegistrationSchema.omit({
+  userType: true,
 });

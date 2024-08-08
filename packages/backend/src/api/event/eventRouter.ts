@@ -6,22 +6,23 @@ import { z, ZodError } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { EventSchema, RegisterationSchema } from '../event/eventModel';
+import { EventSchema, RegistrationSchema, SaveEventSchema } from '../event/eventModel';
 import { eventService } from '../event/eventService';
 import {
   CreateEventSchema,
   GetAllEventSchema,
   GetEventRequest,
   GetEventSchema,
-  SaveEventSchema,
+  GetRegistrationSchema,
+  RegisterEventSchema,
+  SaveEventRequestSchema,
   UpdateEventSchema,
 } from './eventRequest';
-import { EventSavedSchema } from './eventRespone';
 
 export const eventRegistry = new OpenAPIRegistry();
 
 eventRegistry.register('Event', EventSchema);
-eventRegistry.register('UserEventRegistration', RegisterationSchema);
+eventRegistry.register('UserEventRegistration', RegistrationSchema);
 
 export const eventRouter: Router = (() => {
   const router = express.Router();
@@ -75,7 +76,7 @@ export const eventRouter: Router = (() => {
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
       if (error instanceof ZodError) {
-        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
+        const err = new ServiceResponse(ResponseStatus.Failed, error.message, null, StatusCodes.BAD_REQUEST);
         return handleServiceResponse(err, res);
       }
     }
@@ -99,7 +100,7 @@ export const eventRouter: Router = (() => {
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
       if (error instanceof ZodError) {
-        const err = new ServiceResponse(ResponseStatus.Failed, 'bad request', null, StatusCodes.BAD_REQUEST);
+        const err = new ServiceResponse(ResponseStatus.Failed, error.message, null, StatusCodes.BAD_REQUEST);
         return handleServiceResponse(err, res);
       }
     }
@@ -112,7 +113,7 @@ export const eventRouter: Router = (() => {
     responses: createApiResponse(z.object({}), 'Success'),
   });
 
-  router.delete('/:id', async (req: Request, res: Response) => {
+  router.delete('/:id', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const serviceResponse = await eventService.delete(id);
     handleServiceResponse(serviceResponse, res);
@@ -125,7 +126,7 @@ export const eventRouter: Router = (() => {
     responses: createApiResponse(z.array(EventSchema), 'Success'),
   });
 
-  router.get('/:eventId/registrations', async (req: Request, res: Response) => {
+  router.get('/:eventId/registrations', validateRequest(GetRegistrationSchema), async (req: Request, res: Response) => {
     const eventId = req.params.eventId as string;
     const serviceResponse = await eventService.getRegistrations(eventId);
     handleServiceResponse(serviceResponse, res);
@@ -135,16 +136,20 @@ export const eventRouter: Router = (() => {
     method: 'post',
     path: '/events/{eventId}/register/{userId}',
     tags: ['Event'],
-    responses: createApiResponse(z.array(RegisterationSchema), 'Success'),
+    responses: createApiResponse(z.array(RegistrationSchema), 'Success'),
   });
 
-  router.post('/:eventId/register/:userId', async (req: Request, res: Response) => {
-    const eventId = req.params.eventId as string;
-    const userId = req.params.userId as string;
-    const userType = (req.body.userType as string) || 'attendee';
-    const serviceResponse = await eventService.newRegisteration(eventId, userId, userType);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:eventId/register/:userId',
+    validateRequest(RegisterEventSchema),
+    async (req: Request, res: Response) => {
+      const eventId = req.params.eventId as string;
+      const userId = req.params.userId as string;
+      const userType = (req.body.userType as string) || 'Attendee';
+      const serviceResponse = await eventService.newRegisteration(eventId, userId, userType);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   eventRegistry.registerPath({
     method: 'post',
@@ -153,15 +158,19 @@ export const eventRouter: Router = (() => {
     request: {
       params: SaveEventSchema,
     },
-    responses: createApiResponse(EventSavedSchema, 'Success'),
+    responses: createApiResponse(SaveEventSchema, 'Success'),
   });
 
-  router.post('/:eventId/save/:userId', async (req: Request, res: Response) => {
-    const eventId = req.params.eventId as string;
-    const userId = req.params.userId as string;
-    const serviceResponse = await eventService.saveEvent(eventId, userId);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:eventId/save/:userId',
+    validateRequest(SaveEventRequestSchema),
+    async (req: Request, res: Response) => {
+      const eventId = req.params.eventId as string;
+      const userId = req.params.userId as string;
+      const serviceResponse = await eventService.saveEvent(eventId, userId);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   return router;
 })();

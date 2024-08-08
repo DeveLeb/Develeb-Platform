@@ -1,9 +1,10 @@
 import { and, eq, like, SQL, sql } from 'drizzle-orm';
 import { db } from 'src/db';
 import * as schema from 'src/db/schema';
+import { z } from 'zod';
 
-import { Event, EventSchema, RegisterationSchema } from '../event/eventModel';
-import { CreateEventRequest, UpdateEventRequest } from './eventRequest';
+import { Event, EventSchema, RegistrationSchema, SaveEvent, SaveEventSchema } from '../event/eventModel';
+import { CreateEventSchema, UpdateEventSchema } from './eventRequest';
 import { RegisterationResponse } from './eventRespone';
 
 export const eventRepository = {
@@ -60,9 +61,9 @@ export const eventRepository = {
     return events[0];
   },
 
-  createAsync: async (event: CreateEventRequest): Promise<Event> => {
-    if (event.body.date) {
-      if (new Date(event.body.date) < new Date()) {
+  createAsync: async (event: z.infer<typeof CreateEventSchema.shape.body>): Promise<Event> => {
+    if (event.date) {
+      if (new Date(event.date) < new Date()) {
         throw new Error('Cannot create an event in the past');
       }
     }
@@ -70,15 +71,13 @@ export const eventRepository = {
     const [createdEvent] = await db
       .insert(schema.event)
       .values({
-        ...event.body,
-        date: new Date(event.body.date!),
+        ...event,
+        date: new Date(event.date!),
         updatedAt: new Date(),
         createdAt: new Date(),
         postedAt: new Date(),
       })
       .returning();
-
-    console.log('createdEvent', createdEvent);
 
     const parsedEvent = {
       ...createdEvent,
@@ -91,11 +90,11 @@ export const eventRepository = {
     return EventSchema.parse(parsedEvent);
   },
 
-  updateAsync: async (id: string, event: UpdateEventRequest): Promise<Event> => {
+  updateAsync: async (id: string, event: z.infer<typeof UpdateEventSchema.shape.body>): Promise<Event> => {
     const [updatedEvent] = await db
       .update(schema.event)
       .set({
-        ...event.body,
+        ...event,
         updatedAt: new Date(),
       })
       .where(eq(schema.event.id, id))
@@ -128,7 +127,7 @@ export const eventRepository = {
       .where(eq(schema.userEventRegistration.eventId, eventId));
 
     const parsedRegistrations = registrations.map((registration) => {
-      return RegisterationSchema.parse(registration);
+      return RegistrationSchema.parse(registration);
     });
 
     return parsedRegistrations;
@@ -145,7 +144,7 @@ export const eventRepository = {
       .returning()
       .execute();
 
-    return RegisterationSchema.parse(registration[0]);
+    return RegistrationSchema.parse(registration[0]);
   },
 
   getRegistrationByUserIdAndEventIdAsync: async (
@@ -161,17 +160,33 @@ export const eventRepository = {
       return null;
     }
 
-    return RegisterationSchema.parse(registration[0]);
+    return RegistrationSchema.parse(registration[0]);
   },
 
-  saveEventAsync: async (eventId: string, userId: string): Promise<void> => {
-    await db
+  getSavedEventByUserIdAndEventIdAsync: async (eventId: string, userId: string): Promise<SaveEvent | null> => {
+    const registration = await db
+      .select()
+      .from(schema.eventSaved)
+      .where(and(eq(schema.eventSaved.eventId, eventId), eq(schema.eventSaved.userId, userId)));
+
+    if (registration.length === 0) {
+      return null;
+    }
+
+    return SaveEventSchema.parse(registration[0]);
+  },
+
+  saveEventAsync: async (eventId: string, userId: string): Promise<SaveEvent> => {
+    const savedEvent = await db
       .insert(schema.eventSaved)
       .values({
         eventId,
         userId,
         savedAt: new Date(),
       })
+      .returning()
       .execute();
+
+    return SaveEventSchema.parse(savedEvent[0]);
   },
 };

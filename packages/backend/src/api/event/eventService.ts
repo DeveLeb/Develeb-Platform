@@ -65,11 +65,11 @@ export const eventService = {
 
   create: async (event: CreateEventRequest): Promise<ServiceResponse<Event | null>> => {
     logger.info('Creating event with data:', JSON.stringify(event));
-    if (!event) {
+    if (!event || !event.body) {
       return new ServiceResponse(ResponseStatus.Failed, 'Event not provided', null, StatusCodes.BAD_REQUEST);
     }
     try {
-      const newEvent = await eventRepository.createAsync(event);
+      const newEvent = await eventRepository.createAsync(event.body);
       logger.info(`Event created successfully with id:, ${newEvent.id}`);
       return new ServiceResponse<Event>(ResponseStatus.Success, 'Event created', newEvent, StatusCodes.CREATED);
     } catch (ex) {
@@ -81,7 +81,7 @@ export const eventService = {
 
   update: async (id: string, updatedEventData: UpdateEventRequest): Promise<ServiceResponse<Event | null>> => {
     logger.info(`Updating event with id ${id}`);
-    if (!updatedEventData) {
+    if (!updatedEventData || !updatedEventData.body) {
       logger.info('Event not provided');
       return new ServiceResponse(ResponseStatus.Failed, 'Event not provided', null, StatusCodes.BAD_REQUEST);
     }
@@ -92,7 +92,7 @@ export const eventService = {
     }
     try {
       logger.info(`Updating event with data: ${JSON.stringify(updatedEventData)}`);
-      const updatedEvent = await eventRepository.updateAsync(id, updatedEventData);
+      const updatedEvent = await eventRepository.updateAsync(id, updatedEventData.body);
       logger.info(`Event updated successfully with id ${id}`);
       return new ServiceResponse<Event>(ResponseStatus.Success, 'Event updated', updatedEvent, StatusCodes.OK);
     } catch (ex) {
@@ -123,6 +123,11 @@ export const eventService = {
   getRegistrations: async (eventId: string): Promise<ServiceResponse<RegisterationResponse[] | null>> => {
     logger.info(`Finding registrations for event with id ${eventId}`);
     try {
+      const event = await eventRepository.findByIdAsync(eventId);
+      if (!event) {
+        logger.info(`Event not found with id ${eventId}`);
+        return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
+      }
       const registrations = await eventRepository.getRegistrationsAsync(eventId);
       if (registrations.length === 0) {
         logger.info(`No registrations found for event with id ${eventId}`);
@@ -147,11 +152,6 @@ export const eventService = {
     userId: string,
     userType: string
   ): Promise<ServiceResponse<RegisterationResponse | null>> => {
-    const registration = await eventRepository.getRegistrationByUserIdAndEventIdAsync(eventId, userId);
-    if (registration) {
-      logger.info(`User with id ${userId} already registered for event with id ${eventId}`);
-      return new ServiceResponse(ResponseStatus.Failed, 'User already registered', null, StatusCodes.CONFLICT);
-    }
     try {
       logger.info(`Registering user with id ${userId} for event with id ${eventId}`);
       const event = await eventRepository.findByIdAsync(eventId);
@@ -159,7 +159,6 @@ export const eventService = {
         logger.info(`Event not found with id ${eventId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info(`Event found: ${JSON.stringify(event)}`);
 
       // TODO: Uncomment this code when the findByIdAsync function is implemented
       // const user = await findByIdAsync(userId);
@@ -167,9 +166,16 @@ export const eventService = {
       //   logger.info(`User not found with id ${userId}`);
       //   return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
       // }
+
+      const registration = await eventRepository.getRegistrationByUserIdAndEventIdAsync(eventId, userId);
+      if (registration) {
+        logger.info(`User with id ${userId} already registered for event with id ${eventId}`);
+        return new ServiceResponse(ResponseStatus.Failed, 'User already registered', null, StatusCodes.CONFLICT);
+      }
+      logger.info(`Event found: ${JSON.stringify(event)}`);
       const registrations = await eventRepository.newRegisterationAsync(eventId, userId, userType);
       logger.info(`User registered for event with id ${eventId}`);
-      return new ServiceResponse<any>(ResponseStatus.Success, 'Registered', registrations, StatusCodes.OK);
+      return new ServiceResponse<any>(ResponseStatus.Success, 'User registered', registrations, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error registering user with id ${userId} for event with id ${eventId}: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -178,16 +184,28 @@ export const eventService = {
   },
 
   saveEvent: async (eventId: string, userId: string): Promise<ServiceResponse<any>> => {
-    logger.info(`Saving event with id ${eventId} as favorite for user with id ${userId}`);
     try {
+      logger.info(`Saving event with id ${eventId} as favorite for user with id ${userId}`);
       const event = await eventRepository.findByIdAsync(eventId);
       if (!event) {
         logger.info(`Event not found with id ${eventId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
       }
+
+      const save = await eventRepository.getSavedEventByUserIdAndEventIdAsync(eventId, userId);
+      if (save) {
+        logger.info(`Event with id ${eventId} already saved as favorite for user with id ${userId}`);
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Event already saved as favorite',
+          null,
+          StatusCodes.CONFLICT
+        );
+      }
+
       const savedEvent = await eventRepository.saveEventAsync(eventId, userId);
       logger.info(`Event saved as favorite for user with id ${userId}`);
-      return new ServiceResponse<any>(ResponseStatus.Success, 'Event saved as favorite', savedEvent, StatusCodes.OK);
+      return new ServiceResponse<any>(ResponseStatus.Success, 'Event saved', savedEvent, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error saving event with id ${eventId}: ${(ex as Error).message}`;
       logger.error(errorMessage);

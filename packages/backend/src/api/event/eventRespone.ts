@@ -1,10 +1,7 @@
 import { z } from 'zod';
 
-import { RegisterationSchema } from './eventModel';
+import { RegistrationSchema, SaveEventSchema } from './eventModel';
 
-export type RegisterationResponse = z.infer<typeof RegisterationSchema>;
+export type RegisterationResponse = z.infer<typeof RegistrationSchema>;
 
-export type EventSavedRespone = z.infer<typeof EventSavedSchema>;
-export const EventSavedSchema = z.object({
-  message: z.string(),
-});
+export type SaveEventResponse = z.infer<typeof SaveEventSchema>;
