@@ -122,7 +122,7 @@ export const resourceService = {
       logger.info(`Updating resource with id ${id} with data:`, JSON.stringify(updateResourceRequest));
       const updatedResource = await resourceRepository.updateResourceAsync(id, updateResourceRequest);
       logger.info(`Resource updated successfully with id ${id}`);
-      return new ServiceResponse(ResponseStatus.Failed, 'Resource updated', updatedResource, StatusCodes.NOT_FOUND);
+      return new ServiceResponse(ResponseStatus.Success, 'Resource updated', updatedResource, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating resource with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage, ex);
@@ -140,7 +140,7 @@ export const resourceService = {
       logger.info(`Resource found with id ${id}. About to delete...`);
       const deletedResource = await resourceRepository.deleteResourceAsync(id);
       logger.info(`Resource deleted with id ${id}:`, JSON.stringify(deletedResource));
-      return new ServiceResponse(ResponseStatus.Failed, 'Resource deleted', deletedResource, StatusCodes.NOT_FOUND);
+      return new ServiceResponse(ResponseStatus.Success, 'Resource deleted', deletedResource, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting resource with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage, ex);
