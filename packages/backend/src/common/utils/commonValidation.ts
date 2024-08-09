@@ -20,29 +20,11 @@ export const commonValidations = {
     .refine((data) => !isNaN(Number(data)), 'Must be a numeric value')
     .transform(Number)
     .refine((num) => num > 0, 'Page size must be a positive number'),
-};
-export const validatePassword = (password: string): { valid: boolean; message?: string } => {
-  const minLength = 8;
-  const hasNumber = /\d/;
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
-  const hasUpperCase = /[A-Z]/;
-  const hasLowerCase = /[a-z]/;
-
-  if (password.length < minLength) {
-    return { valid: false, message: `Password must be at least ${minLength} characters long.` };
-  }
-  if (!hasNumber.test(password)) {
-    return { valid: false, message: 'Password must contain at least one number.' };
-  }
-  if (!hasSpecialChar.test(password)) {
-    return { valid: false, message: 'Password must contain at least one special character.' };
-  }
-  if (!hasUpperCase.test(password)) {
-    return { valid: false, message: 'Password must contain at least one uppercase letter.' };
-  }
-  if (!hasLowerCase.test(password)) {
-    return { valid: false, message: 'Password must contain at least one lowercase letter.' };
-  }
-
-  return { valid: true };
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters long.')
+    .regex(/\d/, 'Password must contain at least one number.')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character.')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter.'),
 };

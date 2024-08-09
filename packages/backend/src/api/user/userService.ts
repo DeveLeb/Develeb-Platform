@@ -2,8 +2,7 @@ import bcrypt from 'bcrypt';
 import { NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
-import passport from 'src/common/middleware/authConfig/passport';
-import { validatePassword } from 'src/common/utils/commonValidation';
+import passport from 'passport';
 import { env } from 'src/common/utils/envConfig';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
@@ -23,9 +22,9 @@ export const userService = {
       const users = await userRepository.findAllAsync(pageIndex, pageSize, username, email);
       if (!users) {
         logger.info('No users found');
-        return new ServiceResponse(ResponseStatus.Failed, 'No Users found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info('Users found');
+      logger.info('Users retuned successfully');
       return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
@@ -34,12 +33,11 @@ export const userService = {
     }
   },
 
-
   findById: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found');
       return new ServiceResponse<User>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
@@ -52,23 +50,14 @@ export const userService = {
 
   createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
     try {
-      logger.info('Validating password...');
-      const { valid, message } = validatePassword(createUserRequest.password);
-      if (!valid) {
-        logger.info(`Password validation failed: ${message}`);
-        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
-      }
       logger.info('Checking for conflicts...');
-      const userEmail = await userRepository.findByEmailAsync(createUserRequest.email);
-      if (userEmail) {
-        logger.info('Email conflict found');
-        return new ServiceResponse(ResponseStatus.Success, 'Email already in use.', null, StatusCodes.CONFLICT);
-      }
-      logger.info('No email conflicts found. Checking for username...');
-      const userUsername = await userRepository.findByUsernameAsync(createUserRequest.username);
-      if (userUsername) {
-        logger.info('Username conflict found');
-        return new ServiceResponse(ResponseStatus.Success, 'Username already in use.', null, StatusCodes.CONFLICT);
+      const userExists = await userRepository.findByUsernameOrEmailAsync(
+        createUserRequest.username,
+        createUserRequest.email
+      );
+      if (userExists) {
+        logger.info('User exists');
+        return new ServiceResponse(ResponseStatus.Success, 'User exists.', null, StatusCodes.CONFLICT);
       }
       logger.info('No conflicts found. Creating user...');
       const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
@@ -83,17 +72,12 @@ export const userService = {
     }
   },
 
-  deleteUser: async (id: string, currentUser: User | undefined): Promise<ServiceResponse<User | null>> => {
+  deleteUser: async (id: string): Promise<ServiceResponse<User | null>> => {
     try {
-      logger.info('Checking if user to be deleted is the current user');
-      if (!currentUser || !(currentUser.id === id)) {
-        logger.info('Current user is not the user to be deleted');
-        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
-      }
-      logger.info('User to be deleted is the current user, fetching user from database...');
+      logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       await userRepository.deleteUserAsync(id);
       return new ServiceResponse<User>(ResponseStatus.Success, 'User deleted', user, StatusCodes.OK);
@@ -108,20 +92,14 @@ export const userService = {
     full_name: string,
     level_id: number,
     category_id: number,
-    tags: string | undefined,
-    currentUser: User | undefined
+    tags: string | undefined
   ): Promise<ServiceResponse<{ message: string } | null>> => {
     try {
-      logger.info('Checking if user to be edited is the current user');
-      if (!currentUser || !(currentUser.id === id)) {
-        logger.info('Current user is not the user to be edited');
-        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
-      }
-      logger.info('User to be edited is the current user, fetching user from database...');
+      logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         logger.info('User not found by id.');
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found');
       await userRepository.updateUserAsync(id, full_name, level_id, category_id, tags);
@@ -133,51 +111,6 @@ export const userService = {
       );
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-  resetPassword: async (
-    id: string,
-    password: string,
-    currentUser: User | undefined
-  ): Promise<ServiceResponse<User | null>> => {
-    try {
-      logger.info('Checking if user to be edited is the current user');
-      if (!currentUser || !(currentUser.id === id)) {
-        logger.info('Current user is not the user to be edited');
-        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
-      }
-      logger.info('User to be edited is the current user, validating password');
-      const { valid, message } = validatePassword(password);
-      if (!valid) {
-        logger.info(`Password validation failed: ${message}`);
-        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
-      }
-      logger.info('Password validated, fetching user from database...');
-      const user = await userRepository.findByIdAsync(id);
-      if (!user) {
-        logger.info('User not found by id.');
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
-      }
-      logger.info('User found, getting old user password');
-      const currentPassword = await userRepository.getPasswordAsync(id);
-      if (await bcrypt.compare(password, currentPassword)) {
-        logger.info('Password is the same as the current one');
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'New password cannot be the same as the old password',
-          null,
-          StatusCodes.BAD_REQUEST
-        );
-      }
-      logger.info('Password is different from the current one, resetting password...');
-      const hashPassword = await bcrypt.hash(password, 4);
-      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
-      logger.info('Password reset');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -226,7 +159,7 @@ export const userService = {
     });
   },
   userRefreshToken: async (refreshToken: string): Promise<ServiceResponse<{ token: string } | null>> => {
-    logger.info('Checking if refresh token exists...');
+    logger.info('Checking if refresh token exists...')
     try {
       if (!refreshToken) {
         return new ServiceResponse(ResponseStatus.Failed, 'Refresh token is required', null, StatusCodes.BAD_REQUEST);
@@ -236,11 +169,11 @@ export const userService = {
       const user = await userRepository.findByIdAsync(decoded.id);
       if (!user) {
         logger.info('User not found');
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found, refreshing token...');
       const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
-      logger.info('Token refreshed');
+      logger.info('Token refreshed')
       return new ServiceResponse<{ token: string }>(
         ResponseStatus.Success,
         'Token refreshed',
@@ -249,6 +182,51 @@ export const userService = {
       );
     } catch (ex) {
       const errorMessage = `Error refreshing token: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+  resetPassword: async (
+    id: string,
+    password: string,
+    currentUser: User | undefined
+  ): Promise<ServiceResponse<User | null>> => {
+    try {
+      logger.info('Checking if user to be edited is the current user');
+      if (!currentUser || !(currentUser.id === id)) {
+        logger.info('Current user is not the user to be edited');
+        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
+      }
+      logger.info('User to be edited is the current user, validating password');
+      const { valid, message } = validatePassword(password);
+      if (!valid) {
+        logger.info(`Password validation failed: ${message}`);
+        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
+      }
+      logger.info('Password validated, fetching user from database...');
+      const user = await userRepository.findByIdAsync(id);
+      if (!user) {
+        logger.info('User not found by id.');
+        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info('User found, getting old user password');
+      const currentPassword = await userRepository.getPasswordAsync(id);
+      if (await bcrypt.compare(password, currentPassword)) {
+        logger.info('Password is the same as the current one');
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'New password cannot be the same as the old password',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      logger.info('Password is different from the current one, resetting password...');
+      const hashPassword = await bcrypt.hash(password, 4);
+      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
+      logger.info('Password reset');
+      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

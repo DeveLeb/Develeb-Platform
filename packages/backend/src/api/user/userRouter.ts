@@ -1,16 +1,11 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express, { NextFunction, Request, Response, Router } from 'express';
-import jwt from 'jsonwebtoken';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
 import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
-import { ServiceResponse } from 'src/common/models/serviceResponse';
-import { validatePassword } from 'src/common/utils/commonValidation';
-import { env } from 'src/common/utils/envConfig';
-import { logger } from 'src/server';
+import { verifyUser } from 'src/common/middleware/verifyUser';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
@@ -31,8 +26,6 @@ import {
   UpdateUserSchema,
   UserRefreshRequest,
   UserRefreshTokenSchema,
-  UserResetPasswordRequest,
-  UserResetPasswordSchema,
 } from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
@@ -41,7 +34,6 @@ userRegistry.register('User', UserSchema);
 
 export const userRouter: Router = (() => {
   const router = express.Router();
-  router.use(bodyParser.json());
   userRegistry.registerPath({
     method: 'get',
     path: '/users',
@@ -81,20 +73,30 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.delete('/:id', validateRequest(DeleteUserSchema), authenticate, async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as DeleteUserRequest;
-    const currentUser = req.user as User | undefined;
-    const serviceResponse = await userService.deleteUser(id, currentUser);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.delete(
+    '/:id',
+    validateRequest(DeleteUserSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as DeleteUserRequest;
+      const serviceResponse = await userService.deleteUser(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.put('/:id', validateRequest(UpdateUserSchema), authenticate, async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as UpdateUserRequest['params'];
-    const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
-    const currentUser = req.user as User | undefined;
-    const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags, currentUser);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/:id',
+    validateRequest(UpdateUserSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as UpdateUserRequest['params'];
+      const { full_name, level_id, category_id, tags } = req.body as unknown as UpdateUserRequest['body'];
+      const serviceResponse = await userService.updateUser(id, full_name, level_id, category_id, tags);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   router.post('/login', validateRequest(LoginUserSchema), async (req: Request, res: Response, next: NextFunction) => {
     const serviceResponse = await userService.userLogin(req, res, next);
@@ -105,7 +107,6 @@ export const userRouter: Router = (() => {
     const serviceResponse = await userService.userRefreshToken(refreshToken);
     handleServiceResponse(serviceResponse, res);
   });
-
   router.post(
     '/reset-password',
     validateRequest(UserResetPasswordSchema),
@@ -115,15 +116,7 @@ export const userRouter: Router = (() => {
       const currentUser = req.user as User | undefined;
       const serviceResponse = await userService.resetPassword(id, password, currentUser);
       handleServiceResponse(serviceResponse, res);
-      // if (req.user && req.user.id === id) {
-      //   const hashPassword = await bcrypt.hash(password, 1);
-      //   const serviceResponse = await userService.resetPassword(id, password, hashPassword);
-      //   handleServiceResponse(serviceResponse, res);
-      // } else {
-      //   res.status(401).json({ message: 'Unauthorized' });
-      // }
     }
   );
-
   return router;
 })();
