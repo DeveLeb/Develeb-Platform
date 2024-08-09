@@ -24,15 +24,6 @@ export const resourceService = {
     try {
       logger.info('Received filters:', JSON.stringify(filters));
       const { pageIndex, pageSize, type, title } = filters;
-      if (pageIndex < 1 || pageSize < 1) {
-        logger.info('Invalid pagination parameters');
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Invalid pagination parameters',
-          null,
-          StatusCodes.BAD_REQUEST
-        );
-      }
 
       const offset = (pageIndex - 1) * pageSize;
 
@@ -98,7 +89,7 @@ export const resourceService = {
       const resource = await resourceRepository.findResourceAsync(id);
       if (!resource) {
         logger.info(`No resource found with id ${id}`);
-        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       logger.info(`Resource found with id ${id}:`, JSON.stringify(resource));
       return new ServiceResponse(ResponseStatus.Success, 'Resource found', resource, StatusCodes.OK);
@@ -135,7 +126,7 @@ export const resourceService = {
       const resource = await resourceRepository.findResourceAsync(id);
       if (!resource) {
         logger.info(`No resource found with id ${id}`);
-        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       logger.info(`Resource found with id ${id}. About to delete...`);
       const deletedResource = await resourceRepository.deleteResourceAsync(id);
@@ -156,7 +147,7 @@ export const resourceService = {
       logger.info(`Resource found with id ${id}:`, JSON.stringify(resource));
       if (!resource) {
         logger.info(`No resource found with id ${id}`);
-        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       const totalViews = await resourceRepository.findResourceTotalViewsAsync(id);
       const resourceTotalViews = { resource_id: id, totalViews };
@@ -180,7 +171,7 @@ export const resourceService = {
       logger.info(`Resource found with id ${resourceId}:`, JSON.stringify(resource));
       if (!resource) {
         logger.info(`No resource found with id ${resourceId}`);
-        return new ServiceResponse(ResponseStatus.Failed, 'No resource found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
       const savedResource = await resourceRepository.saveResourceAsync(resourceId, userId);
       logger.info(`Resource saved with id ${resourceId} for user with id ${userId}:`, JSON.stringify(savedResource));
