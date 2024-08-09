@@ -108,6 +108,11 @@ export const jobRepository = {
     return createdJob.length > 0 ? JobSchema.parse(createdJob[0]) : null;
   },
 
+  approveJobAsync: async (id: string): Promise<Job | null> => {
+    const approvedJob = await db.update(job).set({ isApproved: true }).where(eq(job.id, id)).returning();
+    return approvedJob.length > 0 ? JobSchema.parse(approvedJob[0]) : null;
+  },
+
   findJobTotalViewsAsync: async (id: string): Promise<number | null> => {
     const result = await db.select({ totalViews: count() }).from(jobViews).where(eq(jobViews.jobId, id));
     return result.length > 0 ? result[0].totalViews : null;
@@ -127,6 +132,11 @@ export const jobRepository = {
   findCategoryByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobCategory).where(eq(jobCategory.id, id)).limit(1);
     return result.length > 0 ? JobCategorySchema.parse(result[0]) : null;
+  },
+
+  findCategorybyTitleAsync: async (title: string): Promise<JobCategory | null> => {
+    const existingCategory = await db.select().from(jobCategory).where(eq(jobCategory.title, title)).limit(1);
+    return existingCategory.length > 0 ? JobCategorySchema.parse(existingCategory[0]) : null;
   },
 
   findCategoriesAsync: async (): Promise<JobCategory[]> => {
@@ -152,6 +162,11 @@ export const jobRepository = {
   findLevelByIdAsync: async (id: number): Promise<JobCategory | null> => {
     const result = await db.select().from(jobLevel).where(eq(jobLevel.id, id)).limit(1);
     return result.length > 0 ? JobCategorySchema.parse(result[0]) : null;
+  },
+
+  findLevelByTitleAsync: async (title: string): Promise<JobCategory | null> => {
+    const existingLevel = await db.select().from(jobLevel).where(eq(jobLevel.title, title)).limit(1);
+    return existingLevel.length > 0 ? JobCategorySchema.parse(existingLevel[0]) : null;
   },
 
   findLevelsAsync: async (): Promise<JobLevel[] | null> => {
