@@ -26,6 +26,8 @@ import {
   UpdateUserSchema,
   UserRefreshRequest,
   UserRefreshTokenSchema,
+  UserResetPasswordRequest,
+  UserResetPasswordSchema,
 } from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
