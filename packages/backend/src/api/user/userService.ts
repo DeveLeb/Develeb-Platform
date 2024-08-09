@@ -115,6 +115,36 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
+  resetPassword: async (id: string, password: string): Promise<ServiceResponse<User | null>> => {
+    try {
+      logger.info('Fetching user from database...');
+      const user = await userRepository.findByIdAsync(id);
+      if (!user) {
+        logger.info('User not found by id.');
+        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info('User found, getting old user password');
+      const currentPassword = await userRepository.getPasswordAsync(id);
+      if (await bcrypt.compare(password, currentPassword)) {
+        logger.info('Password is the same as the current one');
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'New password cannot be the same as the old password',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      logger.info('Password is different from the current one, resetting password...');
+      const hashPassword = await bcrypt.hash(password, 4);
+      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
+      logger.info('Password reset');
+      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
   userLogin: (req: Request, res: Response, next: NextFunction): Promise<ServiceResponse<any>> => {
     return new Promise((resolve) => {
       passport.authenticate('local', { session: false }, (err, user, info) => {
@@ -182,51 +212,6 @@ export const userService = {
       );
     } catch (ex) {
       const errorMessage = `Error refreshing token: ${(ex as Error).message}`;
-      logger.error(errorMessage);
-      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
-    }
-  },
-  resetPassword: async (
-    id: string,
-    password: string,
-    currentUser: User | undefined
-  ): Promise<ServiceResponse<User | null>> => {
-    try {
-      logger.info('Checking if user to be edited is the current user');
-      if (!currentUser || !(currentUser.id === id)) {
-        logger.info('Current user is not the user to be edited');
-        return new ServiceResponse(ResponseStatus.Failed, 'Unauthorized', null, StatusCodes.UNAUTHORIZED);
-      }
-      logger.info('User to be edited is the current user, validating password');
-      const { valid, message } = validatePassword(password);
-      if (!valid) {
-        logger.info(`Password validation failed: ${message}`);
-        return new ServiceResponse(ResponseStatus.Failed, message as string, null, StatusCodes.BAD_REQUEST);
-      }
-      logger.info('Password validated, fetching user from database...');
-      const user = await userRepository.findByIdAsync(id);
-      if (!user) {
-        logger.info('User not found by id.');
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
-      }
-      logger.info('User found, getting old user password');
-      const currentPassword = await userRepository.getPasswordAsync(id);
-      if (await bcrypt.compare(password, currentPassword)) {
-        logger.info('Password is the same as the current one');
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'New password cannot be the same as the old password',
-          null,
-          StatusCodes.BAD_REQUEST
-        );
-      }
-      logger.info('Password is different from the current one, resetting password...');
-      const hashPassword = await bcrypt.hash(password, 4);
-      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
-      logger.info('Password reset');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
-    } catch (ex) {
-      const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

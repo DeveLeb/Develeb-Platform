@@ -10,7 +10,7 @@ import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { GetUserSchema, User, UserSchema } from '../user/userModel';
+import { GetUserSchema, UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
 import {
   CreateUserRequest,
@@ -108,13 +108,14 @@ export const userRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
   router.post(
-    '/reset-password',
+    '/reset-password/:id',
     validateRequest(UserResetPasswordSchema),
     authenticate,
+    verifyUser,
     async (req: Request, res: Response) => {
-      const { id, password } = req.body as unknown as UserResetPasswordRequest;
-      const currentUser = req.user as User | undefined;
-      const serviceResponse = await userService.resetPassword(id, password, currentUser);
+      const { password } = req.body as unknown as UserResetPasswordRequest['body'];
+      const { id } = req.params as unknown as UserResetPasswordRequest['params'];
+      const serviceResponse = await userService.resetPassword(id, password);
       handleServiceResponse(serviceResponse, res);
     }
   );
