@@ -4,7 +4,7 @@ import { Mock } from 'vitest';
 import { Resource } from '../resourceModel';
 import { resourceRepository } from '../resourceRepository';
 import { resourceService } from '../resourceService';
-import { desc } from 'drizzle-orm';
+
 
 vi.mock('../resourceRepository.ts');
 vi.mock('../../../server', () => ({
