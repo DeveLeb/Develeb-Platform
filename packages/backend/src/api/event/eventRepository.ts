@@ -43,7 +43,7 @@ export const eventRepository = {
         updatedAt: row.event.updatedAt.toISOString(),
         postedAt: row.event.postedAt.toISOString(),
       };
-      console.log('eventData', eventData);
+
       return EventSchema.parse(eventData);
     });
 

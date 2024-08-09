@@ -4,8 +4,9 @@ import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResp
 import { logger } from '../../server';
 import { Event } from './eventModel';
 import { eventRepository } from './eventRepository';
-import { CreateEventRequest, UpdateEventRequest } from './eventRequest';
+import { CreateEventSchema, UpdateEventRequest } from './eventRequest';
 import { RegisterationResponse } from './eventRespone';
+import { z } from 'zod';
 // import { findByIdAsync } from '../user/userRepository'; // TODO: Uncomment this line when the findByIdAsync function is implemented
 
 export const eventService = {
@@ -63,13 +64,13 @@ export const eventService = {
     }
   },
 
-  create: async (event: CreateEventRequest): Promise<ServiceResponse<Event | null>> => {
-    logger.info('Creating event with data:', JSON.stringify(event));
-    if (!event || !event.body) {
+  create: async (event: z.infer<typeof CreateEventSchema.shape.body>): Promise<ServiceResponse<Event | null>> => {
+    logger.info('Creating event');
+    if (!event) {
       return new ServiceResponse(ResponseStatus.Failed, 'Event not provided', null, StatusCodes.BAD_REQUEST);
     }
     try {
-      const newEvent = await eventRepository.createAsync(event.body);
+      const newEvent = await eventRepository.createAsync(event);
       logger.info(`Event created successfully with id:, ${newEvent.id}`);
       return new ServiceResponse<Event>(ResponseStatus.Success, 'Event created', newEvent, StatusCodes.CREATED);
     } catch (ex) {
@@ -91,7 +92,7 @@ export const eventService = {
       return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
     }
     try {
-      logger.info(`Updating event with data: ${JSON.stringify(updatedEventData)}`);
+      logger.info('Event found');
       const updatedEvent = await eventRepository.updateAsync(id, updatedEventData.body);
       logger.info(`Event updated successfully with id ${id}`);
       return new ServiceResponse<Event>(ResponseStatus.Success, 'Event updated', updatedEvent, StatusCodes.OK);
@@ -110,7 +111,7 @@ export const eventService = {
         logger.info(`Event not found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Failed, 'Event not found', null, StatusCodes.NOT_FOUND);
       }
-      logger.info(`Event found: ${JSON.stringify}`);
+      logger.info(`Event found`);
       await eventRepository.deleteAsync(id);
       return new ServiceResponse(ResponseStatus.Success, 'Event deleted', null, StatusCodes.OK);
     } catch (ex) {
@@ -172,7 +173,7 @@ export const eventService = {
         logger.info(`User with id ${userId} already registered for event with id ${eventId}`);
         return new ServiceResponse(ResponseStatus.Failed, 'User already registered', null, StatusCodes.CONFLICT);
       }
-      logger.info(`Event found: ${JSON.stringify(event)}`);
+      logger.info(`Event found and user not registered yet`);
       const registrations = await eventRepository.newRegisterationAsync(eventId, userId, userType);
       logger.info(`User registered for event with id ${eventId}`);
       return new ServiceResponse<any>(ResponseStatus.Success, 'User registered', registrations, StatusCodes.CREATED);

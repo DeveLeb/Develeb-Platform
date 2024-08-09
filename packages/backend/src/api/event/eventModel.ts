@@ -17,7 +17,11 @@ export const EventSchema = z.object({
     .datetime()
     .transform((val) => {
       if (val) return new Date(val);
-    }),
+    })
+    .refine((val) => {
+      if (val! < new Date()) return false;
+      return true;
+    }, 'Date cannot be in the past'),
   location: z.string().min(2, 'Location cannot be empty').max(100, 'Location is too long'),
   speakerName: z.string().min(2, 'Speaker Name cannot be empty').max(100, 'Speaker Name is too long'),
   speakerDescription: z

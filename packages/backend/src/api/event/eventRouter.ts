@@ -53,8 +53,7 @@ export const eventRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
-    console.log('req.params', req.params);
-    const id = req.params.id as string;
+    const id = req.params.id;
     const serviceResponse = await eventService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
@@ -69,9 +68,9 @@ export const eventRouter: Router = (() => {
     responses: createApiResponse(EventSchema, 'Success'),
   });
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', validateRequest(CreateEventSchema), async (req: Request, res: Response) => {
     try {
-      const parsedEvent = CreateEventSchema.parse({ body: req.body });
+      const parsedEvent = req.body;
       const serviceResponse = await eventService.create(parsedEvent);
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
@@ -94,7 +93,7 @@ export const eventRouter: Router = (() => {
 
   router.put('/:id', async (req: Request, res: Response) => {
     try {
-      const id = req.params.id as string;
+      const id = req.params.id;
       const parsedEvent = UpdateEventSchema.parse(req);
       const serviceResponse = await eventService.update(id, parsedEvent);
       handleServiceResponse(serviceResponse, res);
@@ -114,7 +113,7 @@ export const eventRouter: Router = (() => {
   });
 
   router.delete('/:id', validateRequest(GetEventSchema), async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+    const id = req.params.id;
     const serviceResponse = await eventService.delete(id);
     handleServiceResponse(serviceResponse, res);
   });
@@ -127,7 +126,7 @@ export const eventRouter: Router = (() => {
   });
 
   router.get('/:eventId/registrations', validateRequest(GetRegistrationSchema), async (req: Request, res: Response) => {
-    const eventId = req.params.eventId as string;
+    const eventId = req.params.eventId;
     const serviceResponse = await eventService.getRegistrations(eventId);
     handleServiceResponse(serviceResponse, res);
   });
@@ -143,9 +142,9 @@ export const eventRouter: Router = (() => {
     '/:eventId/register/:userId',
     validateRequest(RegisterEventSchema),
     async (req: Request, res: Response) => {
-      const eventId = req.params.eventId as string;
-      const userId = req.params.userId as string;
-      const userType = (req.body.userType as string) || 'Attendee';
+      const eventId = req.params.eventId;
+      const userId = req.params.userId;
+      const userType = req.body.userType || 'Attendee';
       const serviceResponse = await eventService.newRegisteration(eventId, userId, userType);
       handleServiceResponse(serviceResponse, res);
     }
@@ -165,8 +164,8 @@ export const eventRouter: Router = (() => {
     '/:eventId/save/:userId',
     validateRequest(SaveEventRequestSchema),
     async (req: Request, res: Response) => {
-      const eventId = req.params.eventId as string;
-      const userId = req.params.userId as string;
+      const eventId = req.params.eventId;
+      const userId = req.params.userId;
       const serviceResponse = await eventService.saveEvent(eventId, userId);
       handleServiceResponse(serviceResponse, res);
     }

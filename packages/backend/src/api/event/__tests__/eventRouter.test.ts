@@ -236,17 +236,7 @@ describe('Events API Endpoints', () => {
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(responseBody.success).toBeFalsy();
-      expect(responseBody.message).toEqual(`[
-  {
-    "code": "invalid_string",
-    "validation": "datetime",
-    "message": "Invalid datetime",
-    "path": [
-      "body",
-      "date"
-    ]
-  }
-]`);
+      expect(responseBody.message).toEqual('Invalid input: Invalid datetime');
       expect(responseBody.responseObject).toBeNull();
     });
 
@@ -276,18 +266,20 @@ describe('Events API Endpoints', () => {
       // Assert
       expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
       expect(responseBody.success).toBeFalsy();
-      expect(responseBody.message).toEqual(`[
-  {
-    "code": "invalid_type",
-    "expected": "string",
-    "received": "undefined",
-    "path": [
-      "body",
-      "date"
-    ],
-    "message": "Required"
-  }
-]`);
+      expect(responseBody.message).toEqual('Invalid input: Required');
+      expect(responseBody.responseObject).toBeNull();
+    });
+
+    it('should return a bad request for a date in the past', async () => {
+      // Act
+      const eventToBeSent = { ...mockEvents[0], date: '2020-01-01T00:00:00Z' };
+      const response = await request(app).post('/events').send(eventToBeSent);
+      const responseBody: ServiceResponse = response.body;
+
+      // Assert
+      expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
+      expect(responseBody.success).toBeFalsy();
+      expect(responseBody.message).toEqual('Invalid input: Date cannot be in the past');
       expect(responseBody.responseObject).toBeNull();
     });
   });

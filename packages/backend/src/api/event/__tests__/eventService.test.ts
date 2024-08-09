@@ -244,21 +244,6 @@ describe('userService', () => {
       expect(result.message).toContain('Error creating event');
       expect(result.responseObject).toBeNull();
     });
-
-    it('returns a bad request error for no event provided', async () => {
-      // Arrange
-
-      // Act
-      const result = await eventService.create({
-        body: null,
-      } as any);
-
-      // Assert
-      expect(result.statusCode).toEqual(StatusCodes.BAD_REQUEST);
-      expect(result.success).toBeFalsy();
-      expect(result.message).toContain('Event not provided');
-      expect(result.responseObject).toBeNull();
-    });
   });
 
   describe('update', () => {
