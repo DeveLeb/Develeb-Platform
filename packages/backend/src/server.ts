@@ -8,6 +8,7 @@ import { jobRouter } from './api/job/jobRouter';
 import { resourceRouter } from './api/resources/resourceRouter';
 import { userRouter } from './api/user/userRouter';
 import { openAPIRouter } from './api-docs/openAPIRouter';
+import passport from './common/middleware/authConfig/passport';
 import errorHandler from './common/middleware/errorHandler';
 import rateLimiter from './common/middleware/rateLimiter';
 import requestLogger from './common/middleware/requestLogger';
@@ -23,6 +24,7 @@ app.set('trust proxy', true);
 app.use(express.json());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(helmet());
+app.use(passport.initialize());
 app.use(rateLimiter);
 
 // Request logging

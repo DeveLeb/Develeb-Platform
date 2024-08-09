@@ -20,4 +20,11 @@ export const commonValidations = {
     .refine((data) => !isNaN(Number(data)), 'Must be a numeric value')
     .transform(Number)
     .refine((num) => num > 0, 'Page size must be a positive number'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters long.')
+    .regex(/\d/, 'Password must contain at least one number.')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character.')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter.'),
 };
