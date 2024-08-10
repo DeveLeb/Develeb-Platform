@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
@@ -25,7 +25,7 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Success, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('Users retuned successfully');
-      return new ServiceResponse<User[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'Users found', users as User[], StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -40,7 +40,7 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'User found', user as User, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -62,9 +62,9 @@ export const userService = {
       logger.info('No conflicts found. Creating user...');
       const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
       createUserRequest.password = hashPassword;
-      const newUser = await userRepository.createUserAsync(createUserRequest);
+      await userRepository.createUserAsync(createUserRequest);
       logger.info('User created successfully');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User created', newUser, StatusCodes.CREATED);
+      return new ServiceResponse(ResponseStatus.Success, 'User created', null, StatusCodes.CREATED);
     } catch (ex) {
       const errorMessage = `Error creating user: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -80,7 +80,7 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       await userRepository.deleteUserAsync(id);
-      return new ServiceResponse<User>(ResponseStatus.Success, 'User deleted', user, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'User deleted', user as User, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -117,49 +117,53 @@ export const userService = {
   },
   userLogin: (req: Request, res: Response, next: NextFunction): Promise<ServiceResponse<any>> => {
     return new Promise((resolve) => {
-      passport.authenticate('local', { session: false }, (err, user, info) => {
-        if (err || !user) {
-          resolve(
-            new ServiceResponse(
-              ResponseStatus.Failed,
-              info ? info.message : 'Authentication failed',
-              null,
-              StatusCodes.UNAUTHORIZED
-            )
-          );
-        } else {
-          req.login(user, { session: false }, async (err) => {
-            if (err) {
-              resolve(
-                new ServiceResponse(
-                  ResponseStatus.Failed,
-                  'Login failed',
-                  { error: err.message },
-                  StatusCodes.UNAUTHORIZED
-                )
-              );
-            } else {
-              const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
+      passport.authenticate(
+        'local',
+        { session: false },
+        (err: Error | null, user: User, info: { message: string } | null) => {
+          if (err || !user) {
+            resolve(
+              new ServiceResponse(
+                ResponseStatus.Failed,
+                info ? info.message : 'Authentication failed',
+                null,
+                StatusCodes.UNAUTHORIZED
+              )
+            );
+          } else {
+            req.login(user, { session: false }, async (err) => {
+              if (err) {
+                resolve(
+                  new ServiceResponse(
+                    ResponseStatus.Failed,
+                    'Login failed',
+                    { error: err.message },
+                    StatusCodes.UNAUTHORIZED
+                  )
+                );
+              } else {
+                const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
 
-              const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
-                expiresIn: '7d',
-              });
-              resolve(
-                new ServiceResponse(
-                  ResponseStatus.Success,
-                  'Login successful',
-                  { message: 'Login successful', token, refreshToken },
-                  StatusCodes.OK
-                )
-              );
-            }
-          });
+                const refreshToken = jwt.sign({ id: user.id, role: user.role }, env.JWT_REFRESH_SECRET, {
+                  expiresIn: '7d',
+                });
+                resolve(
+                  new ServiceResponse(
+                    ResponseStatus.Success,
+                    'Login successful',
+                    { message: 'Login successful', token, refreshToken },
+                    StatusCodes.OK
+                  )
+                );
+              }
+            });
+          }
         }
-      })(req, res, next);
+      )(req, res, next);
     });
   },
   userRefreshToken: async (refreshToken: string): Promise<ServiceResponse<{ token: string } | null>> => {
-    logger.info('Checking if refresh token exists...')
+    logger.info('Checking if refresh token exists...');
     try {
       if (!refreshToken) {
         return new ServiceResponse(ResponseStatus.Failed, 'Refresh token is required', null, StatusCodes.BAD_REQUEST);
@@ -173,7 +177,7 @@ export const userService = {
       }
       logger.info('User found, refreshing token...');
       const token = jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: '1h' });
-      logger.info('Token refreshed')
+      logger.info('Token refreshed');
       return new ServiceResponse<{ token: string }>(
         ResponseStatus.Success,
         'Token refreshed',
