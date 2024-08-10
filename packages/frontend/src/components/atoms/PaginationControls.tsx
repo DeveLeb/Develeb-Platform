@@ -24,6 +24,24 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, to
     router.push(url.toString());
   };
 
+  // Helper function to generate an array of page numbers to display
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, currentPage + 2);
+
+    if (currentPage <= 3) {
+      end = Math.min(5, totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      start = Math.max(1, totalPages - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
+
   return (
     <nav role="navigation" aria-label="pagination" className="mx-auto flex w-full justify-center mt-8">
       <ul className="flex flex-row items-center space-x-2">
@@ -40,22 +58,22 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, to
             <span className="sr-only">Previous</span>
           </button>
         </li>
-        {Array.from({ length: totalPages }, (_, index) => (
-          <li key={index}>
+        {getPageNumbers().map((pageNumber) => (
+          <li key={pageNumber}>
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                handlePageChange(index + 1);
+                handlePageChange(pageNumber);
               }}
               className={cn(
                 'p-2 sm:p-3 bg-transparent border border-[var(--dark-blue)] rounded-none',
-                currentPage === index + 1
+                currentPage === pageNumber
                   ? 'bg-[var(--dark-blue)] text-[var(--white)]'
                   : 'hover:bg-[var(--dark-blue)] text-[var(--dark-blue)] hover:text-[var(--white)]'
               )}
             >
-              {index + 1}
+              {pageNumber}
             </a>
           </li>
         ))}

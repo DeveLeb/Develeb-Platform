@@ -4,16 +4,25 @@ import { FaSearch } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 
 interface SearchPanelProps {
-  onSearch: (filters: { title: string; tag: string; type: string }) => void;
+  onSearch: (filters: { title: string; tags: string[]; type: string }) => void;
 }
 
 const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
   const [title, setTitle] = useState('');
-  const [tag, setTag] = useState('');
+  const [tags, setTags] = useState('');
   const [type, setType] = useState('');
 
   const handleSearch = () => {
-    onSearch({ title, tag, type });
+    const tagArray = tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+    console.log('Search filters:', { title, tags: tagArray, type });
+    onSearch({
+      title: title.trim(),
+      tags: tagArray,
+      type: type.trim(),
+    });
   };
 
   return (
@@ -49,9 +58,9 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
               style={{
                 '--tw-ring-color': 'var(--green)',
               }}
-              placeholder="Enter tag"
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
+              placeholder="Enter tag(s) (e.g., AI, Machine Learning)"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
             />
           </div>
           <div className="flex flex-col mb-4 relative w-full sm:w-auto">
@@ -62,7 +71,7 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
               style={{
                 '--tw-ring-color': 'var(--green)',
               }}
-              placeholder="Enter type (eg., Workshop, Conference)"
+              placeholder="Enter type (e.g., Online, In-Person)"
               value={type}
               onChange={(e) => setType(e.target.value)}
             />
@@ -79,5 +88,4 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
     </div>
   );
 };
-
 export default EventSearchPanel;
