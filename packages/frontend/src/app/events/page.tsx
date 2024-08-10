@@ -14,6 +14,10 @@ const EventPage = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
+  const [title, setTitle] = useState<string>('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [type, setType] = useState<string>('');
+
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
   const per_page = searchParams.get('per_page') ? Number(searchParams.get('per_page')) : 12;
 

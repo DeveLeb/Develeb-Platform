@@ -17,7 +17,7 @@ const getEvents = async (
   if (tagsFilter && tagsFilter.length > 0) query.tags = tagsFilter.join(',');
   if (title) query.title = title;
 
-    const queryString = new URLSearchParams(query).toString();
+  const queryString = new URLSearchParams(query).toString();
 
   const response = await fetch(`${baseURL}/events?${queryString}`, {
     method: 'GET',
@@ -26,9 +26,9 @@ const getEvents = async (
     },
   });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch events');
-    }
+  if (!response.ok) {
+    throw new Error('Failed to fetch events');
+  }
 
   const data = await response.json();
 
@@ -62,9 +62,9 @@ const getEventById = async (eventId: string): Promise<Event> => {
     },
   });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch event');
-    }
+  if (!response.ok) {
+    throw new Error('Failed to fetch event');
+  }
 
   const event = await response.json();
 

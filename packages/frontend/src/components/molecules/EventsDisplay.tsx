@@ -1,7 +1,6 @@
 import React from 'react';
 import { CiCalendar } from 'react-icons/ci';
 
-import PaginationControls from '@/components/atoms/PaginationControls';
 import { Card } from '@/components/ui/card';
 import { Event } from '@/types/Event';
 
@@ -12,7 +11,7 @@ interface EventsDisplayProps {
   itemsPerPage: number;
 }
 
-const EventsDisplay: React.FC<EventsDisplayProps> = ({ events, currentPage, totalItems, itemsPerPage }) => {
+const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
   return (
     <div className="sm:min-h-screen sm:p-11 p-4">
       <h3 className="text-3xl font-bold text-[var(--dark-blue)] mb-3 text-left">All Events</h3>
