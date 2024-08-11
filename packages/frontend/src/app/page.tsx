@@ -59,8 +59,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div className='bg-primary py-10'>
-        <LatestSection title='Our Latest Events'/>
+      <div className="p-10 bg-primary py-10 lg:px-[7rem]">
+        <LatestSection title="Our Latest Events" jobs={false} />
+      </div>
+
+      <div className="p-10 bg-white py-10 lg:px-[7rem]">
+        <LatestSection title="Our Latest Jobs" jobs={true} />
       </div>
 
       <div className="relative w-full h-[30vh] bg-cover bg-center lg:h-[60vh]">

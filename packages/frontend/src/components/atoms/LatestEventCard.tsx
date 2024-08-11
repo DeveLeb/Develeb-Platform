@@ -9,18 +9,21 @@ const ListItem = ({ text }: { text: string }) => {
   );
 };
 
-function LatestEventCard() {
+interface cardProps {
+  title: string;
+  list: string[];
+}
+
+function LatestEventCard({ title, list }: cardProps) {
   return (
-    <div className="bg-main_green relative h-80 rounded-md flex flex-col justify-between p-2">
+    <div className="bg-main_green relative h-96 rounded-md flex flex-col justify-between p-2 lg:w-96">
       <div>
         <img src="/icons/SquareDots.png" alt="dots" className="w-14" />
       </div>
       <div className=" p-5 z-30">
-        <h1 className="font-extrabold text-xl">"LAUNCHING OUR FIRST DESIGN SYSTEM"</h1>
+        <h1 className="font-extrabold text-xl">{title}</h1>
         <ul className="">
-          <ListItem text="Virtual Meet" />
-          <ListItem text="Zoom" />
-          <ListItem text="Mar 20, 2024  8:00 PM" />
+          {list.map((item) => <ListItem text={item} />)}
         </ul>
       </div>
       <div>
