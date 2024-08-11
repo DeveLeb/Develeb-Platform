@@ -30,11 +30,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div className='lg:hidden'>
+      <div className="lg:hidden">
         <TopPartners />
       </div>
 
-      <div className="px-10 lg:flex lg:justify-between lg:py-10">
+      <div className="px-10 lg:flex lg:justify-between lg:px-[7rem] lg:py-10">
         <div className="lg:max-w-[30%] lg: mr-10">
           <HomePageTitle title={'Our Values'} />
           <div className="text-sm">
@@ -56,6 +56,26 @@ export default function Home() {
             <ValuesCard />
           </div>
         </div>
+      </div>
+
+      <div className="relative w-full h-[30vh] bg-cover bg-center lg:h-[60vh]">
+        <img
+          src="/images/DownloadSectionImage.png"
+          alt="hero image"
+          className="absolute object-fill h-[100%] w-[100%] lg:object-cover"
+        />
+        <div className="relative z-10 text-white p-10 flex flex-col items-center justify-evenly h-full text-center lg:px-[7rem]">
+          <h2 className="lg:text-3xl font-bold">
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Molestiae, commodi! Lorem ipsum, dolor sit amet
+            consectetur adipisicing elit. Animi, fugiat!
+          </h2>
+          <button className="p-2 bg-[#01C38D] hover:bg-blue-600 text-white rounded-md flex justify-evenly items-center w-[150px] text-s font-semibold">
+            Download Now
+          </button>
+        </div>
+      </div>
+      <div className='hidden lg:block lg:bg-primary lg:text-white'>
+        <TopPartners/>
       </div>
     </>
   );
