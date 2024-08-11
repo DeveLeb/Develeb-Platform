@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const GetResourceViewsSchema = z.object({
+export const GetResourceViewsResponse = z.object({
   id: z.string(),
   totalViews: z.number(),
 });

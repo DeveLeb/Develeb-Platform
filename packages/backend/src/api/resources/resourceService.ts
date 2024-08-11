@@ -101,7 +101,7 @@ export const resourceService = {
   },
   updateResource: async (
     id: string,
-    updateResourceRequest: PutResourceRequest
+    updateResourceRequest: PutResourceRequest['body']
   ): Promise<ServiceResponse<Resource | null>> => {
     try {
       logger.info(`Attempting to update resource with id ${id}`);

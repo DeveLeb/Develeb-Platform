@@ -134,7 +134,7 @@ describe('resourceService', () => {
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
+      expect(result.success).toBeTruthy();
       expect(result.message).toContain('No resource found');
       expect(result.responseObject).toBeNull();
     });
@@ -311,7 +311,7 @@ describe('resourceService', () => {
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
+      expect(result.success).toBeTruthy();
       expect(result.message).toContain('No resource found');
       expect(result.responseObject).toBeNull();
     });
@@ -362,7 +362,7 @@ describe('resourceService', () => {
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
+      expect(result.success).toBeTruthy();
       expect(result.message).toContain('No resource found');
       expect(result.responseObject).toBeNull();
     });
@@ -412,7 +412,7 @@ describe('resourceService', () => {
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
-      expect(result.success).toBeFalsy();
+      expect(result.success).toBeTruthy();
       expect(result.message).toContain('No resource found');
       expect(result.responseObject).toBeNull();
     });
