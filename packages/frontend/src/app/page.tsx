@@ -1,6 +1,7 @@
 import TopPartners from '@/components/molecules/TopPartners';
 import ValuesCard from '@/components/atoms/ValuesCard';
 import HomePageTitle from '@/components/atoms/homePageTitle';
+import LatestSection from '@/components/molecules/LatestSection';
 
 export default function Home() {
   const images = Array.from({ length: 20 }, (_, index) => index + 1);
@@ -58,6 +59,10 @@ export default function Home() {
         </div>
       </div>
 
+      <div className='bg-primary py-10'>
+        <LatestSection title='Our Latest Events'/>
+      </div>
+
       <div className="relative w-full h-[30vh] bg-cover bg-center lg:h-[60vh]">
         <img
           src="/images/DownloadSectionImage.png"
@@ -74,8 +79,8 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <div className='hidden lg:block lg:bg-primary lg:text-white'>
-        <TopPartners/>
+      <div className="hidden lg:block lg:bg-primary lg:text-white">
+        <TopPartners />
       </div>
     </>
   );
