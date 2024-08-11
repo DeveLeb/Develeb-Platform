@@ -18,7 +18,7 @@ function Header() {
     window.addEventListener('resize', handleResize);
   }, []);
   return (
-    <header className="flex justify-between items-center mb-40 bg-primary sm:px-10 sm:py-3">
+    <header className="flex justify-between items-center bg-primary sm:px-10 sm:py-3">
       <div className="text-secondary border border-border px-2 py-1">Logo</div>
       {isMobileScreen ? (
         <div className="px-2 py-2 rounded-full hover:bg-white/50 transition-colors cursor-pointer">
