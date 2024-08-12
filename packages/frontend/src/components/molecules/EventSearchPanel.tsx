@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface SearchPanelProps {
   onSearch: (filters: { title: string; tags: string[]; type: string }) => void;
@@ -36,13 +37,10 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
         </p>
         <div className="flex flex-col sm:flex-row items-end">
           <div className="flex flex-col mb-4 relative w-full sm:w-auto">
-            <input
+            <Input
               type="text"
               id="eventSearch"
-              className="w-full sm:w-[600px] h-[60px] border border-[var(--gray)] p-2 pl-10 focus:outline-none focus:ring-2 placeholder-custom"
-              style={{
-                '--tw-ring-color': 'var(--green)',
-              }}
+              className="sm:w-[600px] placeholder-custom"
               placeholder="What events are you looking for?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -51,26 +49,20 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
           </div>
 
           <div className="flex flex-col mb-4 relative w-full sm:w-auto">
-            <input
+            <Input
               type="text"
               id="tag"
-              className="w-full sm:w-[450px] h-[60px] border border-[var(--gray)] p-2 pl-10 focus:outline-none focus:ring-2 placeholder-custom"
-              style={{
-                '--tw-ring-color': 'var(--green)',
-              }}
+              className="sm:w-[450px] placeholder-custom"
               placeholder="Enter tag(s) (e.g., AI, Machine Learning)"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
             />
           </div>
           <div className="flex flex-col mb-4 relative w-full sm:w-auto">
-            <input
+            <Input
               type="text"
               id="type"
-              className="w-full sm:w-[450px] h-[60px] border border-[var(--gray)] p-2 pl-10 focus:outline-none focus:ring-2 placeholder-custom"
-              style={{
-                '--tw-ring-color': 'var(--green)',
-              }}
+              className="sm:w-[450px] placeholder-custom"
               placeholder="Enter type (e.g., Online, In-Person)"
               value={type}
               onChange={(e) => setType(e.target.value)}
@@ -79,7 +71,7 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
 
           <Button
             onClick={handleSearch}
-            className="w-full sm:w-[201px] h-[60px] bg-[var(--green)] hover:bg-[var(--dark-blue)] text-white font-bold mb-4 rounded-md text-lg sm:ml-[-4px] sm:border-l-0"
+            className="sm:w-[201px] h-[60px] bg-[var(--green)] hover:bg-[var(--dark-blue)] text-white font-bold mb-4 rounded-md text-lg sm:ml-[-4px] sm:border-l-0"
           >
             Search Event
           </Button>

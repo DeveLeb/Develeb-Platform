@@ -75,8 +75,8 @@
   }
 
   .placeholder-custom::placeholder {
-    font-size: 1.125rem;
-    font-weight: 100;
+    font-size: 1rem;
+    font-weight: 200;
     color: var(--dark-blue);
   }
 }
