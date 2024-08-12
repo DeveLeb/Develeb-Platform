@@ -72,7 +72,7 @@ export const userService = {
     }
   },
 
-  deleteUser: async (id: string): Promise<ServiceResponse<User | null>> => {
+  deleteUser: async (id: string): Promise<ServiceResponse<null>> => {
     try {
       logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
@@ -80,7 +80,8 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       await userRepository.deleteUserAsync(id);
-      return new ServiceResponse(ResponseStatus.Success, 'User deleted', user as User, StatusCodes.OK);
+      logger.info('User deleted');
+      return new ServiceResponse(ResponseStatus.Success, 'User deleted', null, StatusCodes.NO_CONTENT);
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
