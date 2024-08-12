@@ -10,6 +10,7 @@ import { logger } from '../../server';
 import { User } from './userModel';
 import { userRepository } from './userRepository';
 import { CreateUserRequest } from './userRequest';
+import { UserResponse } from './userResponse';
 
 export const userService = {
   findAll: async (
@@ -17,15 +18,15 @@ export const userService = {
     pageSize: number,
     username: string | undefined,
     email: string | undefined
-  ): Promise<ServiceResponse<User[] | null>> => {
+  ): Promise<ServiceResponse<UserResponse[] | null>> => {
     try {
       const users = await userRepository.findAllAsync(pageIndex, pageSize, username, email);
-      if (!users) {
+      if (users.length == 0) {
         logger.info('No users found');
         return new ServiceResponse(ResponseStatus.Success, 'No Users found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('Users retuned successfully');
-      return new ServiceResponse(ResponseStatus.Success, 'Users found', users as User[], StatusCodes.OK);
+      return new ServiceResponse<UserResponse[]>(ResponseStatus.Success, 'Users found', users, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -33,14 +34,14 @@ export const userService = {
     }
   },
 
-  findById: async (id: string): Promise<ServiceResponse<User | null>> => {
+  findById: async (id: string): Promise<ServiceResponse<UserResponse | null>> => {
     try {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found');
-      return new ServiceResponse(ResponseStatus.Success, 'User found', user as User, StatusCodes.OK);
+      return new ServiceResponse<UserResponse>(ResponseStatus.Success, 'User found', user, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -48,7 +49,7 @@ export const userService = {
     }
   },
 
-  createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<User | null>> => {
+  createUser: async (createUserRequest: CreateUserRequest): Promise<ServiceResponse<null>> => {
     try {
       logger.info('Checking for conflicts...');
       const userExists = await userRepository.findByUsernameOrEmailAsync(
@@ -94,7 +95,7 @@ export const userService = {
     level_id: number,
     category_id: number,
     tags: string | undefined
-  ): Promise<ServiceResponse<{ message: string } | null>> => {
+  ): Promise<ServiceResponse<null>> => {
     try {
       logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
@@ -104,12 +105,7 @@ export const userService = {
       }
       logger.info('User found');
       await userRepository.updateUserAsync(id, full_name, level_id, category_id, tags);
-      return new ServiceResponse(
-        ResponseStatus.Success,
-        'User updated',
-        { message: 'User successfully updated' },
-        StatusCodes.OK
-      );
+      return new ServiceResponse(ResponseStatus.Success, 'User updated', null, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);
@@ -152,7 +148,7 @@ export const userService = {
                   new ServiceResponse(
                     ResponseStatus.Success,
                     'Login successful',
-                    { message: 'Login successful', token, refreshToken },
+                    { token, refreshToken },
                     StatusCodes.OK
                   )
                 );
