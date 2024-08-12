@@ -55,7 +55,6 @@ export const jobService = {
 
   findJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
-      JobIDSchema.parse(id);
       logger.info(`Finding job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(job)}`);
@@ -76,7 +75,6 @@ export const jobService = {
 
   deleteJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
-      JobIDSchema.parse(id);
       logger.info(`Deleting job with id ${id}`);
       const findJob = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(findJob)}`);
@@ -98,7 +96,6 @@ export const jobService = {
 
   updateJob: async (id: string, updateJobrequest: PutJobRequest): Promise<ServiceResponse<Job | null>> => {
     try {
-      JobIDSchema.parse(id);
       logger.info(`Updating job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       if (!job) {
@@ -166,7 +163,6 @@ export const jobService = {
 
   rejectJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
-      JobIDSchema.parse(id);
       logger.info(`Rejecting job with id ${id}`);
       logger.info('Beginning job rejection process');
       const findJob = await jobRepository.findJobByIdAsync(id);
@@ -390,7 +386,6 @@ export const jobService = {
     id: string
   ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
     try {
-      JobIDSchema.parse(id);
       logger.info(`Finding total views for job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(job)}`);
