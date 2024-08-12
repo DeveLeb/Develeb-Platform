@@ -6,6 +6,7 @@ import { pino } from 'pino';
 import { eventRouter } from './api/event/eventRouter';
 import { healthCheckRouter } from './api/healthCheck/healthCheckRouter';
 import { jobRouter } from './api/job/jobRouter';
+import { resourceRouter } from './api/resources/resourceRouter';
 import { userRouter } from './api/user/userRouter';
 import { openAPIRouter } from './api-docs/openAPIRouter';
 import passport from './common/middleware/authConfig/passport';
@@ -34,7 +35,9 @@ app.use(requestLogger);
 app.use('/health-check', healthCheckRouter);
 app.use('/users', userRouter);
 app.use('/jobs', jobRouter);
+app.use('/resources', resourceRouter);
 app.use('/events', eventRouter);
+
 // Swagger UI
 app.use(openAPIRouter);
 
