@@ -14,7 +14,7 @@ import {
 export const user = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 50 }).notNull().unique(),
-  phoneNumber: varchar('phone_number', { length: 15 }),
+  phoneNumber: varchar('phone_number', { length: 15 }).unique(),
   fullName: varchar('full_name', { length: 255 }),
   username: varchar('username', { length: 30 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
@@ -57,7 +57,7 @@ export const job = pgTable(
     updatedAt: timestamp('updated_at').defaultNow(),
     postedAt: timestamp('posted_at'),
     tags: text('tags'),
-    isApproved: boolean('is_approved'),
+    isApproved: boolean('is_approved').default(false),
   },
   (table) => ({
     jobLevelIdx: index('job_level_idx').on(table.levelId),
@@ -135,6 +135,11 @@ export const jobViews = pgTable(
   })
 );
 
+export const eventLocationType = pgTable('event_location_type', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull().unique(),
+});
+
 export const event = pgTable('event', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -146,9 +151,9 @@ export const event = pgTable('event', {
   speakerName: varchar('speaker_name', { length: 255 }),
   speakerDescription: varchar('speaker_description', { length: 255 }),
   speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-  typeId: integer('type_id').references(() => jobType.id),
+  locationType: integer('location_type_id').references(() => eventLocationType.id),
   tags: text('tags'),
-  createdAt: timestamp('created_at'),
+  createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at'),
 });
 
