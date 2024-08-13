@@ -3,7 +3,7 @@
 Table "user" {
   "id" VARCHAR(255) [pk]
   "email" VARCHAR(30) [not null]
-  "phone_number" VARCHAR(30)
+  "phone_number" VARCHAR(30) [unique]
   "full_name" VARCHAR(255)
   "username" VARCHAR(30) [not null, unique]
   "password" VARCHAR(255) [not null]
@@ -74,6 +74,11 @@ Table "job_views" {
 
 /*========== Event Entity ===========*/ 
 
+Table "event_location_type"{
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null, unique]
+}
+
 Table "event" {
   "id" VARCHAR(255) [pk]
   "title" varchar(255) [not null]
@@ -85,7 +90,7 @@ Table "event" {
   "speaker_name" varchar(255)
   "speaker_description" varchar(255)
   "speaker_profile_url" varchar(255)
-  "type_id" integer
+  "location_type_id" integer
   "tags" TEXT
   "created_at" timestamp
   "updated_at" timestamp
@@ -208,3 +213,5 @@ Ref: "user"."id" <> "event_saved"."user_id"
 Ref: "resource_saved"."resource_id" <> "resource"."id"
 
 Ref: "resource_saved"."user_id" <> "user"."id"
+
+Ref:"event_location_type"."id" <> "event"."location_type_id"
