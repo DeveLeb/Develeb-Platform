@@ -68,13 +68,14 @@ const EventSearchPanel: React.FC<SearchPanelProps> = ({ onSearch }) => {
               onChange={(e) => setType(e.target.value)}
             />
           </div>
-
-          <Button
-            onClick={handleSearch}
-            className="sm:w-[201px] h-[60px] bg-[var(--green)] hover:bg-[var(--dark-blue)] text-white font-bold mb-4 rounded-md text-lg sm:ml-[-4px] sm:border-l-0"
-          >
-            Search Event
-          </Button>
+          <div className="flex justify-center items-end w-full">
+            <Button
+              onClick={handleSearch}
+              className="sm:w-[201px] h-[60px] bg-[var(--green)] hover:bg-[var(--dark-blue)] text-white font-bold mb-4 rounded-md text-lg sm:ml-[-4px] sm:border-l-0"
+            >
+              Search Event
+            </Button>
+          </div>
         </div>
       </div>
     </div>
