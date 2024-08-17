@@ -6,7 +6,8 @@ import React, { useEffect, useState } from 'react';
 import PaginationControls from '@/components/atoms/PaginationControls';
 import EventsDisplay from '@/components/molecules/EventsDisplay';
 import EventSearchPanel from '@/components/molecules/EventSearchPanel';
-import EventService from '@/services/EventService';
+import { EventService } from '@/services/EventService';
+import { Event } from '@/types';
 
 const EventPage = () => {
   const searchParams = useSearchParams();
@@ -24,23 +25,20 @@ const EventPage = () => {
   const [title, setTitle] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [type, setType] = useState<string>('');
+  const [page, setPage] = useState<number>(searchParams.get('page') ? Number(searchParams.get('page')) : 1);
 
-  const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
   const per_page = searchParams.get('per_page') ? Number(searchParams.get('per_page')) : 12;
 
-  const fetchEvents = async () => {
+  useEffect(() => {
     try {
-      const { events, total } = await EventService.getEvents(type, tags, title, page, per_page);
-      setEvents(events);
-      setTotalItems(total);
+      new EventService().getEvents(type, tags, title, page, per_page).then(({ events }) => {
+        setEvents(events);
+        setTotalItems(events.length);
+      });
     } catch (error) {
       setError('Error fetching events');
     }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, [type, tags, title, page, per_page]);
+  }, [page, per_page, tags, title, type]);
 
   const handleSearch = (filters: { title: string; tags: string[]; type: string }) => {
     setTitle(filters.title);
@@ -66,7 +64,7 @@ const EventPage = () => {
         </div>
       ) : (
         <>
-          <EventsDisplay events={events} />
+          <EventsDisplay events={events} currentPage={0} totalItems={0} itemsPerPage={0} />
           <div className="py-4">
             <PaginationControls
               currentPage={page}

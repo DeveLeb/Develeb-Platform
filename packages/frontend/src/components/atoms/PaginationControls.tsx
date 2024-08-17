@@ -10,9 +10,15 @@ interface PaginationControlsProps {
   currentPage: number;
   totalItems: number;
   itemsPerPage: number;
+  onPageChange: (newPage: number) => void;
 }
 
-const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, totalItems, itemsPerPage }) => {
+const PaginationControls: React.FC<PaginationControlsProps> = ({
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+}) => {
   const router = useRouter();
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
