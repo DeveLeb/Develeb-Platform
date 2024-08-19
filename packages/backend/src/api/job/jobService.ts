@@ -3,6 +3,7 @@ import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceRespon
 import { logger } from 'src/server';
 import { ZodError } from 'zod';
 
+import { userRepository } from '../user/userRepository';
 import { Job, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
 import {
@@ -55,6 +56,7 @@ export const jobService = {
 
   findJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      JobIDSchema.parse(id);
       logger.info(`Finding job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(job)}`);
@@ -75,6 +77,7 @@ export const jobService = {
 
   deleteJobById: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      JobIDSchema.parse(id);
       logger.info(`Deleting job with id ${id}`);
       const findJob = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(findJob)}`);
@@ -96,6 +99,7 @@ export const jobService = {
 
   updateJob: async (id: string, updateJobrequest: PutJobRequest): Promise<ServiceResponse<Job | null>> => {
     try {
+      JobIDSchema.parse(id);
       logger.info(`Updating job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       if (!job) {
@@ -163,6 +167,7 @@ export const jobService = {
 
   rejectJob: async (id: string): Promise<ServiceResponse<Job | null>> => {
     try {
+      JobIDSchema.parse(id);
       logger.info(`Rejecting job with id ${id}`);
       logger.info('Beginning job rejection process');
       const findJob = await jobRepository.findJobByIdAsync(id);
@@ -386,6 +391,7 @@ export const jobService = {
     id: string
   ): Promise<ServiceResponse<{ job_id: string; totalViews: number | null } | null>> => {
     try {
+      JobIDSchema.parse(id);
       logger.info(`Finding total views for job with id ${id}`);
       const job = await jobRepository.findJobByIdAsync(id);
       logger.info(`Job found: ${JSON.stringify(job)}`);
@@ -433,7 +439,12 @@ export const jobService = {
 
   findSavedJobs: async (userId: string): Promise<ServiceResponse<Job[] | null>> => {
     try {
-      //first we want to check if there are user but we dont have the user repo for now
+      logger.info(`Attempting to find saved jobs for user with id ${userId}`);
+      const foundUser = await userRepository.findByIdAsync(userId);
+      if (!foundUser) {
+        logger.info(`User not found with id ${userId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
       logger.info(`userId: ${userId}`);
       const result = await jobRepository.findSavedJobsAsync(userId);
       logger.info(`jobs: ${JSON.stringify(result)}`);
