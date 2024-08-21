@@ -1,5 +1,8 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
+import authenticate from 'src/common/middleware/authConfig/authentication';
+import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
+import { Roles } from 'src/common/middleware/authConfig/roles';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
@@ -16,6 +19,8 @@ import {
   DeleteJobCategorySchema,
   GetJobCategoryRequest,
   GetJobCategorySchema,
+  GetJobLevelSchema,
+  GetJobSchema,
   GetJobsRequest,
   GetJobsSchema,
   PutJobCategoryRequest,
@@ -54,7 +59,8 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', validateRequest(CreateJobSchema), async (req: Request, res: Response) => {
+  router.post('/', authenticate, validateRequest(CreateJobSchema), async (req: Request, res: Response) => {
+    //user and admin can post
     const createJobRequest = req.body as unknown as CreateJobRequest;
     const serviceResponse = await jobService.submitJobForApproval(createJobRequest, true);
     handleServiceResponse(serviceResponse, res);
@@ -67,12 +73,17 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
-  router.post('/:jobId/save/:userId', async (req: Request, res: Response) => {
-    // TODO: implement auth
-    const { jobId, userId } = req.params;
-    const serviceResponse = await jobService.saveJob(jobId, userId);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:jobId/save/:userId',
+    authenticate,
+    validateRequest(GetJobsSchema),
+    async (req: Request, res: Response) => {
+      // TODO: implement auth
+      const { jobId, userId } = req.params;
+      const serviceResponse = await jobService.saveJob(jobId, userId);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'get',
@@ -81,17 +92,22 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(z.array(JobCategorySchema), 'Success'),
   });
 
-  router.get('/category', async (_req: Request, res: Response) => {
+  router.get('/category', validateRequest(GetJobCategorySchema), async (_req: Request, res: Response) => {
     const serviceResponse = await jobService.findCategories();
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/category', validateRequest(CreateJobCategorySchema), async (req: Request, res: Response) => {
-    // TODO: user auth
-    const { title } = req.body as unknown as CreateJobCategoryRequest;
-    const serviceResponse = await jobService.createJobCategory(title);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/category',
+    authenticate,
+    validateRequest(CreateJobCategorySchema),
+    async (req: Request, res: Response) => {
+      // TODO: user auth
+      const { title } = req.body as unknown as CreateJobCategoryRequest;
+      const serviceResponse = await jobService.createJobCategory(title);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'get',
@@ -107,20 +123,30 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/category/:id', validateRequest(PutJobCategorySchema), async (req: Request, res: Response) => {
-    // TODO: auth
-    const { id } = req.params as unknown as PutJobCategoryRequest['params'];
-    const { title } = req.body as unknown as PutJobCategoryRequest['body'];
-    const serviceResponse = await jobService.updateJobCategory(id, title);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/category/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(PutJobCategorySchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as PutJobCategoryRequest['params'];
+      const { title } = req.body as unknown as PutJobCategoryRequest['body'];
+      const serviceResponse = await jobService.updateJobCategory(id, title);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.delete('/category/:id', validateRequest(DeleteJobCategorySchema), async (req: Request, res: Response) => {
-    // TODO: auth
-    const { id } = req.params as unknown as DeleteJobCategoryRequest;
-    const serviceResponse = await jobService.deleteJobCategory(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.delete(
+    '/category/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(DeleteJobCategorySchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as DeleteJobCategoryRequest;
+      const serviceResponse = await jobService.deleteJobCategory(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'post',
@@ -129,11 +155,17 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(z.array(JobCategorySchema), 'Success'),
   });
 
-  router.post('/level', validateRequest(CreateJobLevelSchema), async (req: Request, res: Response) => {
-    const { title } = req.body as unknown as CreateJobLevelRequest;
-    const serviceResponse = await jobService.createJobLevel(title);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/level',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(CreateJobLevelSchema),
+    async (req: Request, res: Response) => {
+      const { title } = req.body as unknown as CreateJobLevelRequest;
+      const serviceResponse = await jobService.createJobLevel(title);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'get',
@@ -162,14 +194,20 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/level/:id', validateRequest(UpdateJobLevelSchema), async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as UpdateJobLevelRequest['params'];
-    const { title } = req.body as unknown as UpdateJobLevelRequest['body'];
-    const serviceResponse = await jobService.updateJobLevel(id, title);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/level/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(UpdateJobLevelSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as UpdateJobLevelRequest['params'];
+      const { title } = req.body as unknown as UpdateJobLevelRequest['body'];
+      const serviceResponse = await jobService.updateJobLevel(id, title);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.delete('/level/:id', async (req: Request, res: Response) => {
+  router.delete('/level/:id', authenticate, authorizeRole(Roles.ADMIN), async (req: Request, res: Response) => {
     const { id } = req.params;
     const levelId = parseInt(id, 10);
     const serviceResponse = await jobService.deleteJobLevel(levelId);
@@ -184,9 +222,6 @@ export const jobRouter: Router = (() => {
   });
 
   router.get(':id/views', async (req: Request, res: Response) => {
-    if (req.user?.role.toLowerCase() !== 'admin') {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
     const { id } = req.params;
     const serviceResponse = await jobService.findJobTotalViews(id);
     handleServiceResponse(serviceResponse, res);
@@ -199,24 +234,37 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
-  router.get('/:id', async (req: Request, res: Response) => {
+  router.get('/:id', validateRequest(GetJobSchema), async (req: Request, res: Response) => {
     const { id } = req.params;
     const serviceResponse = await jobService.findJobById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.delete('/:id', async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const serviceResponse = await jobService.deleteJobById(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.delete(
+    '/:id',
+    validateRequest(GetJobSchema),
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const serviceResponse = await jobService.deleteJobById(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.put('/:id', validateRequest(PutJobSchema), async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const putJobObject = req.body as unknown as PutJobRequest;
-    const serviceResponse = await jobService.updateJob(id, putJobObject);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/:id',
+    validateRequest(GetJobSchema),
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(PutJobSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const putJobObject = req.body as unknown as PutJobRequest;
+      const serviceResponse = await jobService.updateJob(id, putJobObject);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'post',
@@ -225,14 +273,17 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
-  router.post('/:id/approve', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const { id } = req.params;
-    const serviceResponse = await jobService.approveJob(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:id/approve',
+    validateRequest(GetJobSchema),
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const serviceResponse = await jobService.approveJob(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'post',
@@ -241,14 +292,17 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(JobSchema, 'Success'),
   });
 
-  router.post('/:id/reject', async (req: Request, res: Response) => {
-    // if (req.user?.role.toLowerCase() !== 'admin') {
-    //   return res.status(401).json({ message: 'Unauthorized' });
-    // }
-    const { id } = req.params;
-    const serviceResponse = await jobService.rejectJob(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:id/reject',
+    validateRequest(GetJobSchema),
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const serviceResponse = await jobService.rejectJob(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   jobRegistry.registerPath({
     method: 'get',
@@ -256,7 +310,7 @@ export const jobRouter: Router = (() => {
     tags: ['Job'],
     responses: createApiResponse(JobSchema, 'Success'),
   });
-  router.get('/:userId/saved/jobs', async (req: Request, res: Response) => {
+  router.get('/:userId/saved/jobs', authenticate, async (req: Request, res: Response) => {
     const { userId } = req.params;
     const serviceResponse = await jobService.findSavedJobs(userId);
     handleServiceResponse(serviceResponse, res);

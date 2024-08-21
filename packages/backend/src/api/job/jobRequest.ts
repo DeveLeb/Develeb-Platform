@@ -27,6 +27,14 @@ export const CreateJobSchema = z.object({
     tags: z.string().optional(),
   }),
 });
+
+export type GetJobRequest = z.infer<typeof GetJobSchema>;
+export const GetJobSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});
+
 export type CreateJobRequest = z.infer<typeof CreateJobSchema>['body'];
 
 export const CreateJobCategorySchema = z.object({
@@ -79,3 +87,9 @@ export const UpdateJobLevelSchema = z.object({
 export type UpdateJobLevelRequest = z.infer<typeof UpdateJobLevelSchema>;
 
 export const JobIDSchema = z.string().uuid();
+
+export const GetJobLevelSchema = z.object({
+  params: z.number(),
+});
+
+export type GetJobLevelRequest = z.infer<typeof GetJobLevelSchema>;
