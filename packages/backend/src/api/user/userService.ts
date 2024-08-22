@@ -61,7 +61,7 @@ export const userService = {
         return new ServiceResponse(ResponseStatus.Success, 'User exists.', null, StatusCodes.CONFLICT);
       }
       logger.info('No conflicts found. Creating user...');
-      const hashPassword = await bcrypt.hash(createUserRequest.password, 4);
+      const hashPassword = await bcrypt.hash(createUserRequest.password, 10);
       createUserRequest.password = hashPassword;
       await userRepository.createUserAsync(createUserRequest);
       logger.info('User created successfully');
