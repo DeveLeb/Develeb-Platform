@@ -4,7 +4,7 @@
         "title": "Tech Innovations Conference",
         "description": "A conference exploring the latest in technology and innovation.",
         "videoLink": "https://www.example.com/video/tech-innovations",
-        "flyerLink": "https://www.example.com/images/flyer.jpg",
+        "flyerLink": "https://dummyjson.com/image/200x100",
         "date": "2024-09-01T10:00:00Z",
         "location": "San Francisco Convention Center",
         "speakerName": "John Doe",
