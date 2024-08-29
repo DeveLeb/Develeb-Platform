@@ -109,7 +109,7 @@ describe('jobService', () => {
       (jobRepository.findJobByIdAsync as Mock).mockReturnValue(mockJobs[0]);
 
       //Act
-      const result = await jobService.findJobById('');
+      const result = await jobService.findJobById('uuid1');
 
       // Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -282,7 +282,7 @@ describe('jobService', () => {
     });
   });
 
-  describe('aaprve a job', async () => {
+  describe('approve a job', async () => {
     const approvedJob = {
       ...mockJobs[0],
       isApproved: true,
@@ -905,7 +905,10 @@ describe('jobService', () => {
       (jobRepository.saveJobAsync as Mock).mockReturnValue(mockJobs[0]);
 
       //Act
-      const result = await jobService.saveJob('uuid1', 'uuid12');
+      const result = await jobService.saveJob(
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0',
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0'
+      );
 
       //Assert
       expect(result.statusCode).toEqual(StatusCodes.OK);
@@ -920,7 +923,10 @@ describe('jobService', () => {
       (jobRepository.findSavedJobAsync as Mock).mockReturnValue(mockJobs[0]);
 
       //Act
-      const result = await jobService.saveJob('uuid1', 'uuid12');
+      const result = await jobService.saveJob(
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0',
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0'
+      );
 
       //Assert
       expect(result.statusCode).toEqual(StatusCodes.CONFLICT);
@@ -935,7 +941,10 @@ describe('jobService', () => {
       (jobRepository.findSavedJobAsync as Mock).mockReturnValue(null);
 
       //Act
-      const result = await jobService.saveJob('uuid1', 'uuid12');
+      const result = await jobService.saveJob(
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0',
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0'
+      );
 
       //Assert
       expect(result.statusCode).toEqual(StatusCodes.NOT_FOUND);
@@ -952,12 +961,17 @@ describe('jobService', () => {
       });
 
       //Act
-      const result = await jobService.saveJob('uuid1', 'uuid12');
+      const result = await jobService.saveJob(
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0',
+        'a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0'
+      );
 
       //Assert
       expect(result.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
       expect(result.success).toBeFalsy();
-      expect(result.message).toContain('Error saving job with id uuid1:, Database Exception');
+      expect(result.message).toContain(
+        'Error saving job with id a3c3d19e-2b8d-4c9e-9a27-b8f8f89e35a0:, Database Exception'
+      );
       expect(result.responseObject).toBeNull();
     });
   });
