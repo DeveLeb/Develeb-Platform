@@ -1,16 +1,14 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import bodyParser from 'body-parser';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
-import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
 import { verifyUser } from 'src/common/middleware/verifyUser';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { GetUserSchema, UserSchema } from '../user/userModel';
+import { UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
 import {
   CreateUserRequest,
@@ -18,9 +16,9 @@ import {
   DeleteUserRequest,
   DeleteUserSchema,
   GetUserRequest,
+  GetUserSchema,
   GetUsersRequest,
   GetUsersSchema,
-  LoginUserRequest,
   LoginUserSchema,
   UpdateUserRequest,
   UpdateUserSchema,
@@ -64,7 +62,7 @@ export const userRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
-    const id = req.params as unknown as GetUserRequest['id'];
+    const { id } = req.params as unknown as GetUserRequest;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });

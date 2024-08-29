@@ -3,13 +3,13 @@ import { z } from 'zod';
 
 export const CreateUserSchema = z.object({
   body: z.object({
-    email: z.string(),
+    email: commonValidations.email,
     username: z.string(),
     password: commonValidations.password,
     full_name: z.string(),
     phone_number: z.string(),
-    level_id: z.number(),
-    category_id: z.number(),
+    level_id: commonValidations.numId,
+    category_id: commonValidations.numId,
   }),
 });
 
@@ -17,7 +17,7 @@ export type CreateUserRequest = z.infer<typeof CreateUserSchema>['body'];
 
 export const GetUserSchema = z.object({
   params: z.object({
-    id: z.string(),
+    id: z.string().uuid(),
   }),
 });
 
@@ -28,7 +28,7 @@ export const GetUsersSchema = z.object({
     pageIndex: commonValidations.pageIndex,
     pageSize: commonValidations.pageSize,
     username: z.string().optional(),
-    email: z.string().optional(),
+    email: commonValidations.email.optional(),
   }),
 });
 
@@ -36,12 +36,12 @@ export type GetUsersRequest = z.infer<typeof GetUsersSchema>['query'];
 
 export const UpdateUserSchema = z.object({
   params: z.object({
-    id: z.string(),
+    id: z.string().uuid(),
   }),
   body: z.object({
     full_name: z.string(),
-    level_id: z.number(),
-    category_id: z.number(),
+    level_id: commonValidations.numId,
+    category_id: commonValidations.numId,
     tags: z.string().optional(),
   }),
 });
@@ -50,7 +50,7 @@ export type UpdateUserRequest = z.infer<typeof UpdateUserSchema>;
 
 export const DeleteUserSchema = z.object({
   params: z.object({
-    id: z.string(),
+    id: z.string().uuid(),
   }),
 });
 
@@ -58,7 +58,7 @@ export type DeleteUserRequest = z.infer<typeof DeleteUserSchema>['params'];
 
 export const LoginUserSchema = z.object({
   body: z.object({
-    email: z.string(),
+    email: commonValidations.email,
     password: z.string(),
   }),
 });

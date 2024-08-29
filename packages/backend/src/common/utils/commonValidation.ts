@@ -27,4 +27,8 @@ export const commonValidations = {
     .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character.')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter.'),
+  email: z
+    .string()
+    .min(1, ' Email is required.')
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid email address'),
 };
