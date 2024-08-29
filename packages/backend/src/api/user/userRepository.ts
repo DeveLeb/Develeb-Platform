@@ -74,4 +74,14 @@ export const userRepository = {
 
     return result[0] as UserResponse | undefined;
   },
+  resetPasswordAsync: async (id: string, password: string) => {
+    const updatedAt = new Date();
+    const result = await db.update(user).set({ password, updatedAt }).where(eq(user.id, id)).returning();
+    return result[0] as UserResponse | undefined;
+  },
+  getPasswordAsync: async (id: string) => {
+    const pass = await db.select({ password: user.password }).from(user).where(eq(user.id, id));
+    console.log(pass);
+    return pass[0].password;
+  },
 };

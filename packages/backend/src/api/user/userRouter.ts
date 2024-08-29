@@ -24,6 +24,8 @@ import {
   UpdateUserSchema,
   UserRefreshRequest,
   UserRefreshTokenSchema,
+  UserResetPasswordRequest,
+  UserResetPasswordSchema,
 } from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
@@ -105,6 +107,17 @@ export const userRouter: Router = (() => {
     const serviceResponse = await userService.userRefreshToken(refreshToken);
     handleServiceResponse(serviceResponse, res);
   });
-
+  router.post(
+    '/reset-password/:id',
+    validateRequest(UserResetPasswordSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { password } = req.body as unknown as UserResetPasswordRequest['body'];
+      const { id } = req.params as unknown as UserResetPasswordRequest['params'];
+      const serviceResponse = await userService.resetPassword(id, password);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
   return router;
 })();
