@@ -148,6 +148,7 @@ export const event = pgTable('event', {
   speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
   typeId: integer('type_id').references(() => jobType.id),
   tags: text('tags'),
+  postedAt: timestamp('posted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
