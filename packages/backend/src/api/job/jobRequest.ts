@@ -14,11 +14,11 @@ export type GetJobsRequest = z.infer<typeof GetJobsSchema>['query'];
 
 export const CreateJobSchema = z.object({
   body: z.object({
-    title: z.string(),
+    title: z.string().trim(),
     levelId: commonValidations.numId,
     categoryId: commonValidations.numId,
     typeId: commonValidations.numId,
-    location: z.string(),
+    location: z.string().trim(),
     description: z.string().optional(),
     compensation: z.string().optional(),
     applicationLink: z.string().optional(),
@@ -27,6 +27,14 @@ export const CreateJobSchema = z.object({
     tags: z.string().optional(),
   }),
 });
+
+export type GetJobRequest = z.infer<typeof GetJobSchema>;
+export const GetJobSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});
+
 export type CreateJobRequest = z.infer<typeof CreateJobSchema>['body'];
 
 export const CreateJobCategorySchema = z.object({
@@ -77,3 +85,11 @@ export const UpdateJobLevelSchema = z.object({
   }),
 });
 export type UpdateJobLevelRequest = z.infer<typeof UpdateJobLevelSchema>;
+
+export const JobIDSchema = z.string().uuid();
+
+export const GetJobLevelSchema = z.object({
+  params: z.number(),
+});
+
+export type GetJobLevelRequest = z.infer<typeof GetJobLevelSchema>;
