@@ -1,4 +1,4 @@
-import { commonValidations } from 'src/common/utils/commonValidation';
+import { commonValidations, phoneNumberValidation } from 'src/common/utils/commonValidation';
 import { z } from 'zod';
 
 export const CreateUserSchema = z.object({
@@ -7,7 +7,7 @@ export const CreateUserSchema = z.object({
     username: z.string(),
     password: commonValidations.password,
     full_name: z.string(),
-    phone_number: z.string(),
+    phone_number: commonValidations.phoneNumber, 
     level_id: commonValidations.numId,
     category_id: commonValidations.numId,
   }),

@@ -81,7 +81,6 @@ export const userRepository = {
   },
   getPasswordAsync: async (id: string) => {
     const pass = await db.select({ password: user.password }).from(user).where(eq(user.id, id));
-    console.log(pass);
     return pass[0].password;
   },
 };
