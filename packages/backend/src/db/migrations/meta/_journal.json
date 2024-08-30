@@ -15,6 +15,13 @@
       "when": 1723460028377,
       "tag": "0001_oval_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1725008240794,
+      "tag": "0002_cold_medusa",
+      "breakpoints": true
     }
   ]
 }

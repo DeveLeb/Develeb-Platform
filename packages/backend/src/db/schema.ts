@@ -135,11 +135,6 @@ export const jobViews = pgTable(
   })
 );
 
-export const eventLocationType = pgTable('event_location_type', {
-  id: serial('id').primaryKey(),
-  title: varchar('title', { length: 255 }).notNull().unique(),
-});
-
 export const event = pgTable('event', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -151,7 +146,7 @@ export const event = pgTable('event', {
   speakerName: varchar('speaker_name', { length: 255 }),
   speakerDescription: varchar('speaker_description', { length: 255 }),
   speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-  locationType: integer('location_type_id').references(() => eventLocationType.id),
+  locationType: varchar('location_type', { length: 30 }),
   tags: text('tags'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at'),
