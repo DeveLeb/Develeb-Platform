@@ -1,10 +1,10 @@
 import Image from 'next/image';
 
+import { ReactComponent as Arrow } from '@/assets/Arrow.svg';
 import HomePageTitle from '@/components/atoms/homePageTitle';
 import ValuesCard from '@/components/atoms/ValuesCard';
 import LatestSection from '@/components/molecules/LatestSection';
 import TopPartners from '@/components/molecules/TopPartners';
-
 export default function Home() {
   return (
     <>
@@ -25,7 +25,7 @@ export default function Home() {
             </p>
             <button className="p-2 bg-[#01C38D] hover:bg-blue-600 text-white rounded-md flex justify-evenly items-center w-[150px] text-s font-semibold">
               Get Started
-              <img src="/icons/arrow.svg" alt="" className="w-7" />
+              <Arrow className="w-10" />
             </button>
           </div>
         </div>
@@ -68,10 +68,12 @@ export default function Home() {
       </div>
 
       <div className="relative w-full h-[30vh] bg-cover bg-center lg:h-[60vh]">
-        <img
+        <Image
           src="/images/DownloadSectionImage.png"
-          alt="hero image"
-          className="absolute object-fill h-[100%] w-[100%] lg:object-cover"
+          alt="Hero image"
+          layout="fill"
+          objectFit="cover"
+          className="absolute inset-0"
         />
         <div className="relative z-10 text-white p-10 flex flex-col items-center justify-evenly h-full text-center lg:px-[7rem]">
           <h2 className="lg:text-3xl font-bold">
