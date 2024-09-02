@@ -1,16 +1,14 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import bodyParser from 'body-parser';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import authenticate from 'src/common/middleware/authConfig/authentication';
 import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
-import passport from 'src/common/middleware/authConfig/passport';
 import { Roles } from 'src/common/middleware/authConfig/roles';
 import { verifyUser } from 'src/common/middleware/verifyUser';
 import { z } from 'zod';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { GetUserSchema, UserSchema } from '../user/userModel';
+import { UserSchema } from '../user/userModel';
 import { userService } from '../user/userService';
 import {
   CreateUserRequest,
@@ -18,14 +16,16 @@ import {
   DeleteUserRequest,
   DeleteUserSchema,
   GetUserRequest,
+  GetUserSchema,
   GetUsersRequest,
   GetUsersSchema,
-  LoginUserRequest,
   LoginUserSchema,
   UpdateUserRequest,
   UpdateUserSchema,
   UserRefreshRequest,
   UserRefreshTokenSchema,
+  UserResetPasswordRequest,
+  UserResetPasswordSchema,
 } from './userRequest';
 
 export const userRegistry = new OpenAPIRegistry();
@@ -62,7 +62,7 @@ export const userRouter: Router = (() => {
   });
 
   router.get('/:id', validateRequest(GetUserSchema), async (req: Request, res: Response) => {
-    const id = req.params as unknown as GetUserRequest['id'];
+    const { id } = req.params as unknown as GetUserRequest;
     const serviceResponse = await userService.findById(id);
     handleServiceResponse(serviceResponse, res);
   });
@@ -107,6 +107,17 @@ export const userRouter: Router = (() => {
     const serviceResponse = await userService.userRefreshToken(refreshToken);
     handleServiceResponse(serviceResponse, res);
   });
-
+  router.post(
+    '/reset-password/:id',
+    validateRequest(UserResetPasswordSchema),
+    authenticate,
+    verifyUser,
+    async (req: Request, res: Response) => {
+      const { password } = req.body as unknown as UserResetPasswordRequest['body'];
+      const { id } = req.params as unknown as UserResetPasswordRequest['params'];
+      const serviceResponse = await userService.resetPassword(id, password);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
   return router;
 })();
