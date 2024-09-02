@@ -1,4 +1,5 @@
 import React from 'react';
+
 import HomePageTitle from '../atoms/homePageTitle';
 function TopPartners() {
   const images = Array.from({ length: 20 }, (_, index) => index + 1);

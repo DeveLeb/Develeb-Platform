@@ -1,14 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { FaBars } from 'react-icons/fa';
-import NavBar from './NavBar';
-import { Button } from '../atoms/button';
 import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import { FaBars } from 'react-icons/fa';
+
+import { Button } from '../atoms/button';
+import NavBar from './NavBar';
 function Header() {
   const [openBar, setOpenBar] = useState(false);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
-  let closeBar = () => setOpenBar(false);
+  const closeBar = () => setOpenBar(false);
 
   useEffect(() => {
     const handleResize = () => {

@@ -1,15 +1,15 @@
-import TopPartners from '@/components/molecules/TopPartners';
-import ValuesCard from '@/components/atoms/ValuesCard';
+import Image from 'next/image';
+
 import HomePageTitle from '@/components/atoms/homePageTitle';
+import ValuesCard from '@/components/atoms/ValuesCard';
 import LatestSection from '@/components/molecules/LatestSection';
+import TopPartners from '@/components/molecules/TopPartners';
 
 export default function Home() {
-  const images = Array.from({ length: 20 }, (_, index) => index + 1);
-
   return (
     <>
       <div className="relative w-full h-[45vh] bg-cover bg-center lg:h-[70vh]">
-        <img src="/images/hero image.png" alt="hero image" className="absolute object-cover h-[100%] w-[100%]" />
+        <Image src="/images/hero image.png" alt="hero image" layout="fill" objectFit="cover" className="absolute" />
         <div className="relative z-10 flex flex-col justify-center h-full text-white items-center text-center px-5 lg:items-start lg:text-start lg:justify-evenly lg:pl-[7rem]">
           <div className="text-sm lg:max-w-[55%]">
             <div className="mb-3">Lorem ipsum</div>

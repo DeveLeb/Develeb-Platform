@@ -1,7 +1,8 @@
 import React from 'react';
-import { Input } from './input';
-import { Button } from './button';
 import { BsArrowRight } from 'react-icons/bs';
+
+import { Button } from './button';
+import { Input } from './input';
 
 function Subscribe({ className }: { className: string }) {
   return (

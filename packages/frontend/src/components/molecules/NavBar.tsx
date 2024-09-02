@@ -1,9 +1,9 @@
+import Link from 'next/link';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Link from 'next/link';
 import { FaBars } from 'react-icons/fa';
 
-let pages = [
+const pages = [
   { title: 'Home', path: '#' },
   { title: 'Jobs', path: '#' },
   { title: 'Events', path: '#' },
@@ -15,7 +15,7 @@ interface NavBarProps {
   theme: string;
   closeBar: () => void;
 }
-function NavBarLayout({ theme, closeBar }: NavBarProps) {
+function NavBarLayout({ closeBar }: NavBarProps) {
   const selected = 'Home';
   return (
     <div className={`absolute top-0 right-0 left-0 bottom-0 bg-white/90`}>

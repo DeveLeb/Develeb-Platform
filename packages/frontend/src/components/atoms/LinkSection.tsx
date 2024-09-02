@@ -1,11 +1,7 @@
 import Link from 'next/link';
 import React from 'react';
 
-function LinkSection({
-  section,
-}: {
-  section: { title: string; links: string[] };
-}) {
+function LinkSection({ section }: { section: { title: string; links: string[] } }) {
   return (
     <ul className="w-100% flex flex-col items-center ml:items-stretch list-none flex-grow p-0 m-0 text-gray-300 leading-6">
       <li className="title text-white font-bold pb-1.5">{section.title}</li>

@@ -1,9 +1,11 @@
-import React from 'react'
+import React from 'react';
 
-function homePageTitle({title}) {
-  return (
-    <h1 className='font-semibold text-2xl py-5'>{title}</h1>
-  )
+interface HomePageTitleProps {
+  title: string;
 }
 
-export default homePageTitle
+const HomePageTitle: React.FC<HomePageTitleProps> = ({ title }) => {
+  return <h1 className="font-semibold text-2xl py-5">{title}</h1>;
+};
+
+export default HomePageTitle;

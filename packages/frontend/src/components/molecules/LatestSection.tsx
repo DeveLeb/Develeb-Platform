@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+
 import HomePageTitle from '../atoms/homePageTitle';
 import LatestEventCard from '../atoms/LatestEventCard';
 import LatestJobCard from '../atoms/LatestJobCard';

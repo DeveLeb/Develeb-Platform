@@ -23,7 +23,9 @@ function LatestEventCard({ title, list }: cardProps) {
       <div className=" p-5 z-30">
         <h1 className="font-extrabold text-xl">{title}</h1>
         <ul className="">
-          {list.map((item) => <ListItem text={item} />)}
+          {list.map((item, index) => (
+            <ListItem key={index} text={item} />
+          ))}
         </ul>
       </div>
       <div>
