@@ -22,7 +22,7 @@ export const tagsRepository = {
 
   createTagAsync: async (name: string): Promise<Tag | null> => {
     const result = await db.insert(tags).values({ name }).returning();
-    return result.length > 0 ? TagSchema.parse(result[0]) : null;
+    return TagSchema.parse(result[0]);
   },
 
   deleteTagByIdAsync: async (id: number): Promise<Tag | null> => {
