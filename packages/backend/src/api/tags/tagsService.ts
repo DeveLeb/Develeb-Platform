@@ -55,6 +55,11 @@ export const tagsService = {
         logger.info('Invalid input');
         return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
       }
+      const existingTag = await tagsRepository.findTagByNameAsync(name);
+      if (existingTag) {
+        logger.info('Tag already exists');
+        return new ServiceResponse(ResponseStatus.Failed, 'Tag already exists', null, StatusCodes.CONFLICT);
+      }
       const createdTag = await tagsRepository.createTagAsync(name);
       logger.info('tag from db:', createdTag);
       if (!createdTag) {
@@ -78,6 +83,11 @@ export const tagsService = {
         logger.info('Invalid input');
         return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
       }
+      const existingTag = await tagsRepository.findTagByIdAsync(id);
+      if (!existingTag) {
+        logger.info('Tag not found');
+        return new ServiceResponse(ResponseStatus.Success, 'Tag not found', null, StatusCodes.NOT_FOUND);
+      }
       const updatedTag = await tagsRepository.updateTagAsync(id, name);
       logger.info('tag from db:', updatedTag);
       if (!updatedTag) {
@@ -100,6 +110,11 @@ export const tagsService = {
       if (!id) {
         logger.info('Invalid input');
         return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
+      }
+      const existingTag = await tagsRepository.findTagByIdAsync(id);
+      if (!existingTag) {
+        logger.info('Tag not found');
+        return new ServiceResponse(ResponseStatus.Success, 'Tag not found', null, StatusCodes.NOT_FOUND);
       }
       const deletedTag = await tagsRepository.deleteTagByIdAsync(id);
       logger.info('tag from db:', deletedTag);

@@ -27,7 +27,7 @@ export const tagsRepository = {
 
   deleteTagByIdAsync: async (id: number): Promise<Tag | null> => {
     const result = await db.delete(tags).where(eq(tags.id, id)).returning();
-    return result.length > 0 ? TagSchema.parse(result[0]) : null;
+    return TagSchema.parse(result[0]);
   },
 
   updateTagAsync: async (id: number, name: string): Promise<Tag | null> => {
