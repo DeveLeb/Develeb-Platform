@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import useSWR from 'swr';
 
@@ -16,6 +16,7 @@ const fetcher = async (type: string, tags: string[], title: string, page: number
 
 const EventPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [title, setTitle] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
@@ -40,9 +41,11 @@ const EventPage = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', newPage.toString());
-    window.history.pushState({}, '', url.toString());
+    const newQueryParams = new URLSearchParams(window.location.search);
+    newQueryParams.set('page', newPage.toString());
+    newQueryParams.set('perPage', perPage.toString());
+
+    router.push('?${newQueryParams.toString()}');
     setPage(newPage);
   };
 
