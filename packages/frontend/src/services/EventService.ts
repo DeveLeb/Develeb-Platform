@@ -11,11 +11,11 @@ export class EventService {
     tagsFilter?: string[],
     title?: string,
     page: number = 1,
-    per_page: number = 12
+    perPage: number = 12
   ): Promise<{ events: Event[] }> {
     const query: EventQueryParams = {
       page,
-      per_page,
+      perPage,
       ...(type ? { type } : {}),
       ...(tagsFilter && tagsFilter.length > 0 ? { tags: tagsFilter.join(',') } : {}),
       ...(title ? { title } : {}),

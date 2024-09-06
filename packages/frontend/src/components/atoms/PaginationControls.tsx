@@ -26,7 +26,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
     if (page < 1 || page > totalPages) return;
     const url = new URL(window.location.href);
     url.searchParams.set('page', String(page));
-    url.searchParams.set('per_page', String(itemsPerPage));
+    url.searchParams.set('perPage', String(itemsPerPage));
     router.push(url.toString());
   };
 

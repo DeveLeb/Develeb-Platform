@@ -1,19 +1,21 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import useSWR from 'swr';
 
 import PaginationControls from '@/components/atoms/PaginationControls';
 import EventsDisplay from '@/components/molecules/EventsDisplay';
 import EventSearchPanel from '@/components/molecules/EventSearchPanel';
 import { EventService } from '@/services/EventService';
-import { Event } from '@/types';
+
+const fetcher = async (type: string, tags: string[], title: string, page: number, perPage: number) => {
+  const { events } = await new EventService().getEvents(type, tags, title, page, perPage);
+  return events;
+};
 
 const EventPage = () => {
   const searchParams = useSearchParams();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
@@ -27,18 +29,9 @@ const EventPage = () => {
   const [type, setType] = useState<string>('');
   const [page, setPage] = useState<number>(searchParams.get('page') ? Number(searchParams.get('page')) : 1);
 
-  const per_page = searchParams.get('per_page') ? Number(searchParams.get('per_page')) : 12;
+  const perPage = searchParams.get('perPage') ? Number(searchParams.get('perPage')) : 12;
 
-  useEffect(() => {
-    try {
-      new EventService().getEvents(type, tags, title, page, per_page).then(({ events }) => {
-        setEvents(events);
-        setTotalItems(events.length);
-      });
-    } catch (error) {
-      setError('Error fetching events');
-    }
-  }, [page, per_page, tags, title, type]);
+  const { data: events, error } = useSWR([type, tags, title, page, perPage], fetcher);
 
   const handleSearch = (filters: { title: string; tags: string[]; type: string }) => {
     setTitle(filters.title);
@@ -57,19 +50,21 @@ const EventPage = () => {
     <div className="relative">
       <EventSearchPanel onSearch={handleSearch} />
       {error ? (
-        <div className="error">{error}</div>
+        <div className="error">Error fetching events</div>
+      ) : !events ? (
+        <div className="loading">Loading events...</div>
       ) : events.length === 0 ? (
         <div className="no-events flex items-center justify-center min-h-screen text-center text-xl text-gray-500">
           <p>No events match your search criteria.</p>
         </div>
       ) : (
         <>
-          <EventsDisplay events={events} currentPage={0} totalItems={0} itemsPerPage={0} />
+          <EventsDisplay events={events} currentPage={page} totalItems={events.length} itemsPerPage={perPage} />
           <div className="py-4">
             <PaginationControls
               currentPage={page}
-              totalItems={totalItems}
-              itemsPerPage={per_page}
+              totalItems={events.length}
+              itemsPerPage={perPage}
               onPageChange={handlePageChange}
             />
           </div>
