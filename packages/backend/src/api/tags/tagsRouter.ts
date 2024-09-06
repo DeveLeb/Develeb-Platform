@@ -1,7 +1,10 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
 import { createApiResponse } from 'src/api-docs/openAPIResponseBuilders';
-import { handleServiceResponse } from 'src/common/utils/httpHandlers';
+import authenticate from 'src/common/middleware/authConfig/authentication';
+import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
+import { Roles } from 'src/common/middleware/authConfig/roles';
+import { handleServiceResponse, validateRequest } from 'src/common/utils/httpHandlers';
 import { z } from 'zod';
 
 import { TagSchema, TagSchemaRequest } from './tagsModel';
@@ -19,12 +22,12 @@ export const tagsRouter: Router = (() => {
     responses: createApiResponse(z.array(TagSchema), 'Success'),
   });
 
-  router.get('/', async (_req: Request, res: Response) => {
+  router.get('/', validateRequest(TagSchema), async (_req: Request, res: Response) => {
     const serviceResponse = await tagsService.findTags();
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', authenticate, authorizeRole(Roles.ADMIN), async (req: Request, res: Response) => {
     const serviceResponse = await tagsService.createTag(req.body);
     handleServiceResponse(serviceResponse, res);
   });
@@ -36,22 +39,34 @@ export const tagsRouter: Router = (() => {
     responses: createApiResponse(TagSchema, 'Success'),
   });
 
-  router.get('/:id', async (req: Request, res: Response) => {
+  router.get('/:id', validateRequest(TagSchema), async (req: Request, res: Response) => {
     const { id } = TagSchemaRequest.parse(req.params);
     const serviceResponse = await tagsService.findTagById(id);
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/:id', async (req: Request, res: Response) => {
-    const { id } = TagSchemaRequest.parse(req.params);
-    const serviceResponse = await tagsService.updateTag(id, req.body);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.put(
+    '/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(TagSchema),
+    async (req: Request, res: Response) => {
+      const { id } = TagSchemaRequest.parse(req.params);
+      const serviceResponse = await tagsService.updateTag(id, req.body);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
-  router.delete('/id', async (req: Request, res: Response) => {
-    const { id } = TagSchemaRequest.parse(req.params);
-    const serviceResponse = await tagsService.deleteTag(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.delete(
+    '/id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(TagSchema),
+    async (req: Request, res: Response) => {
+      const { id } = TagSchemaRequest.parse(req.params);
+      const serviceResponse = await tagsService.deleteTag(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
   return router;
 })();
