@@ -33,7 +33,7 @@ const social_media = [
 
 function Footer() {
   return (
-    <footer className="flex flex-wrap flex-col ml:flex-row items-center ml:items-stretch bg-primary text-white text-sm p-10  ml:pb-20  xl:px-20 max-w-[2000px] m-auto">
+    <footer className="flex flex-wrap flex-col ml:flex-row items-center ml:items-stretch bg-primary text-white text-sm p-10  ml:pb-20  xl:px-20 max-w-[2000px]">
       <div className="links-container flex flex-col sm:flex-row justify-center gap-6 ml:gap-0 order-2 pb-8 w-[100%] ml:w-[65%]  ml:border-b ml:border-gray-500 ml:mb-[30px] ml:pb-0 ml:order-none">
         {links_sections.map((section: { title: string; links: string[] }, key) => {
           return <LinkSection section={section} key={key} />;

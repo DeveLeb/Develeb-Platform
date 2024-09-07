@@ -33,8 +33,8 @@ function Header() {
         </div>
       ) : (
         <div className="flex justify-between items-center text-secondary gap-7">
-          <Link href="#">Jobs</Link>
-          <Link href="#">Events</Link>
+          <Link href="jobs">Jobs</Link>
+          <Link href="events">Events</Link>
           <Link href="#">Companies</Link>
           <Link href="#">About Us</Link>
           <Link href="#">Contact Us</Link>
