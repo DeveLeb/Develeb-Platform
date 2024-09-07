@@ -79,7 +79,7 @@ async function tinyURLShorten(link: any) {
   return shortenedLink;
 }
 
-/////////////////////////////////////xpert4////////////////////////////////////////
+
 export const xpert4Scrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
@@ -181,7 +181,7 @@ export const expertiseRecruitmentScrape = async () => {
   await page.waitForSelector('lyte-checkbox[lt-prop-value="Technology"]');
 
   await page.evaluate(() => {
-    const checkbox = document.querySelector('lyte-checkbox[lt-prop-value="Technology"]');
+    const checkbox = document.querySelector('lyte-checkbox[lt-prop-value="Technology"]') as HTMLElement;
     if (checkbox && !checkbox.classList.contains('lyteChecked')) {
       checkbox.click();
     }
