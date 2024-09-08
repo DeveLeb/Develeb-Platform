@@ -1,6 +1,15 @@
 import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 
+const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=14days';
+const remocate =
+  'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
+const expertiseRecruitment = 'https://jobs.expertiserecruitment.com/jobs/Careers';
+const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
+const bayt =
+  'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3';
+const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
+
 function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
     'JavaScript',
@@ -79,13 +88,12 @@ async function tinyURLShorten(link: any) {
   return shortenedLink;
 }
 
-
 export const xpert4Scrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
   // Navigate to the page with job listings
-  await page.goto('https://xperts4.com/job/?filter-category=30&filter-date-posted=14days');
+  await page.goto(xpert4);
   const links = [];
   // Wait for the job listings to load
   await page.waitForSelector('.jobs-wrapper.items-wrapper');
@@ -141,9 +149,7 @@ export const remocateScrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
-  page.goto(
-    'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board'
-  );
+  page.goto(remocate);
 
   await page.waitForSelector('.board-list.w-dyn-items');
   const jobLinks = await page.$$('.w-dyn-item[role="listitem"] a.job-card.w-inline-block');
@@ -176,7 +182,7 @@ export const expertiseRecruitmentScrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
-  page.goto('https://jobs.expertiserecruitment.com/jobs/Careers');
+  page.goto(expertiseRecruitment);
 
   await page.waitForSelector('lyte-checkbox[lt-prop-value="Technology"]');
 
@@ -218,7 +224,7 @@ export const smartRecruitersScrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
-  page.goto('https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote');
+  page.goto(smartRecruiters);
 
   await page.waitForSelector('.jobs-item');
 
@@ -257,9 +263,7 @@ export const baytScrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
-  page.goto(
-    'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3'
-  );
+  page.goto(bayt);
 
   await page.waitForSelector('#results_inner_card');
 
@@ -295,7 +299,7 @@ export const remoteSourceScrape = async () => {
   const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
   const page = await browser.newPage();
 
-  page.goto('https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D');
+  page.goto(remoteSource);
 
   await page.waitForSelector('.grouped-job-result');
 
