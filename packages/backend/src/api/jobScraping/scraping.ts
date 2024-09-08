@@ -89,7 +89,7 @@ async function tinyURLShorten(link: any) {
 }
 
 export const xpert4Scrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   // Navigate to the page with job listings
@@ -146,7 +146,7 @@ export const xpert4Scrape = async () => {
 };
 
 export const remocateScrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   page.goto(remocate);
@@ -179,7 +179,7 @@ export const remocateScrape = async () => {
 };
 
 export const expertiseRecruitmentScrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   page.goto(expertiseRecruitment);
@@ -221,7 +221,7 @@ export const expertiseRecruitmentScrape = async () => {
 };
 
 export const smartRecruitersScrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   page.goto(smartRecruiters);
@@ -260,7 +260,7 @@ export const smartRecruitersScrape = async () => {
 };
 
 export const baytScrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   page.goto(bayt);
@@ -296,7 +296,7 @@ export const baytScrape = async () => {
 
 //TODO:fix filtering the locations to get the remote jobs only
 export const remoteSourceScrape = async () => {
-  const browser = await puppeteer.launch({ headless: false, defaultViewport: { width: 1700, height: 3000 } });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   page.goto(remoteSource);
