@@ -7,7 +7,6 @@
   "scripts": {},
   "devDependencies": {
     "eslint": "^8.57.0",
-    "lerna": "^8.1.5",
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.2"
   },
@@ -27,8 +26,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
+    "lerna": "^8.1.8",
+    "passport-jwt": "^4.0.1"
   }
-  }
-  
-
+}

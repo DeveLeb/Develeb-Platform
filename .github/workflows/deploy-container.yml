@@ -1,0 +1,20 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ['Build and Deploy']
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${RENDER_SERVICE_ID}
+          api-key: ${RENDER_API_KEY}
