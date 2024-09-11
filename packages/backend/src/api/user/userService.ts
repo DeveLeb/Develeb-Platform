@@ -118,7 +118,7 @@ export const userService = {
       const user = await userRepository.findByIdAsync(id);
       if (!user) {
         logger.info('User not found by id.');
-        return new ServiceResponse(ResponseStatus.Failed, 'User not found', null, StatusCodes.NOT_FOUND);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
       }
       logger.info('User found, getting old user password');
       const currentPassword = await userRepository.getPasswordAsync(id);
