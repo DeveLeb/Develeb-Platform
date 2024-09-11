@@ -19,7 +19,6 @@ import {
   DeleteJobCategorySchema,
   GetJobCategoryRequest,
   GetJobCategorySchema,
-  GetJobLevelSchema,
   GetJobSchema,
   GetJobsRequest,
   GetJobsSchema,
@@ -58,7 +57,12 @@ export const jobRouter: Router = (() => {
     });
     handleServiceResponse(serviceResponse, res);
   });
-
+  jobRegistry.registerPath({
+    method: 'post',
+    path: '/jobs',
+    tags: ['Job'],
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
   router.post('/', authenticate, validateRequest(CreateJobSchema), async (req: Request, res: Response) => {
     //user and admin can post
     const createJobRequest = req.body as unknown as CreateJobRequest;
@@ -97,6 +101,12 @@ export const jobRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
+  jobRegistry.registerPath({
+    method: 'post',
+    path: '/jobs/category',
+    tags: ['Job'],
+    responses: createApiResponse(JobCategorySchema, 'Success'),
+  });
   router.post(
     '/category',
     authenticate,
@@ -122,6 +132,12 @@ export const jobRouter: Router = (() => {
     const serviceResponse = await jobService.findJobCategory(id);
     handleServiceResponse(serviceResponse, res);
   });
+  jobRegistry.registerPath({
+    method: 'put',
+    path: '/jobs/category/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(JobCategorySchema, 'Success'),
+  });
 
   router.put(
     '/category/:id',
@@ -136,6 +152,12 @@ export const jobRouter: Router = (() => {
     }
   );
 
+  jobRegistry.registerPath({
+    method: 'delete',
+    path: '/jobs/category/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(z.object({}), 'Success'),
+  });
   router.delete(
     '/category/:id',
     authenticate,
@@ -193,7 +215,12 @@ export const jobRouter: Router = (() => {
     const serviceResponse = await jobService.findJoblevel(levelId);
     handleServiceResponse(serviceResponse, res);
   });
-
+  jobRegistry.registerPath({
+    method: 'put',
+    path: '/jobs/level/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(JobLevelSchema, 'Success'),
+  });
   router.put(
     '/level/:id',
     authenticate,
@@ -206,6 +233,12 @@ export const jobRouter: Router = (() => {
       handleServiceResponse(serviceResponse, res);
     }
   );
+  jobRegistry.registerPath({
+    method: 'delete',
+    path: '/jobs/level/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(z.object({}), 'Success'),
+  });
 
   router.delete('/level/:id', authenticate, authorizeRole(Roles.ADMIN), async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -239,7 +272,12 @@ export const jobRouter: Router = (() => {
     const serviceResponse = await jobService.findJobById(id);
     handleServiceResponse(serviceResponse, res);
   });
-
+  jobRegistry.registerPath({
+    method: 'delete',
+    path: '/jobs/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(z.object({}), 'Success'),
+  });
   router.delete(
     '/:id',
     validateRequest(GetJobSchema),
@@ -251,6 +289,12 @@ export const jobRouter: Router = (() => {
       handleServiceResponse(serviceResponse, res);
     }
   );
+  jobRegistry.registerPath({
+    method: 'put',
+    path: '/jobs/{id}',
+    tags: ['Job'],
+    responses: createApiResponse(JobSchema, 'Success'),
+  });
 
   router.put(
     '/:id',
