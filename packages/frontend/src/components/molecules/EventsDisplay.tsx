@@ -19,10 +19,13 @@ const EventsDisplay: React.FC<EventsDisplayProps> = ({ events }) => {
         {events.map((event) => (
           <a href={`/event/${event.id}`} key={event.id} className="block">
             <Card
-              className="shadow-lg h-[320px] sm:h-[380px] flex flex-col bg-cover bg-center relative transform transition-transform duration-300 hover:scale-105"
+              className="shadow-lg h-[320px] sm:h-[380px] flex flex-col bg-cover bg-center relative transform transition-transform duration-300 hover:scale-105 group"
               style={{ backgroundImage: `url(${event.flyerLink})` }}
             >
-              <div className="flex-grow flex flex-col justify-end p-4">
+              <div className="absolute inset-0 bg-black opacity-0 transition-opacity duration-300 group-hover:opacity-50"></div>
+
+              <div className="flex-grow flex flex-col justify-end p-4 relative z-10">
+                <h3 className="text-2xl font-bold text-[var(--white)] mb-2">{event.title}</h3>
                 <h4 className="text-xl font-bold text-[var(--white)] flex items-center">
                   <CiCalendar className="text-[var(--white)] text-xl mr-2" />
                   {event.date}
