@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import PaginationControls from '@/components/atoms/PaginationControls';
 import EventsDisplay from '@/components/molecules/EventsDisplay';
 import EventSearchPanel from '@/components/molecules/EventSearchPanel';
+import { LoadingSpinner } from '@/components/ui/loadingSpinner';
 import { EventService } from '@/services/EventService';
 
 const fetcher = async (type: string, tags: string[], title: string, page: number, perPage: number) => {
@@ -55,7 +56,9 @@ const EventPage = () => {
       {error ? (
         <div className="error">Error fetching events</div>
       ) : !events ? (
-        <div className="loading">Loading events...</div>
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner className="w-12 h-12 text-primary" /> 
+        </div>
       ) : events.length === 0 ? (
         <div className="no-events flex items-center justify-center min-h-screen text-center text-xl text-gray-500">
           <p>No events match your search criteria.</p>
