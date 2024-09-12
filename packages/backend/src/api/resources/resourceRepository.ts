@@ -78,4 +78,12 @@ export const resourceRepository = {
       .orderBy(asc(resource.createdAt));
     return result.length > 0 ? result.map((row) => ResourceSchema.parse(row.resource)) : null;
   },
+  findSavedResourceByIdAsync: async (id: string): Promise<Resource | null> => {
+    const result = await db.select().from(resourceSaved).where(eq(resourceSaved.resourceId, id));
+    return result.length > 0 ? ResourceSchema.parse(result[0]) : null;
+  },
+  deleteSavedResourceAsync: async (id: string): Promise<Resource | null> => {
+    const result = await db.delete(resourceSaved).where(eq(resourceSaved.resourceId, id)).returning();
+    return result.length > 0 ? ResourceSchema.parse(result[0]) : null;
+  },
 };

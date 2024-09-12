@@ -101,7 +101,7 @@ export const resourceService = {
   },
   updateResource: async (
     id: string,
-    updateResourceRequest: PutResourceRequest['body']
+    updateResourceRequest: PutResourceRequest
   ): Promise<ServiceResponse<Resource | null>> => {
     try {
       logger.info(`Attempting to update resource with id ${id}`);
@@ -128,6 +128,9 @@ export const resourceService = {
         logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
+      const savedResource = await resourceRepository.findSavedResourceByIdAsync(id);
+      if (savedResource) await resourceRepository.deleteSavedResourceAsync(id);
+
       logger.info(`Resource found with id ${id}. About to delete...`);
       const deletedResource = await resourceRepository.deleteResourceAsync(id);
       logger.info(`Resource deleted with id ${id}:`, JSON.stringify(deletedResource));
@@ -172,6 +175,10 @@ export const resourceService = {
       if (!resource) {
         logger.info(`No resource found with id ${resourceId}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
+      }
+      const checkSavedResource = await resourceRepository.findSavedResourceByIdAsync(resourceId);
+      if (checkSavedResource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Resource already saved!', null, StatusCodes.CONFLICT);
       }
       const savedResource = await resourceRepository.saveResourceAsync(resourceId, userId);
       logger.info(`Resource saved with id ${resourceId} for user with id ${userId}:`, JSON.stringify(savedResource));
