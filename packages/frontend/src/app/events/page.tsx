@@ -22,13 +22,6 @@ const EventPage = () => {
   const [title, setTitle] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [type, setType] = useState<string>('');
-
-  const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
-  const per_page = searchParams.get('per_page') ? Number(searchParams.get('per_page')) : 12;
-
-  const [title, setTitle] = useState<string>('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [type, setType] = useState<string>('');
   const [page, setPage] = useState<number>(searchParams.get('page') ? Number(searchParams.get('page')) : 1);
 
   const perPage = searchParams.get('perPage') ? Number(searchParams.get('perPage')) : 12;
