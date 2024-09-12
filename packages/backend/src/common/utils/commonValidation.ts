@@ -1,5 +1,5 @@
+import { PhoneNumberFormat, PhoneNumberUtil } from 'google-libphonenumber';
 import { z } from 'zod';
-
 // Schema definitions
 export const commonValidations = {
   stringId: z
@@ -31,4 +31,13 @@ export const commonValidations = {
     .string()
     .min(1, ' Email is required.')
     .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid email address'),
+  phoneNumber: z.string().refine((data) => {
+    const phoneUtil = PhoneNumberUtil.getInstance();
+    try {
+      const number = phoneUtil.parseAndKeepRawInput(data, '');
+      return phoneUtil.isValidNumber(number);
+    } catch (error) {
+      return false;
+    }
+  }, 'Invalid phone number'),
 };
