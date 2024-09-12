@@ -15,7 +15,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      #     - uses: actions/setup-node@v4
+      #        with:
+      #          node-version: 20
+      #      - name: Install Dependencies
+      #        run: npm ci
+      #      - name: Run Migrations
+      #        run: npm run db:migrate
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -32,3 +38,9 @@ jobs:
           file: ./packages/backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/develeb-backend:${{ github.sha }}, ${{ secrets.DOCKER_USERNAME }}/develeb-backend:latest
+
+      - name: Deploy
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
