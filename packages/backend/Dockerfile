@@ -1,4 +1,4 @@
-FROM node:current-slim
+FROM node:current-alpine
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -19,4 +19,5 @@ RUN npm run build
 EXPOSE 8080
 
 # Start the app
-CMD npm run start
+CMD ["npm", "start"]
+
