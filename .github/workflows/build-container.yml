@@ -11,7 +11,9 @@ jobs:
   build:
     name: Building image
     runs-on: ubuntu-latest
-    working-directory: packages/backend
+    defaults:
+      run:
+        working-directory: packages/backend
 
     env:
       VERSION: ${{ github.sha }}
