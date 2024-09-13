@@ -34,10 +34,9 @@ RUN npm ci --omit=dev
 # Copy the built app from the build stage
 COPY --from=build /usr/src/app/dist ./dist
 
-RUN cat ./dist/db/migrate.js
 
 # Expose port 8080
 EXPOSE 8080
 
 # Start the app with migration script (not best practice - migrations should be outside the dockerfile)
-CMD ["sh", "-c", "ls -ls -laR ./dist && cat ./dist/db/migrate.js && npm run migrate:prod && npm start"]
+CMD ["sh", "-c", "npm run migrate:prod && npm start"]
