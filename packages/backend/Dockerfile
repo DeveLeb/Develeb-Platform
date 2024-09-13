@@ -34,6 +34,8 @@ RUN npm ci --omit=dev
 # Copy the built app from the build stage
 COPY --from=build /usr/src/app/dist ./dist
 
+RUN cat ./dist/db/migrate.js
+
 # Expose port 8080
 EXPOSE 8080
 
