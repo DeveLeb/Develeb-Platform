@@ -35,7 +35,7 @@ RUN npm ci --omit=dev
 COPY --from=build /usr/src/app/dist ./dist
 
 # List the contents of the dist folder for debugging
-RUN ls -la /usr/src/app/dist
+RUN ls -laR /usr/src/app/dist
 
 # Expose port 8080
 EXPOSE 8080
