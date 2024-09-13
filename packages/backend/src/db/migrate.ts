@@ -10,7 +10,7 @@ const migrationClient = postgres(process.env.DATABASE_URL as string);
 
 async function main() {
   await migrate(drizzle(migrationClient), {
-    migrationsFolder: './src/db/migrations',
+    migrationsFolder: './migrations',
   });
 
   await migrationClient.end();
