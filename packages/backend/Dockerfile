@@ -29,16 +29,13 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy the built app from the build stage
 COPY --from=build /usr/src/app/dist ./dist
 
-# Run database migrations after compiling TypeScript
-RUN npm run migrate:prod
-
 # Expose port 8080
 EXPOSE 8080
 
-# Start the app
-CMD ["npm", "start"]
+# Start the app with migration script
+CMD ["sh", "-c", "npm run migrate:prod && npm start"]
