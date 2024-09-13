@@ -34,11 +34,8 @@ RUN npm ci --omit=dev
 # Copy the built app from the build stage
 COPY --from=build /usr/src/app/dist ./dist
 
-# List the contents of the dist folder for debugging
-RUN ls -laR /usr/src/app/dist
-
 # Expose port 8080
 EXPOSE 8080
 
-# Start the app with migration script
+# Start the app with migration script (not best practice - migrations should be outside the dockerfile)
 CMD ["sh", "-c", "npm run migrate:prod && npm start"]
