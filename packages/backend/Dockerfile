@@ -40,4 +40,4 @@ RUN cat ./dist/db/migrate.js
 EXPOSE 8080
 
 # Start the app with migration script (not best practice - migrations should be outside the dockerfile)
-CMD ["sh", "-c", "ls -ls -laR ./dist && cat ./dist/db.migrate.js && npm run migrate:prod && npm start"]
+CMD ["sh", "-c", "ls -ls -laR ./dist && cat ./dist/db/migrate.js && npm run migrate:prod && npm start"]
