@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  push:
+      branches:
+        - main
+      paths:
+        - 'packages/backend/**'
+  workflow_dispatch:
+jobs:
+  build:
+    name: Building image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./packages/backend
+          file: ./packages/backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/develeb-backend:${{ github.sha }}, ${{ secrets.DOCKER_USERNAME }}/develeb-backend:latest
+
+      - name: Deploy
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
