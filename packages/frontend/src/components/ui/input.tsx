@@ -9,11 +9,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
     <input
       type={type}
       className={cn(
-        'flex h-10 focus:text-red w-full px-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none  disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-[60px] p-2 pl-10 w-full border border-[var(--gray)] bg-background text-sm focus:outline-none focus:ring-2',
         className
       )}
+      style={{
+        '--tw-ring-color': 'var(--green)',
+      }}
       ref={ref}
-      placeholder="Email address"
       {...props}
     />
   );

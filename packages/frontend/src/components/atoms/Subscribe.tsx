@@ -2,7 +2,7 @@ import React from 'react';
 import { BsArrowRight } from 'react-icons/bs';
 
 import { Button } from './button';
-import { Input } from './input';
+import { Input } from '../ui/input';
 
 function Subscribe({ className }: { className: string }) {
   return (
