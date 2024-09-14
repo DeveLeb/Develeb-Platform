@@ -1,4 +1,3 @@
-import e from 'cors';
 import { commonValidations } from 'src/common/utils/commonValidation';
 import { z } from 'zod';
 
@@ -23,7 +22,7 @@ export const CreateResourceSchema = z.object({
   body: z.object({
     title: z.string().min(1, { message: 'Title is required' }),
     description: z.string().optional(),
-    link: z.string().min(1, { message: 'Link is required' }),
+    link: z.string().min(1, { message: 'Link is required' }).url('link must be a valid url'),
     publish: z.boolean().optional(),
     type: z.string().optional(),
     tags: z.string().optional(),
