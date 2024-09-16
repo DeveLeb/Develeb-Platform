@@ -1,14 +1,13 @@
 import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 
-const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=14days';
-const remocate =
-  'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
-const expertiseRecruitment = 'https://jobs.expertiserecruitment.com/jobs/Careers';
-const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
+const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=24hours';
 const bayt =
   'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3';
 const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
+const remocate =
+  'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
+const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
 
 function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
@@ -78,11 +77,6 @@ function filterLanguagesAndFrameworks(paragraph: string) {
 }
 
 async function shortenLink(link: any) {
-  const shortenedLink = await tinyURLShorten(link);
-  return shortenedLink;
-}
-
-async function tinyURLShorten(link: any) {
   const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(link)}`);
   const shortenedLink = await response.text();
   return shortenedLink;
@@ -149,15 +143,20 @@ export const remocateScrape = async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  page.goto(remocate);
+  await page.goto(remocate);
 
   await page.waitForSelector('.board-list.w-dyn-items');
   const jobLinks = await page.$$('.w-dyn-item[role="listitem"] a.job-card.w-inline-block');
 
   const links = [];
   for (const linkElement of jobLinks) {
-    const href = await linkElement.evaluate((el) => el.href);
-    links.push(href);
+    const postDate = await linkElement.$eval('div.job-card-right div.job-date.home-date', (el) =>
+      el.textContent?.trim()
+    );
+    if (postDate === 'Today') {
+      const href = await linkElement.evaluate((el) => el.href);
+      links.push(href);
+    }
   }
 
   const jobs = [];
@@ -178,53 +177,11 @@ export const remocateScrape = async () => {
   return jobs;
 };
 
-export const expertiseRecruitmentScrape = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  page.goto(expertiseRecruitment);
-
-  await page.waitForSelector('lyte-checkbox[lt-prop-value="Technology"]');
-
-  await page.evaluate(() => {
-    const checkbox = document.querySelector('lyte-checkbox[lt-prop-value="Technology"]') as HTMLElement;
-    if (checkbox && !checkbox.classList.contains('lyteChecked')) {
-      checkbox.click();
-    }
-  });
-  await page.waitForSelector('.posR');
-
-  const jobLinks: any[] = [];
-
-  const jobListings = await page.$$('.cw-filter-joblist');
-  for (const link of jobListings) {
-    const href = await link.$eval('h3:nth-child(1) > a:nth-child(1)', (el) => el.href);
-    jobLinks.push(href);
-  }
-
-  const jobs: any[] = [];
-
-  for (const link of jobLinks) {
-    await page.goto(link);
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    const title = $('.cw-jobheader-info > h1:nth-child(2)').text().trim();
-    const description = $('#spandesc > ul:nth-child(2) > li , #spanreq > ul:nth-child(2) > li').text().trim();
-
-    const { languages, frameworks } = filterLanguagesAndFrameworks(description);
-
-    const applicationLink = await shortenLink(link);
-    jobs.push({ title, languages, frameworks, applicationLink });
-  }
-  return jobs;
-};
-
 export const smartRecruitersScrape = async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  page.goto(smartRecruiters);
+  await page.goto(smartRecruiters);
 
   await page.waitForSelector('.jobs-item');
 
@@ -232,14 +189,17 @@ export const smartRecruitersScrape = async () => {
 
   const jobListings = await page.$$('.jobs-item');
   for (const link of jobListings) {
-    const href = await link.$eval('a', (el) => el.href);
-    jobLinks.push(href);
+    const postDate = await link.$eval('.job-details li:nth-child(2)', (el) => el.textContent?.trim());
+    if (postDate?.includes('hours')) {
+      const href = await link.$eval('a', (el) => el.href);
+      jobLinks.push(href);
+    }
   }
 
   const jobs: any[] = [];
 
   for (const link of jobLinks) {
-    await page.goto(jobLinks[1]);
+    await page.goto(link);
     const html = await page.content();
     const $ = cheerio.load(html);
 
