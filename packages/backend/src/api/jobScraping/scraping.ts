@@ -4,10 +4,10 @@ import puppeteer from 'puppeteer';
 const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=24hours';
 const bayt =
   'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3';
-const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
 const remocate =
   'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
 const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
+const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
 
 function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
@@ -216,6 +216,7 @@ export const smartRecruitersScrape = async () => {
     jobs.push({ title, languages, frameworks, applicationLink });
   }
 
+  await browser.close();
   return jobs;
 };
 
@@ -251,6 +252,7 @@ export const baytScrape = async () => {
 
     jobs.push({ title, languages, frameworks, applicationLink });
   }
+  await browser.close();
   return jobs;
 };
 
