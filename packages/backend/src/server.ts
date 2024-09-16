@@ -16,7 +16,29 @@ import rateLimiter from './common/middleware/rateLimiter';
 import requestLogger from './common/middleware/requestLogger';
 import { env } from './common/utils/envConfig';
 
-const logger = pino({ name: 'server start' });
+const loggerOptions = [{ level: 'info' }];
+
+if (process.env.isProduction || process.env.NODE_ENV === 'production') {
+  loggerOptions.push(
+    pino.transport({
+      target: 'pino-loki',
+      options: {
+        batching: true,
+        interval: 5,
+        labels: { application: 'production-server' },
+
+        host: process.env.LOKI_HOST,
+        basicAuth: {
+          username: process.env.LOKI_USERNAME,
+          password: process.env.LOKI_PASSWORD,
+        },
+      },
+    })
+  );
+}
+
+const logger = pino(...loggerOptions);
+
 const app: Express = express();
 
 // Set the application to trust the reverse proxy
