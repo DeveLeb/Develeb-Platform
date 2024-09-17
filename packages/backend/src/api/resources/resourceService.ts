@@ -207,4 +207,21 @@ export const resourceService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
+  deleteSavedResource: async (resourceId: string): Promise<ServiceResponse<SavedResource | null>> => {
+    try {
+      const resource = await resourceRepository.findResourceAsync(resourceId);
+      if (!resource) {
+        logger.info(`No resource found with id ${resourceId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info(`Attempting to delete saved resource`);
+      const result = await resourceRepository.deleteSavedResourceAsync(resourceId);
+      logger.info(`Resource deleted with id ${resourceId}:`, JSON.stringify(result));
+      return new ServiceResponse(ResponseStatus.Success, 'Resource deleted', result, StatusCodes.OK);
+    } catch (ex) {
+      const errorMessage = `Error deleting resource with id ${resourceId}: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
 };

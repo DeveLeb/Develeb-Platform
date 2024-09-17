@@ -124,7 +124,7 @@ export const resourceRouter: Router = (() => {
   router.put('/:id', validateRequest(PutResourceSchema), async (req: Request, res: Response) => {
     //TODO auth implementation
     const { id } = req.params as unknown as PutResourceRequest['params'];
-    const putResourceObject = req.body as unknown as PutResourceRequest['body'];
+    const putResourceObject = req.body as unknown as PutResourceRequest;
     const serviceResponse = await resourceService.updateResource(id, putResourceObject);
     handleServiceResponse(serviceResponse, res);
   });
@@ -133,6 +133,12 @@ export const resourceRouter: Router = (() => {
     //TODO auth implementation
     const { id } = req.params as unknown as DeleteResourceRequest;
     const serviceResponse = await resourceService.deleteResource(id);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  router.delete('/:id/saved', validateRequest(DeleteResourceSchema), async (req: Request, res: Response) => {
+    const { id } = req.params as unknown as DeleteResourceRequest;
+    const serviceResponse = await resourceService.deleteSavedResource(id);
     handleServiceResponse(serviceResponse, res);
   });
   return router;
