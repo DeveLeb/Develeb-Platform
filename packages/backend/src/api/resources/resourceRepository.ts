@@ -2,7 +2,7 @@ import { and, asc, count, eq, SQL, sql } from 'drizzle-orm';
 import { resource, resourceSaved, resourceViews } from 'src/db/schema';
 
 import { db } from '../../db';
-import { Resource, ResourceSchema } from './resourceModel';
+import { Resource, ResourceSchema, SavedResource, SavedResourceSchema } from './resourceModel';
 import { CreateResourceRequest, PutResourceRequest } from './resourceRequest';
 
 export const resourceRepository = {
@@ -59,15 +59,24 @@ export const resourceRepository = {
   },
   deleteResourceAsync: async (id: string): Promise<Resource | null> => {
     const deletedResource = await db.delete(resource).where(eq(resource.id, id)).returning();
+
     return ResourceSchema.parse(deletedResource[0]) || null;
   },
   findResourceTotalViewsAsync: async (id: string): Promise<number | null> => {
     const result = await db.select({ totalViews: count() }).from(resourceViews).where(eq(resourceViews.resourceId, id));
     return result[0].totalViews || null;
   },
-  saveResourceAsync: async (resourceId: string, userId: string): Promise<Resource | null> => {
-    const result = await db.insert(resourceSaved).values({ resourceId, userId, savedAt: new Date() });
-    return ResourceSchema.parse(result[0]) || null;
+  saveResourceAsync: async (resourceId: string, userId: string): Promise<SavedResource | null> => {
+    const result = await db.insert(resourceSaved).values({ resourceId, userId, savedAt: new Date() }).returning();
+    return SavedResourceSchema.parse(result[0]) || null;
+  },
+  findSavedResourceAsync: async (resourceId: string): Promise<SavedResource | null> => {
+    const result = await db.select().from(resourceSaved).where(eq(resourceSaved.resourceId, resourceId));
+    return result.length > 0 ? SavedResourceSchema.parse(result[0]) : null;
+  },
+  deleteSavedResourceAsync: async (id: string): Promise<SavedResource | null> => {
+    const result = await db.delete(resourceSaved).where(eq(resourceSaved.resourceId, id)).returning();
+    return result.length > 0 ? SavedResourceSchema.parse(result[0]) : null;
   },
   findSavedResourcesAsync: async (userId: string): Promise<Resource[] | null> => {
     const result = await db
@@ -77,13 +86,5 @@ export const resourceRepository = {
       .where(eq(resourceSaved.userId, userId))
       .orderBy(asc(resource.createdAt));
     return result.length > 0 ? result.map((row) => ResourceSchema.parse(row.resource)) : null;
-  },
-  findSavedResourceByIdAsync: async (id: string): Promise<Resource | null> => {
-    const result = await db.select().from(resourceSaved).where(eq(resourceSaved.resourceId, id));
-    return result.length > 0 ? ResourceSchema.parse(result[0]) : null;
-  },
-  deleteSavedResourceAsync: async (id: string): Promise<Resource | null> => {
-    const result = await db.delete(resourceSaved).where(eq(resourceSaved.resourceId, id)).returning();
-    return result.length > 0 ? ResourceSchema.parse(result[0]) : null;
   },
 };

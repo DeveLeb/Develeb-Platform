@@ -3,7 +3,7 @@ import { ResponseStatus, ServiceResponse } from 'src/common/models/serviceRespon
 import { logger } from 'src/server';
 import { ZodError } from 'zod';
 
-import { Resource } from './resourceModel';
+import { Resource, SavedResource } from './resourceModel';
 import { resourceRepository } from './resourceRepository';
 import { CreateResourceRequest, PutResourceRequest } from './resourceRequest';
 
@@ -128,9 +128,8 @@ export const resourceService = {
         logger.info(`No resource found with id ${id}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
       }
-      const savedResource = await resourceRepository.findSavedResourceByIdAsync(id);
+      const savedResource = await resourceRepository.findSavedResourceAsync(id);
       if (savedResource) await resourceRepository.deleteSavedResourceAsync(id);
-
       logger.info(`Resource found with id ${id}. About to delete...`);
       const deletedResource = await resourceRepository.deleteResourceAsync(id);
       logger.info(`Resource deleted with id ${id}:`, JSON.stringify(deletedResource));
@@ -167,18 +166,18 @@ export const resourceService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  saveResourceForUser: async (resourceId: string, userId: string): Promise<ServiceResponse<Resource | null>> => {
+  saveResourceForUser: async (resourceId: string, userId: string): Promise<ServiceResponse<SavedResource | null>> => {
     try {
       logger.info(`Attempting to save resource with id ${resourceId} for user with id ${userId}`);
       const resource = await resourceRepository.findResourceAsync(resourceId);
+      const alreadySavedResource = await resourceRepository.findSavedResourceAsync(resourceId);
+      if (alreadySavedResource) {
+        return new ServiceResponse(ResponseStatus.Failed, 'Resource already saved', null, StatusCodes.CONFLICT);
+      }
       logger.info(`Resource found with id ${resourceId}:`, JSON.stringify(resource));
       if (!resource) {
         logger.info(`No resource found with id ${resourceId}`);
         return new ServiceResponse(ResponseStatus.Success, 'No resource found', null, StatusCodes.NOT_FOUND);
-      }
-      const checkSavedResource = await resourceRepository.findSavedResourceByIdAsync(resourceId);
-      if (checkSavedResource) {
-        return new ServiceResponse(ResponseStatus.Failed, 'Resource already saved!', null, StatusCodes.CONFLICT);
       }
       const savedResource = await resourceRepository.saveResourceAsync(resourceId, userId);
       logger.info(`Resource saved with id ${resourceId} for user with id ${userId}:`, JSON.stringify(savedResource));
