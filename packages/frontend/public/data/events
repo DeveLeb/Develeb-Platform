@@ -14,5 +14,37 @@
         "tags": ["Technology", "Innovation", "AI"],
         "createdAt": "2024-08-01T12:00:00Z",
         "updatedAt": "2024-08-10T15:30:00Z"
+      },
+      {
+        "id": "2a2b3c4d",
+        "title": "Tech Innovations Conference",
+        "description": "A conference exploring the latest in technology and innovation.",
+        "videoLink": "https://www.example.com/video/tech-innovations",
+        "flyerLink": "https://picsum.photos/200/300",
+        "date": "2024-09-01T10:00:00Z",
+        "location": "San Francisco Convention Center",
+        "speakerName": "John Doe",
+        "speakerDescription": "John Doe is a renowned expert in artificial intelligence and machine learning.",
+        "speakerProfileUrl": "https://www.example.com/speakers/johndoe",
+        "type": "Conference",
+        "tags": ["Technology", "Innovation", "AI"],
+        "createdAt": "2024-08-01T12:00:00Z",
+        "updatedAt": "2024-08-10T15:30:00Z"
+      },
+      {
+        "id": "3a2b3c4d",
+        "title": "Tech Innovations Conference",
+        "description": "A conference exploring the latest in technology and innovation.",
+        "videoLink": "https://www.example.com/video/tech-innovations",
+        "flyerLink": "https://picsum.photos/200/300",
+        "date": "2024-09-01T10:00:00Z",
+        "location": "San Francisco Convention Center",
+        "speakerName": "John Doe",
+        "speakerDescription": "John Doe is a renowned expert in artificial intelligence and machine learning.",
+        "speakerProfileUrl": "https://www.example.com/speakers/johndoe",
+        "type": "Conference",
+        "tags": ["Technology", "Innovation", "AI"],
+        "createdAt": "2024-08-01T12:00:00Z",
+        "updatedAt": "2024-08-10T15:30:00Z"
       }
 ]

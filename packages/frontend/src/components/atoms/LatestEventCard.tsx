@@ -3,7 +3,7 @@ import React from 'react';
 const ListItem = ({ text }: { text: string }) => {
   return (
     <div className="flex gap-2 items-center my-1">
-      <div className="w-4 h-4 bg-white"></div>
+      <div className="w-4 h-4 bg-[var(--white)]"></div>
       <div className="font-light text-sm">{text}</div>
     </div>
   );
@@ -16,7 +16,7 @@ interface cardProps {
 
 function LatestEventCard({ title, list }: cardProps) {
   return (
-    <div className="bg-main_green relative h-96 rounded-md flex flex-col justify-between p-2 lg:w-96">
+    <div className="bg-[var(--green)] relative h-96 rounded-md flex flex-col justify-between p-2 lg:w-96">
       <div>
         <img src="/icons/SquareDots.png" alt="dots" className="w-14" />
       </div>

@@ -19,8 +19,10 @@ function Header() {
     window.addEventListener('resize', handleResize);
   }, []);
   return (
-    <header className="flex justify-between items-center bg-primary sm:px-10 sm:py-3">
-      <div className="text-secondary border border-border px-2 py-1">Logo</div>
+    <header className="flex justify-between items-center bg-[var(--dark-blue)] sm:px-10 sm:py-3">
+      <div className="text-[var(--white)]">
+      <img src="/images/Logo.png" alt="logo" className="w-14" />
+      </div>
       {isMobileScreen ? (
         <div className="px-2 py-2 rounded-full hover:bg-white/50 transition-colors cursor-pointer">
           <FaBars
@@ -32,7 +34,7 @@ function Header() {
           />
         </div>
       ) : (
-        <div className="flex justify-between items-center text-secondary gap-7">
+        <div className="flex justify-between items-center text-[var(--white)] gap-7">
           <Link href="jobs">Jobs</Link>
           <Link href="events">Events</Link>
           <Link href="#">Companies</Link>
@@ -40,8 +42,8 @@ function Header() {
           <Link href="#">Contact Us</Link>
 
           <div className="border-l-2 pl-7 flex gap-5">
-            <Button className="text-main_green border-2 border-main_green bg-transparent rounded-md">Login</Button>
-            <Button className="text-secondary bg-main_green rounded-md hover:bg-main-green">Sign Up</Button>
+            <Button className="text-[var(--green)] border-2 border-[var(--green)] bg-transparent rounded-md">Login</Button>
+            <Button className="text-[var(--white)] bg-[var(--green)] rounded-md hover:bg-[var(--dark-blue)]">Sign Up</Button>
           </div>
         </div>
       )}

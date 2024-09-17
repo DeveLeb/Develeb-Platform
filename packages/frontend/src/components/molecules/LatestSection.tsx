@@ -1,9 +1,19 @@
 'use client';
 import React, { useState } from 'react';
+import useSWR from 'swr';
+
+import { EventService } from '@/services/EventService';
 
 import HomePageTitle from '../atoms/homePageTitle';
 import LatestEventCard from '../atoms/LatestEventCard';
 import LatestJobCard from '../atoms/LatestJobCard';
+
+
+const eventService = new EventService();
+const fetchEvents = async () => {
+  const { events } = await eventService.getEvents();
+  return events;
+};
 
 const ArrowButton = ({
   reverse = false,
@@ -16,7 +26,7 @@ const ArrowButton = ({
 }) => {
   return (
     <button
-      className={jobs ? 'bg-primary rounded-full w-9 ml-2' : 'bg-main_green rounded-full w-9 ml-2'}
+      className={jobs ? 'bg-[var(--dark-blue)] rounded-full w-9 ml-2' : 'bg-[var(--green)] rounded-full w-9 ml-2'}
       onClick={onClick}
     >
       <img src="/icons/arrow.svg" alt="" className={reverse ? 'transform rotate-180' : ''} />
@@ -26,6 +36,11 @@ const ArrowButton = ({
 
 function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { data: events, error } = useSWR('/events', fetchEvents);
+
+  if (error) return <div>Failed to load events</div>;
+  if (!events) return <div>Loading...</div>;
 
   const cards = jobs
     ? [
@@ -63,11 +78,9 @@ function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
           }}
         />,
       ]
-    : [
-        <LatestEventCard key={0} title="xxx" list={['virtual meet', 'zoom', '2024-07-08']} />,
-        <LatestEventCard key={1} title="222" list={['virtual meet', 'zoom', '2024-07-08']} />,
-        <LatestEventCard key={2} title="333" list={['virtual meet', 'zoom', '2024-07-08']} />,
-      ];
+    : events.map((event, index) => (
+        <LatestEventCard key={index} title={event.title} list={[event.type, event.location, event.date]} />
+      ));
 
   const totalCards = cards.length;
 
@@ -81,7 +94,7 @@ function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
 
   return (
     <div className="">
-      <div className={jobs ? 'text-primary' : 'text-main_green'}>
+      <div className={jobs ? 'text-primary' : 'text-[var(--green)] '}>
         <HomePageTitle title={title} />
       </div>
       <div className="text-right mb-2 lg:hidden">
