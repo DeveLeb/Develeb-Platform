@@ -15,9 +15,9 @@ import errorHandler from './common/middleware/errorHandler';
 import rateLimiter from './common/middleware/rateLimiter';
 import requestLogger from './common/middleware/requestLogger';
 import { env } from './common/utils/envConfig';
-import { loggerOptions } from './common/utils/loggerOptions';
+import { targets } from './common/utils/loggerOptions';
 
-const logger = pino(...loggerOptions);
+const logger = pino(pino.transport({ targets }));
 
 const app: Express = express();
 
