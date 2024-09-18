@@ -28,7 +28,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./packages/backend
+          context: .
           file: ./packages/backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/develeb-backend:${{ github.sha }}, ${{ secrets.DOCKER_USERNAME }}/develeb-backend:latest
