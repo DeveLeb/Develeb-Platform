@@ -16,6 +16,9 @@
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.2"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.9.5"
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
