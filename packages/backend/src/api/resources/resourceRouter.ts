@@ -135,5 +135,11 @@ export const resourceRouter: Router = (() => {
     const serviceResponse = await resourceService.deleteResource(id);
     handleServiceResponse(serviceResponse, res);
   });
+
+  router.delete('/:id/saved', validateRequest(DeleteResourceSchema), async (req: Request, res: Response) => {
+    const { id } = req.params as unknown as DeleteResourceRequest;
+    const serviceResponse = await resourceService.deleteSavedResource(id);
+    handleServiceResponse(serviceResponse, res);
+  });
   return router;
 })();
