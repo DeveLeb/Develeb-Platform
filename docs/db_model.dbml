@@ -1,344 +1,211 @@
-CREATE TABLE "user" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "email" VARCHAR(30) NOT NULL,
-  "phone_number" VARCHAR(30) UNIQUE,
-  "full_name" VARCHAR(255),
-  "username" VARCHAR(30) UNIQUE NOT NULL,
-  "password" VARCHAR(255) NOT NULL,
-  "profile_url" VARCHAR(255),
-  "level_id" INTEGER,
-  "category_id" INTEGER,
-  "role" VARCHAR(255) NOT NULL,
-  "is_verified" BOOLEAN DEFAULT false,
-  "created_at" TIMESTAMP DEFAULT (now()),
-  "updated_at" TIMESTAMP DEFAULT (now()),
+/*========== USER ENTITY =============*/ 
+
+Table "user" {
+  "id" VARCHAR(255) [pk]
+  "email" VARCHAR(30) [not null]
+  "phone_number" VARCHAR(30) [unique]
+  "full_name" VARCHAR(255)
+  "username" VARCHAR(30) [not null, unique]
+  "password" VARCHAR(255) [not null]
+  "profile_url" VARCHAR(255)
+  "level_id" INTEGER
+  "category_id" INTEGER 
+  "role" VARCHAR(255) [not null]
+  "is_verified" BOOLEAN [default: false]
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
   "tags" TEXT
-);
+}
 
-CREATE TABLE "session" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "created_at" TIMESTAMP DEFAULT (now())
-);
+Table "session" {
+  "id" VARCHAR(255) [pk]
+  "created_at" TIMESTAMP [default: `now()`]
+}
 
-CREATE TABLE "job" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "title" VARCHAR(255) NOT NULL,
-  "level_id" INTEGER NOT NULL,
-  "category_id" INTEGER NOT NULL,
-  "type_id" INTEGER NOT NULL,
-  "location" VARCHAR(255),
-  "description" TEXT,
-  "compensation" VARCHAR(255),
-  "application_link" VARCHAR(255),
-  "is_external" BOOLEAN DEFAULT false,
-  "is_approved" BOOLEAN DEFAULT false,
-  "company_id" INTEGER,
-  "created_at" TIMESTAMP DEFAULT (now()),
-  "updated_at" TIMESTAMP DEFAULT (now()),
-  "posted_at" TIMESTAMP DEFAULT null,
+/*========== JOB ENTITY =============*/ 
+Table "job" {
+  "id" VARCHAR(255) [pk]
+  "title" VARCHAR(255) [not null]
+  "level_id" INTEGER [not null]
+  "category_id" INTEGER [not null]
+  "type_id" INTEGER [not null]
+  "location" VARCHAR(255)
+  "description" TEXT
+  "compensation" VARCHAR(255)
+  "application_link" VARCHAR(255)
+  "is_external" BOOLEAN [default: false]
+  "is_approved" BOOLEAN [default: false]
+  "company_id" INTEGER
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+  "posted_at" TIMESTAMP [default: null]
   "tags" TEXT
-);
+}
 
-CREATE TABLE "job_category" (
-  "id" INTEGER PRIMARY KEY,
-  "title" VARCHAR(255) NOT NULL
-);
+Table "job_category" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
 
-CREATE TABLE "job_level" (
-  "id" INTEGER PRIMARY KEY,
-  "title" VARCHAR(255) NOT NULL
-);
+Table "job_level" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
 
-CREATE TABLE "job_type" (
-  "id" INTEGER PRIMARY KEY,
-  "title" VARCHAR(255) NOT NULL
-);
+Table "job_type" {
+  "id" INTEGER [pk]
+  "title" VARCHAR(255) [not null]
+}
 
-CREATE TABLE "job_saved" (
-  "id" INTEGER PRIMARY KEY,
-  "job_id" INTEGER NOT NULL,
-  "user_id" INTEGER,
-  "saved_at" TIMESTAMP DEFAULT (now())
-);
+Table "job_saved" {
+  "id" INTEGER [pk]
+  "job_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
 
-CREATE TABLE "job_views" (
-  "id" INTEGER PRIMARY KEY,
-  "job_id" INTEGER NOT NULL,
-  "user_id" INTEGER,
-  "session_id" INTEGER,
-  "last_viewed_at" TIMESTAMP DEFAULT (now())
-);
+Table "job_views" {
+  "id" INTEGER [pk]
+  "job_id" INTEGER [not null]
+  "user_id" INTEGER
+  "session_id" INTEGER
+  "last_viewed_at" TIMESTAMP [default: `now()`]
+}
 
-CREATE TABLE "event" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "title" varchar(255) NOT NULL,
-  "description" text,
-  "video_link" varchar(255) NOT NULL,
-  "flyer_link" varchar(255) NOT NULL,
-  "date" datetime,
-  "location" varchar(255),
-  "speaker_name" varchar(255),
-  "speaker_description" varchar(255),
-  "speaker_profile_url" varchar(255),
-  "location_type" varchar,
-  "tags" TEXT,
-  "created_at" timestamp,
-  "updated_at" timestamp,
-  "posted_at" TIMESTAMP DEFAULT null
-);
+/*========== Event Entity ===========*/ 
 
-CREATE TABLE "user_event_registration" (
-  "id" INTEGER PRIMARY KEY,
-  "user_id" integer,
-  "event_id" integer,
+
+Table "event" {
+  "id" VARCHAR(255) [pk]
+  "title" varchar(255) [not null]
+  "description" text
+  "video_link" varchar(255) [not null]
+  "flyer_link" varchar(255) [not null]
+  "date" datetime
+  "location" varchar(255)
+  "speaker_name" varchar(255)
+  "speaker_description" varchar(255)
+  "speaker_profile_url" varchar(255)
+  "location_type" varchar
+  "tags" TEXT
+  "created_at" timestamp
+  "updated_at" timestamp
+  "posted_at" TIMESTAMP [default: null]
+}
+
+Table "user_event_registration" {
+  "id" INTEGER [pk]
+  "user_id" integer
+  "event_id" integer
   "user_type" varchar(255)
-);
-
-CREATE TABLE "event_saved" (
-  "id" INTEGER PRIMARY KEY,
-  "event_id" INTEGER NOT NULL,
-  "user_id" INTEGER,
-  "saved_at" TIMESTAMP DEFAULT (now())
-);
-
-CREATE TABLE "resource" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "title" VARCHAR(255) NOT NULL,
-  "description" TEXT,
-  "link" VARCHAR(255) NOT NULL,
-  "publish" BOOLEAN DEFAULT false,
-  "type" VARCHAR(255),
-  "tags" TEXT,
-  "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMP,
-  "posted_at" TIMESTAMP DEFAULT null
-);
-
-CREATE TABLE "resource_views" (
-  "id" INTEGER PRIMARY KEY,
-  "user_id" INTEGER,
-  "resource_id" INTEGER,
-  "session_id" INTEGER,
-  "last_viewed_at" TIMESTAMP DEFAULT (now())
-);
-
-CREATE TABLE "resource_saved" (
-  "id" INTEGER PRIMARY KEY,
-  "resource_id" INTEGER NOT NULL,
-  "user_id" INTEGER,
-  "saved_at" TIMESTAMP DEFAULT (now())
-);
-
-CREATE TABLE "company" (
-  "id" VARCHAR(255) PRIMARY KEY,
-  "name" VARCHAR(255) UNIQUE,
-  "description" TEXT,
-  "website" VARCHAR(255) UNIQUE,
-  "size" VARCHAR(10),
-  "location" VARCHAR(255),
-  "industry" VARCHAR(255),
-  "is_visible" BOOLEAN DEFAULT false,
-  "intagram_url" VARCHAR(255),
-  "facebook_url" VARCHAR(255),
-  "x_url" VARCHAR(255),
-  "linkedin_url" VARCHAR(255),
-  "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
-);
+}
+
+Table "event_saved" {
+  "id" INTEGER [pk]
+  "event_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
+
+
+/*========== Resource Entity ===========*/ 
+
+Table "resource" {
+  "id" VARCHAR(255) [pk]
+  "title" VARCHAR(255) [not null]
+  "description" TEXT
+  "link" VARCHAR(255) [not null]
+  "publish" BOOLEAN [default: false]
+  "type" VARCHAR(255)
+  "tags" TEXT
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP
+  "posted_at" TIMESTAMP [default: null]
+}
+
+
+
+Table "resource_views" {
+  "id" INTEGER [pk]
+  "user_id" INTEGER
+  "resource_id" INTEGER
+  "session_id" INTEGER
+  "last_viewed_at" TIMESTAMP [default: `now()`]
+}
+
+Table "resource_saved" {
+  "id" INTEGER [pk]
+  "resource_id" INTEGER [not null]
+  "user_id" INTEGER
+  "saved_at" TIMESTAMP [default: `now()`]
+}
+
+
+/*========== COMPANY ENTITY ===========*/ 
+
+Table "company" {
+  "id" VARCHAR(255) [pk]
+  "name" VARCHAR(255) [unique]
+  "description" TEXT
+  "website" VARCHAR(255) [unique]
+  "size" VARCHAR(10)
+  "location" VARCHAR(255)
+  "industry" VARCHAR(255)
+  "is_visible" BOOLEAN [default: false]
+  "intagram_url" VARCHAR(255)
+  "facebook_url" VARCHAR(255)
+  "x_url" VARCHAR(255)
+  "linkedin_url" VARCHAR(255)
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP [not null, default: `now()`]
+}
+
+Table "company_feedback" {
+  "id" INTEGER [unique, pk, not null, increment]
+  "company_id" INTEGER
+  "user_id" INTEGER
+  "description" TEXT
+  "approved" BOOLEAN [default: false]
+  "created_at" TIMESTAMP [not null, default: `now()`]
+  "updated_at" TIMESTAMP [not null, default: `now()`]
+}
+
+
+/*========== TAGS ENTITY ===========*/ 
+
+Table "tags" {
+  "id" INTEGER [pk]
+  "name" VARCHAR(255) [not null, unique]
+}
+
+/*========== ENTITY RELATIONSHIPS ===========*/ 
+
+Ref: "job_category"."id" < "job"."category_id"
+Ref: "job_level"."id" < "job"."level_id"
+Ref: "job_type"."id" < "job"."type_id"
+
+Ref: "job"."id" <> "job_views"."job_id"
+Ref: "job_views"."user_id" <> "user"."id"
+Ref: "session"."id" <> "job_views"."session_id"
+
+Ref: "event"."id" <> "user_event_registration"."event_id"
+Ref: "user"."id" <> "user_event_registration"."user_id"
+
+Ref: "resource"."id" <> "resource_views"."resource_id"
+Ref: "resource_views"."session_id" <> "session"."id"
+Ref: "resource_views"."id" <> "user"."id"
+
+Ref: "user"."id" <> "company_feedback"."user_id"
+Ref: "company"."id" <> "company_feedback"."company_id"
+
+Ref: "job"."id" <> "job_saved"."job_id"
 
-CREATE TABLE "company_feedback" (
-  "id" INTEGER GENERATED BY DEFAULT AS IDENTITY UNIQUE PRIMARY KEY NOT NULL,
-  "company_id" INTEGER,
-  "user_id" INTEGER,
-  "description" TEXT,
-  "approved" BOOLEAN DEFAULT false,
-  "created_at" TIMESTAMP NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMP NOT NULL DEFAULT (now())
-);
+Ref: "job_saved"."user_id" <> "user"."id"
 
-CREATE TABLE "tags" (
-  "id" INTEGER PRIMARY KEY,
-  "name" VARCHAR(255) UNIQUE NOT NULL
-);
+Ref: "event_saved"."event_id" <> "event"."id"
 
-ALTER TABLE "job" ADD FOREIGN KEY ("category_id") REFERENCES "job_category" ("id");
+Ref: "user"."id" <> "event_saved"."user_id"
 
-ALTER TABLE "job" ADD FOREIGN KEY ("level_id") REFERENCES "job_level" ("id");
+Ref: "resource_saved"."resource_id" <> "resource"."id"
 
-ALTER TABLE "job" ADD FOREIGN KEY ("type_id") REFERENCES "job_type" ("id");
-
-CREATE TABLE "job_job_views" (
-  "job_id" VARCHAR(255),
-  "job_views_job_id" INTEGER,
-  PRIMARY KEY ("job_id", "job_views_job_id")
-);
-
-ALTER TABLE "job_job_views" ADD FOREIGN KEY ("job_id") REFERENCES "job" ("id");
-
-ALTER TABLE "job_job_views" ADD FOREIGN KEY ("job_views_job_id") REFERENCES "job_views" ("job_id");
-
-
-CREATE TABLE "job_views_user" (
-  "job_views_user_id" INTEGER,
-  "user_id" VARCHAR(255),
-  PRIMARY KEY ("job_views_user_id", "user_id")
-);
-
-ALTER TABLE "job_views_user" ADD FOREIGN KEY ("job_views_user_id") REFERENCES "job_views" ("user_id");
-
-ALTER TABLE "job_views_user" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-
-CREATE TABLE "session_job_views" (
-  "session_id" VARCHAR(255),
-  "job_views_session_id" INTEGER,
-  PRIMARY KEY ("session_id", "job_views_session_id")
-);
-
-ALTER TABLE "session_job_views" ADD FOREIGN KEY ("session_id") REFERENCES "session" ("id");
-
-ALTER TABLE "session_job_views" ADD FOREIGN KEY ("job_views_session_id") REFERENCES "job_views" ("session_id");
-
-
-CREATE TABLE "event_user_event_registration" (
-  "event_id" VARCHAR(255),
-  "user_event_registration_event_id" integer,
-  PRIMARY KEY ("event_id", "user_event_registration_event_id")
-);
-
-ALTER TABLE "event_user_event_registration" ADD FOREIGN KEY ("event_id") REFERENCES "event" ("id");
-
-ALTER TABLE "event_user_event_registration" ADD FOREIGN KEY ("user_event_registration_event_id") REFERENCES "user_event_registration" ("event_id");
-
-
-CREATE TABLE "user_user_event_registration" (
-  "user_id" VARCHAR(255),
-  "user_event_registration_user_id" integer,
-  PRIMARY KEY ("user_id", "user_event_registration_user_id")
-);
-
-ALTER TABLE "user_user_event_registration" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-ALTER TABLE "user_user_event_registration" ADD FOREIGN KEY ("user_event_registration_user_id") REFERENCES "user_event_registration" ("user_id");
-
-
-CREATE TABLE "resource_resource_views" (
-  "resource_id" VARCHAR(255),
-  "resource_views_resource_id" INTEGER,
-  PRIMARY KEY ("resource_id", "resource_views_resource_id")
-);
-
-ALTER TABLE "resource_resource_views" ADD FOREIGN KEY ("resource_id") REFERENCES "resource" ("id");
-
-ALTER TABLE "resource_resource_views" ADD FOREIGN KEY ("resource_views_resource_id") REFERENCES "resource_views" ("resource_id");
-
-
-CREATE TABLE "resource_views_session" (
-  "resource_views_session_id" INTEGER,
-  "session_id" VARCHAR(255),
-  PRIMARY KEY ("resource_views_session_id", "session_id")
-);
-
-ALTER TABLE "resource_views_session" ADD FOREIGN KEY ("resource_views_session_id") REFERENCES "resource_views" ("session_id");
-
-ALTER TABLE "resource_views_session" ADD FOREIGN KEY ("session_id") REFERENCES "session" ("id");
-
-
-CREATE TABLE "resource_views_user" (
-  "resource_views_id" INTEGER,
-  "user_id" VARCHAR(255),
-  PRIMARY KEY ("resource_views_id", "user_id")
-);
-
-ALTER TABLE "resource_views_user" ADD FOREIGN KEY ("resource_views_id") REFERENCES "resource_views" ("id");
-
-ALTER TABLE "resource_views_user" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-
-CREATE TABLE "user_company_feedback" (
-  "user_id" VARCHAR(255),
-  "company_feedback_user_id" INTEGER,
-  PRIMARY KEY ("user_id", "company_feedback_user_id")
-);
-
-ALTER TABLE "user_company_feedback" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-ALTER TABLE "user_company_feedback" ADD FOREIGN KEY ("company_feedback_user_id") REFERENCES "company_feedback" ("user_id");
-
-
-CREATE TABLE "company_company_feedback" (
-  "company_id" VARCHAR(255),
-  "company_feedback_company_id" INTEGER,
-  PRIMARY KEY ("company_id", "company_feedback_company_id")
-);
-
-ALTER TABLE "company_company_feedback" ADD FOREIGN KEY ("company_id") REFERENCES "company" ("id");
-
-ALTER TABLE "company_company_feedback" ADD FOREIGN KEY ("company_feedback_company_id") REFERENCES "company_feedback" ("company_id");
-
-
-CREATE TABLE "job_job_saved" (
-  "job_id" VARCHAR(255),
-  "job_saved_job_id" INTEGER,
-  PRIMARY KEY ("job_id", "job_saved_job_id")
-);
-
-ALTER TABLE "job_job_saved" ADD FOREIGN KEY ("job_id") REFERENCES "job" ("id");
-
-ALTER TABLE "job_job_saved" ADD FOREIGN KEY ("job_saved_job_id") REFERENCES "job_saved" ("job_id");
-
-
-CREATE TABLE "job_saved_user" (
-  "job_saved_user_id" INTEGER,
-  "user_id" VARCHAR(255),
-  PRIMARY KEY ("job_saved_user_id", "user_id")
-);
-
-ALTER TABLE "job_saved_user" ADD FOREIGN KEY ("job_saved_user_id") REFERENCES "job_saved" ("user_id");
-
-ALTER TABLE "job_saved_user" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-
-CREATE TABLE "event_saved_event" (
-  "event_saved_event_id" INTEGER,
-  "event_id" VARCHAR(255),
-  PRIMARY KEY ("event_saved_event_id", "event_id")
-);
-
-ALTER TABLE "event_saved_event" ADD FOREIGN KEY ("event_saved_event_id") REFERENCES "event_saved" ("event_id");
-
-ALTER TABLE "event_saved_event" ADD FOREIGN KEY ("event_id") REFERENCES "event" ("id");
-
-
-CREATE TABLE "user_event_saved" (
-  "user_id" VARCHAR(255),
-  "event_saved_user_id" INTEGER,
-  PRIMARY KEY ("user_id", "event_saved_user_id")
-);
-
-ALTER TABLE "user_event_saved" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-ALTER TABLE "user_event_saved" ADD FOREIGN KEY ("event_saved_user_id") REFERENCES "event_saved" ("user_id");
-
-
-CREATE TABLE "resource_saved_resource" (
-  "resource_saved_resource_id" INTEGER,
-  "resource_id" VARCHAR(255),
-  PRIMARY KEY ("resource_saved_resource_id", "resource_id")
-);
-
-ALTER TABLE "resource_saved_resource" ADD FOREIGN KEY ("resource_saved_resource_id") REFERENCES "resource_saved" ("resource_id");
-
-ALTER TABLE "resource_saved_resource" ADD FOREIGN KEY ("resource_id") REFERENCES "resource" ("id");
-
-
-CREATE TABLE "resource_saved_user" (
-  "resource_saved_user_id" INTEGER,
-  "user_id" VARCHAR(255),
-  PRIMARY KEY ("resource_saved_user_id", "user_id")
-);
-
-ALTER TABLE "resource_saved_user" ADD FOREIGN KEY ("resource_saved_user_id") REFERENCES "resource_saved" ("user_id");
-
-ALTER TABLE "resource_saved_user" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
+Ref: "resource_saved"."user_id" <> "user"."id"
