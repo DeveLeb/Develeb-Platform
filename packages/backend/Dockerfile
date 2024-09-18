@@ -30,7 +30,7 @@ WORKDIR /usr/src/app
 COPY ./packages/backend/package.json ./
 COPY package-lock.json ./
 
-# Install only production dependencies
+# Install only production dependencies for backend
 RUN npm ci --omit=dev
 
 # Copy the built app from the build stage
