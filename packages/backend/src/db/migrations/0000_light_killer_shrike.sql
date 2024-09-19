@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS "company" (
 	"facebook_url" varchar(255),
 	"x_url" varchar(255),
 	"linkedin_url" varchar(255),
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "company_name_unique" UNIQUE("name"),
 	CONSTRAINT "company_website_unique" UNIQUE("website")
 );
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS "company_feedback" (
 	"user_id" uuid,
 	"description" text,
 	"approved" boolean DEFAULT false,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "event" (
@@ -38,9 +38,10 @@ CREATE TABLE IF NOT EXISTS "event" (
 	"speaker_name" varchar(255),
 	"speaker_description" varchar(255),
 	"speaker_profile_url" varchar(255),
-	"type_id" integer,
+	"location_type" varchar(30),
 	"tags" text,
-	"created_at" timestamp,
+	"posted_at" timestamp,
+	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp
 );
 --> statement-breakpoint
@@ -67,7 +68,7 @@ CREATE TABLE IF NOT EXISTS "job" (
 	"updated_at" timestamp DEFAULT now(),
 	"posted_at" timestamp,
 	"tags" text,
-	"is_approved" boolean
+	"is_approved" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "job_category" (
@@ -111,7 +112,7 @@ CREATE TABLE IF NOT EXISTS "resource" (
 	"publish" boolean DEFAULT false,
 	"type" varchar(255),
 	"tags" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
+	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp
 );
 --> statement-breakpoint
@@ -157,6 +158,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"updated_at" timestamp DEFAULT now(),
 	"tags" text,
 	CONSTRAINT "user_email_unique" UNIQUE("email"),
+	CONSTRAINT "user_phone_number_unique" UNIQUE("phone_number"),
 	CONSTRAINT "user_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
@@ -168,31 +170,25 @@ CREATE TABLE IF NOT EXISTS "user_event_registration" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "company_feedback" ADD CONSTRAINT "company_feedback_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "company_feedback" ADD CONSTRAINT "company_feedback_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "company_feedback" ADD CONSTRAINT "company_feedback_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "company_feedback" ADD CONSTRAINT "company_feedback_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "event" ADD CONSTRAINT "event_type_id_job_type_id_fk" FOREIGN KEY ("type_id") REFERENCES "public"."job_type"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "event_saved" ADD CONSTRAINT "event_saved_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "event_saved" ADD CONSTRAINT "event_saved_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "event_saved" ADD CONSTRAINT "event_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "event_saved" ADD CONSTRAINT "event_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -216,31 +212,31 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "job" ADD CONSTRAINT "job_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "job" ADD CONSTRAINT "job_company_id_company_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."company"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "job_saved" ADD CONSTRAINT "job_saved_job_id_job_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."job"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "job_saved" ADD CONSTRAINT "job_saved_job_id_job_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."job"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "job_saved" ADD CONSTRAINT "job_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "job_saved" ADD CONSTRAINT "job_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "job_views" ADD CONSTRAINT "job_views_job_id_job_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."job"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "job_views" ADD CONSTRAINT "job_views_job_id_job_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."job"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "job_views" ADD CONSTRAINT "job_views_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "job_views" ADD CONSTRAINT "job_views_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -252,25 +248,25 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "resource_saved" ADD CONSTRAINT "resource_saved_resource_id_resource_id_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."resource"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "resource_saved" ADD CONSTRAINT "resource_saved_resource_id_resource_id_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."resource"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "resource_saved" ADD CONSTRAINT "resource_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "resource_saved" ADD CONSTRAINT "resource_saved_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "resource_views" ADD CONSTRAINT "resource_views_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "resource_views" ADD CONSTRAINT "resource_views_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "resource_views" ADD CONSTRAINT "resource_views_resource_id_resource_id_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."resource"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "resource_views" ADD CONSTRAINT "resource_views_resource_id_resource_id_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."resource"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -294,13 +290,13 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "user_event_registration" ADD CONSTRAINT "user_event_registration_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "user_event_registration" ADD CONSTRAINT "user_event_registration_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "user_event_registration" ADD CONSTRAINT "user_event_registration_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "user_event_registration" ADD CONSTRAINT "user_event_registration_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

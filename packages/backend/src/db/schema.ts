@@ -14,7 +14,7 @@ import {
 export const user = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 50 }).notNull().unique(),
-  phoneNumber: varchar('phone_number', { length: 15 }),
+  phoneNumber: varchar('phone_number', { length: 15 }).unique(),
   fullName: varchar('full_name', { length: 255 }),
   username: varchar('username', { length: 30 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
@@ -52,12 +52,12 @@ export const job = pgTable(
     compensation: varchar('compensation', { length: 255 }),
     applicationLink: varchar('application_link', { length: 255 }),
     isExternal: boolean('is_external').default(false),
-    companyId: uuid('company_id').references(() => company.id),
+    companyId: uuid('company_id').references(() => company.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
     postedAt: timestamp('posted_at'),
     tags: text('tags'),
-    isApproved: boolean('is_approved'),
+    isApproved: boolean('is_approved').default(false),
   },
   (table) => ({
     jobLevelIdx: index('job_level_idx').on(table.levelId),
@@ -107,8 +107,8 @@ export const jobSaved = pgTable(
     id: serial('id').primaryKey(),
     jobId: uuid('job_id')
       .notNull()
-      .references(() => job.id),
-    userId: uuid('user_id').references(() => user.id),
+      .references(() => job.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
     savedAt: timestamp('saved_at').defaultNow(),
   },
   (table) => ({
@@ -123,8 +123,8 @@ export const jobViews = pgTable(
     id: serial('id').primaryKey(),
     jobId: uuid('job_id')
       .notNull()
-      .references(() => job.id),
-    userId: uuid('user_id').references(() => user.id),
+      .references(() => job.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
     sessionId: uuid('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
@@ -146,10 +146,10 @@ export const event = pgTable('event', {
   speakerName: varchar('speaker_name', { length: 255 }),
   speakerDescription: varchar('speaker_description', { length: 255 }),
   speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-  typeId: integer('type_id').references(() => jobType.id),
+  typeId: varchar('location_type', { length: 30 }),
   tags: text('tags'),
   postedAt: timestamp('posted_at'),
-  createdAt: timestamp('created_at'),
+  createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at'),
 });
 
@@ -157,8 +157,8 @@ export const userEventRegistration = pgTable(
   'user_event_registration',
   {
     id: serial('id').primaryKey(),
-    userId: uuid('user_id').references(() => user.id),
-    eventId: uuid('event_id').references(() => event.id),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    eventId: uuid('event_id').references(() => event.id, { onDelete: 'cascade' }),
     userType: varchar('user_type', { length: 255 }),
   },
   (table) => ({
@@ -173,8 +173,8 @@ export const eventSaved = pgTable(
     id: serial('id').primaryKey(),
     eventId: uuid('event_id')
       .notNull()
-      .references(() => event.id),
-    userId: uuid('user_id').references(() => user.id),
+      .references(() => event.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
     savedAt: timestamp('saved_at').defaultNow(),
   },
   (table) => ({
@@ -191,7 +191,7 @@ export const resource = pgTable('resource', {
   publish: boolean('publish').default(false),
   type: varchar('type', { length: 255 }),
   tags: text('tags'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at'),
 });
 
@@ -199,8 +199,8 @@ export const resourceViews = pgTable(
   'resource_views',
   {
     id: serial('id').primaryKey(),
-    userId: uuid('user_id').references(() => user.id),
-    resourceId: uuid('resource_id').references(() => resource.id),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
+    resourceId: uuid('resource_id').references(() => resource.id, { onDelete: 'cascade' }),
     sessionId: uuid('session_id').references(() => session.id),
     lastViewedAt: timestamp('last_viewed_at').defaultNow(),
   },
@@ -217,8 +217,8 @@ export const resourceSaved = pgTable(
     id: serial('id').primaryKey(),
     resourceId: uuid('resource_id')
       .notNull()
-      .references(() => resource.id),
-    userId: uuid('user_id').references(() => user.id),
+      .references(() => resource.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
     savedAt: timestamp('saved_at').defaultNow(),
   },
   (table) => ({
@@ -242,8 +242,8 @@ export const company = pgTable(
     facebookUrl: varchar('facebook_url', { length: 255 }),
     xUrl: varchar('x_url', { length: 255 }),
     linkedinUrl: varchar('linkedin_url', { length: 255 }),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => ({
     companyNameIdx: uniqueIndex('company_name_idx').on(table.name),
@@ -257,12 +257,12 @@ export const companyFeedback = pgTable(
   'company_feedback',
   {
     id: serial('id').primaryKey(),
-    companyId: uuid('company_id').references(() => company.id),
-    userId: uuid('user_id').references(() => user.id),
+    companyId: uuid('company_id').references(() => company.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
     description: text('description'),
     approved: boolean('approved').default(false),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => ({
     companyFeedbackCompanyIdx: index('company_feedback_company_idx').on(table.companyId),

@@ -5,13 +5,14 @@ FROM node:current-alpine AS build
 WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY ./packages/backend/package.json ./
+COPY package-lock.json ./
 
 # Install all dependencies (including devDependencies)
 RUN npm ci
 
 # Bundle app source
-COPY . .
+COPY ./packages/backend ./
 
 # Build the TypeScript files
 RUN npm run build
@@ -26,9 +27,10 @@ ENV NODE_ENV=production
 WORKDIR /usr/src/app
 
 # Copy only production dependencies
-COPY package*.json ./
+COPY ./packages/backend/package.json ./
+COPY package-lock.json ./
 
-# Install only production dependencies
+# Install only production dependencies for backend
 RUN npm ci --omit=dev
 
 # Copy the built app from the build stage
