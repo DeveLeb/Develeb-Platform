@@ -1,6 +1,8 @@
 import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 
+const linkedin =
+  'https://www.linkedin.com/jobs/search/?currentJobId=4027172512&f_TPR=r86400&geoId=101834488&keywords=web%20developer&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true';
 const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=24hours';
 const bayt =
   'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3';
@@ -9,7 +11,7 @@ const remocate =
 const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
 const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
 
-function filterLanguagesAndFrameworks(paragraph: string) {
+export function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
     'JavaScript',
     'TypeScript',
@@ -38,7 +40,7 @@ function filterLanguagesAndFrameworks(paragraph: string) {
     'Angular',
     'Svelte',
     'Next.js',
-    'Express',
+    'Express.js',
     'Django',
     'Flask',
     'Spring Boot',
@@ -70,29 +72,40 @@ function filterLanguagesAndFrameworks(paragraph: string) {
   const foundLanguages = paragraph.match(languagesRegex) || [];
   const foundFrameworks = paragraph.match(frameworksRegex) || [];
 
+  // Helper function to normalize and deduplicate results
+  const normalizeAndDeduplicate = (items: string[], reference: string[]): string[] => {
+    const normalizedItems = items.map(
+      (item) => reference.find((ref) => ref.toLowerCase() === item.toLowerCase()) || item
+    );
+    return Array.from(new Set(normalizedItems));
+  };
+
   return {
-    languages: [...new Set(foundLanguages)], // Removing duplicates
-    frameworks: [...new Set(foundFrameworks)], // Removing duplicates
+    languages: normalizeAndDeduplicate(foundLanguages, languages),
+    frameworks: normalizeAndDeduplicate(foundFrameworks, frameworks),
   };
 }
-
 async function shortenLink(link: any) {
   const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(link)}`);
   const shortenedLink = await response.text();
   return shortenedLink;
 }
 
-export const xpert4Scrape = async () => {
-  const browser = await puppeteer.launch();
+async function initializePage(link: string) {
+  const browser = await puppeteer.launch({
+    args: ['--incognito'],
+  });
   const page = await browser.newPage();
+  await page.goto(link, { waitUntil: 'domcontentloaded' });
+  return { browser, page };
+}
 
-  // Navigate to the page with job listings
-  await page.goto(xpert4);
+export const xpert4Scrape = async () => {
+  const { browser, page } = await initializePage(xpert4);
   const links = [];
-  // Wait for the job listings to load
+
   await page.waitForSelector('.jobs-wrapper.items-wrapper');
 
-  // Get all job listing elements
   const jobListings = await page.$$('.item-job');
 
   for (const listing of jobListings) {
@@ -140,10 +153,7 @@ export const xpert4Scrape = async () => {
 };
 
 export const remocateScrape = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  await page.goto(remocate);
+  const { browser, page } = await initializePage(remocate);
 
   await page.waitForSelector('.board-list.w-dyn-items');
   const jobLinks = await page.$$('.w-dyn-item[role="listitem"] a.job-card.w-inline-block');
@@ -178,11 +188,7 @@ export const remocateScrape = async () => {
 };
 
 export const smartRecruitersScrape = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  await page.goto(smartRecruiters);
-
+  const { browser, page } = await initializePage(smartRecruiters);
   await page.waitForSelector('.jobs-item');
 
   const jobLinks: any[] = [];
@@ -190,7 +196,7 @@ export const smartRecruitersScrape = async () => {
   const jobListings = await page.$$('.jobs-item');
   for (const link of jobListings) {
     const postDate = await link.$eval('.job-details li:nth-child(2)', (el) => el.textContent?.trim());
-    if (postDate?.includes('hours')) {
+    if (postDate?.includes('hours') || postDate?.includes('minutes')) {
       const href = await link.$eval('a', (el) => el.href);
       jobLinks.push(href);
     }
@@ -221,11 +227,7 @@ export const smartRecruitersScrape = async () => {
 };
 
 export const baytScrape = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  page.goto(bayt);
-
+  const { browser, page } = await initializePage(bayt);
   await page.waitForSelector('#results_inner_card');
 
   const jobLinks: any[] = [];
@@ -258,10 +260,7 @@ export const baytScrape = async () => {
 
 //TODO:fix filtering the locations to get the remote jobs only
 export const remoteSourceScrape = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  page.goto(remoteSource);
+  const { browser, page } = await initializePage(remoteSource);
 
   await page.waitForSelector('.grouped-job-result');
 
@@ -312,4 +311,59 @@ export const remoteSourceScrape = async () => {
       console.log({ title, languages, frameworks, applicationLink });
     }
   }
+  await browser.close();
+};
+
+export const linkedinScrape = async () => {
+  const { browser, page } = await initializePage(linkedin);
+  await setTimeout(async () => {
+    await page.mouse.click(100, 200);
+  }, 2000);
+
+  const jobsLink: string[] = [];
+
+  const jobListings = await page.$$('.base-card.relative.job-search-card');
+
+  for (const job of jobListings) {
+    const href = await job.$eval('a.base-card__full-link', (el) => el.href);
+    jobsLink.push(href);
+  }
+
+  const jobs: any[] = [];
+
+  for (const link of jobsLink) {
+    try {
+      await page.goto(link, { waitUntil: 'networkidle0' });
+
+      await page.waitForSelector('.top-card-layout__title');
+
+      try {
+        await page.click(
+          'button.show-more-less-html__button--more[aria-expanded="false"][data-tracking-control-name="public_jobs_show-more-html-btn"]'
+        );
+      } catch (clickError) {
+        console.log('Show more button not found or not clickable');
+      }
+
+      const html = await page.content();
+      const $ = cheerio.load(html);
+
+      const title = $('.top-card-layout__title').text().trim();
+      const description = $('.show-more-less-html__markup').text().trim();
+      const { languages, frameworks } = await filterLanguagesAndFrameworks(description);
+      const applicationLink = await shortenLink(link);
+
+      jobs.push({
+        title,
+        languages,
+        frameworks,
+        applicationLink,
+      });
+    } catch (error) {
+      console.error(`Error processing job link ${link}:`, error);
+    }
+  }
+
+  await browser.close();
+  return jobs;
 };
