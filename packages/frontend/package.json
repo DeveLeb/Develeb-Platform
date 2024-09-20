@@ -10,6 +10,8 @@
         "knip": "knip"
     },
     "dependencies": {
+        "@hookform/resolvers": "^3.9.0",
+        "@radix-ui/react-label": "^2.1.0",
         "@radix-ui/react-scroll-area": "^1.1.0",
         "@radix-ui/react-slot": "^1.1.0",
         "@tanstack/react-table": "^8.20.5",
@@ -20,11 +22,13 @@
         "next": "14.2.4",
         "react": "^18",
         "react-dom": "^18",
+        "react-hook-form": "^7.53.0",
         "react-icons": "^5.2.1",
         "react-router-dom": "^6.26.1",
         "swr": "^2.2.5",
         "tailwind-merge": "^2.3.0",
-        "tailwindcss-animate": "^1.0.7"
+        "tailwindcss-animate": "^1.0.7",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@svgr/webpack": "^8.1.0",

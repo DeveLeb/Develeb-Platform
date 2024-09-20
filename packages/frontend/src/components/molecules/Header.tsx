@@ -21,7 +21,7 @@ function Header() {
   return (
     <header className="flex justify-between items-center bg-[var(--dark-blue)] sm:px-10 sm:py-3">
       <div className="text-[var(--white)]">
-      <img src="/images/Logo.png" alt="logo" className="w-14" />
+        <img src="/images/Logo.png" alt="logo" className="w-14" />
       </div>
       {isMobileScreen ? (
         <div className="px-2 py-2 rounded-full hover:bg-white/50 transition-colors cursor-pointer">
@@ -42,8 +42,13 @@ function Header() {
           <Link href="#">Contact Us</Link>
 
           <div className="border-l-2 pl-7 flex gap-5">
-            <Button className="text-[var(--green)] border-2 border-[var(--green)] bg-transparent rounded-md">Login</Button>
-            <Button className="text-[var(--white)] bg-[var(--green)] rounded-md hover:bg-[var(--dark-blue)]">Sign Up</Button>
+            <Button className="text-[var(--green)] border-2 border-[var(--green)] bg-transparent rounded-md">
+              <Link href="login">Login</Link>
+            </Button>
+
+            <Button className="text-[var(--white)] bg-[var(--green)] rounded-md hover:bg-[var(--dark-blue)]">
+              <Link href="/signup">Sign Up</Link>
+            </Button>
           </div>
         </div>
       )}
