@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 
 const linkedin =
-  'https://www.linkedin.com/jobs/search/?currentJobId=4027172512&f_TPR=r86400&geoId=101834488&keywords=web%20developer&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true';
+  'https://www.linkedin.com/jobs/search?keywords=Software%20Developer&location=Lebanon&geoId=101834488&f_TPR=r86400&position=1&pageNum=0';
 const xpert4 = 'https://xperts4.com/job/?filter-category=30&filter-date-posted=24hours';
 const bayt =
   'https://www.bayt.com/en/lebanon/jobs/developer-jobs/?filters%5Bjb_last_modification_date_interval%5D%5B%5D=3';
@@ -61,18 +61,15 @@ export function filterLanguagesAndFrameworks(paragraph: string) {
     '.NET Core',
   ];
 
-  // Ensure special characters are escaped (C++, C#)
   const escapedLanguages = languages.map((lang) => lang.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const escapedFrameworks = frameworks.map((framework) => framework.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-  // Join into a regex that matches any of the languages or frameworks
   const languagesRegex = new RegExp(`(?<![\\w])(${escapedLanguages.join('|')})(?![\\w])`, 'gi');
   const frameworksRegex = new RegExp(`(?<![\\w])(${escapedFrameworks.join('|')})(?![\\w])`, 'gi');
 
   const foundLanguages = paragraph.match(languagesRegex) || [];
   const foundFrameworks = paragraph.match(frameworksRegex) || [];
 
-  // Helper function to normalize and deduplicate results
   const normalizeAndDeduplicate = (items: string[], reference: string[]): string[] => {
     const normalizedItems = items.map(
       (item) => reference.find((ref) => ref.toLowerCase() === item.toLowerCase()) || item
@@ -93,6 +90,8 @@ async function shortenLink(link: any) {
 
 async function initializePage(link: string) {
   const browser = await puppeteer.launch({
+    headless: false,
+    defaultViewport: { width: 1920, height: 1080 },
     args: ['--incognito'],
   });
   const page = await browser.newPage();
