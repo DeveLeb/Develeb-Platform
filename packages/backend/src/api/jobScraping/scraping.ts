@@ -10,7 +10,8 @@ const bayt =
 const remocate =
   'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
 const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
-
+const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
+const lbTalent = 'https://lb.talent.com/en/jobs?k=Software+Developer&l=&date=1d&radius=50&id=f37a4c7ad142';
 export function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
     'JavaScript',
@@ -107,7 +108,7 @@ async function initializePage(link: string) {
   return { browser, page };
 }
 
-export const xpert4Scrape = async () => {
+export const xpert4Scrape = async (): Promise<Job[] | null> => {
   const { browser, page } = await initializePage(xpert4);
   const links: string[] = [];
   const jobs: Job[] = [];
@@ -166,7 +167,7 @@ export const xpert4Scrape = async () => {
   return jobs;
 };
 
-export const remocateScrape = async () => {
+export const remocateScrape = async (): Promise<Job[] | null> => {
   const { browser, page } = await initializePage(remocate);
   const links: string[] = [];
   const jobs: Job[] = [];
@@ -210,7 +211,7 @@ export const remocateScrape = async () => {
   return jobs;
 };
 
-export const smartRecruitersScrape = async () => {
+export const smartRecruitersScrape = async (): Promise<Job[] | null> => {
   const { browser, page } = await initializePage(smartRecruiters);
   const jobLinks: string[] = [];
   const jobs: Job[] = [];
@@ -252,7 +253,7 @@ export const smartRecruitersScrape = async () => {
   return jobs;
 };
 
-export const baytScrape = async () => {
+export const baytScrape = async (): Promise<Job[] | null> => {
   const { browser, page } = await initializePage(bayt);
   const jobLinks: string[] = [];
   const jobs: Job[] = [];
@@ -293,7 +294,97 @@ export const baytScrape = async () => {
   return jobs;
 };
 
-export const linkedinScrape = async () => {
+//TODO:fix filtering the locations to get the remote jobs only
+export const remoteSourceScrape = async () => {
+  const { browser, page } = await initializePage(remoteSource);
+
+  await page.waitForSelector('.grouped-job-result');
+
+  const jobListings = await page.$$('.grouped-job-result');
+  logger.info(`Found ${jobListings.length} job listings`);
+
+  for (const job of jobListings) {
+    const location = await job.evaluate(() => {
+      return document.querySelector('.job-list-company-meta-item.job-list-company-meta-locations')?.textContent;
+    });
+
+    logger.info(`Location: ${location}`);
+
+    if (location?.split('-').includes('Remote')) {
+      logger.info('Location is remote');
+
+      await page.click('div.grouped-job-result:nth-child(4) > button:nth-child(4)');
+
+      const title = await page.$eval(
+        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)',
+        (el) => el.textContent
+      );
+
+      logger.info(`Title: ${title}`);
+
+      const description = await page.$$eval(
+        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > div:nth-child(2) > span',
+        (spans) => spans.map((span) => span.innerText).join(' ')
+      );
+      const { languages, frameworks } = filterLanguagesAndFrameworks(description);
+      const link = await page.$eval(
+        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)',
+        (el) => el.href
+      );
+
+      const applicationLink = await shortenLink(link);
+
+      logger.info(`Application link: ${applicationLink}`);
+      logger.info({ title, languages, frameworks, applicationLink });
+    }
+  }
+  await browser.close();
+};
+
+export const lbTalentScrape = async () => {
+  const { browser, page } = await initializePage(lbTalent);
+  const links: string[] = [];
+  const jobs: Job[] = [];
+  await page.waitForSelector('#nv-jobs');
+
+  try {
+    const jobListings = await page.$$('.card.card__job');
+
+    const link = 'https://lb.talent.com/en/jobs?k=Software+Developer&l=&date=1d&radius=50&id=';
+    for (const job of jobListings) {
+      try {
+        const dataId = await job.evaluate((el) => el.getAttribute('data-id'));
+        dataId ? links.push(link + dataId) : logger.warn('No data-id found for a job listing');
+      } catch (error: any) {
+        logger.error(`Error extracting data-id: ${error.message}`);
+      }
+    }
+
+    for (const link of links) {
+      try {
+        await page.goto(link);
+
+        await page.waitForSelector('.jobsPreview');
+        const html = await page.content();
+        const $ = cheerio.load(html);
+        const title = $('.jobPreview__header--title').text().trim();
+        const description = $('.jobPreview__body.jobPreview__body--wrapper').text().trim();
+        const { languages, frameworks } = filterLanguagesAndFrameworks(description);
+        const applicationLink = await shortenLink(link);
+        jobs.push({ title, languages, frameworks, applicationLink });
+      } catch (error) {
+        logger.error(`Error fetching jobs from ${link}: ${error}`);
+      }
+    }
+  } catch (error) {
+    logger.error(`Error fetching jobs from lbTalent: ${error}`);
+  } finally {
+    await browser.close();
+  }
+  return jobs;
+};
+
+export const linkedinScrape = async (): Promise<Job[] | null> => {
   const jobsLink: string[] = [];
   const jobs: Job[] = [];
 
