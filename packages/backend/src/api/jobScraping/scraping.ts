@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
+import { logger } from 'src/server';
 
 const linkedin =
   'https://www.linkedin.com/jobs/search?keywords=Software%20Developer&location=Lebanon&geoId=101834488&f_TPR=r86400&position=1&pageNum=0';
@@ -82,6 +83,14 @@ export function filterLanguagesAndFrameworks(paragraph: string) {
     frameworks: normalizeAndDeduplicate(foundFrameworks, frameworks),
   };
 }
+
+interface Job {
+  title: string;
+  languages?: string[];
+  frameworks?: string[];
+  applicationLink: string;
+}
+
 async function shortenLink(link: any) {
   const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(link)}`);
   const shortenedLink = await response.text();
@@ -101,159 +110,188 @@ async function initializePage(link: string) {
 
 export const xpert4Scrape = async () => {
   const { browser, page } = await initializePage(xpert4);
-  const links = [];
+  const links: string[] = [];
+  const jobs: Job[] = [];
 
-  await page.waitForSelector('.jobs-wrapper.items-wrapper');
+  try {
+    await page.waitForSelector('.jobs-wrapper.items-wrapper');
 
-  const jobListings = await page.$$('.item-job');
+    const jobListings = await page.$$('.item-job');
 
-  for (const listing of jobListings) {
-    const link = await listing.$eval(' h2:nth-child(1) > a:nth-child(1)', (x) => x.href);
-    links.push(link);
-  }
+    for (const listing of jobListings) {
+      const link = await listing.$eval(' h2:nth-child(1) > a:nth-child(1)', (x) => x.href);
+      links.push(link);
+    }
 
-  const jobs = [];
+    for (const link of links) {
+      try {
+        await page.goto(link);
+        const html = await page.content();
+        const $ = cheerio.load(html);
 
-  for (const link of links) {
-    await page.goto(link);
-    const html = await page.content();
-    const $ = cheerio.load(html);
+        const title = $('.job-detail-title').text().trim();
+        const descriptionDiv = $('#bsf_rt_marker');
 
-    const title = $('.job-detail-title').text().trim();
-    const descriptionDiv = $('#bsf_rt_marker');
+        let descriptionText = '';
 
-    let descriptionText = '';
-
-    descriptionDiv.find('p').each((_i, element) => {
-      descriptionText += $(element).text().trim() + '\n';
-    });
-
-    descriptionDiv.find('ul').each((_i, element) => {
-      $(element)
-        .find('li')
-        .each((_j, li) => {
-          descriptionText += '- ' + $(li).text().trim() + '\n';
+        descriptionDiv.find('p').each((_i, element) => {
+          descriptionText += $(element).text().trim() + '\n';
         });
-    });
-    const { languages, frameworks } = filterLanguagesAndFrameworks(descriptionText);
 
-    const applicationLink = await shortenLink(link);
+        descriptionDiv.find('ul').each((_i, element) => {
+          $(element)
+            .find('li')
+            .each((_j, li) => {
+              descriptionText += '- ' + $(li).text().trim() + '\n';
+            });
+        });
+        const { languages, frameworks } = filterLanguagesAndFrameworks(descriptionText);
 
-    jobs.push({
-      title,
-      languages,
-      frameworks,
-      applicationLink,
-    });
+        const applicationLink = await shortenLink(link);
+
+        jobs.push({
+          title,
+          languages,
+          frameworks,
+          applicationLink,
+        });
+      } catch (error) {
+        logger.error(`Error processing job link ${link}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error('Error scraping xpert4:', error);
+  } finally {
+    await browser.close();
   }
 
-  await browser.close();
   return jobs;
 };
 
 export const remocateScrape = async () => {
   const { browser, page } = await initializePage(remocate);
+  const links: string[] = [];
+  const jobs: Job[] = [];
 
-  await page.waitForSelector('.board-list.w-dyn-items');
-  const jobLinks = await page.$$('.w-dyn-item[role="listitem"] a.job-card.w-inline-block');
+  try {
+    await page.waitForSelector('.board-list.w-dyn-items');
+    const jobLinks = await page.$$('.w-dyn-item[role="listitem"] a.job-card.w-inline-block');
 
-  const links = [];
-  for (const linkElement of jobLinks) {
-    const postDate = await linkElement.$eval('div.job-card-right div.job-date.home-date', (el) =>
-      el.textContent?.trim()
-    );
-    if (postDate === 'Today') {
-      const href = await linkElement.evaluate((el) => el.href);
-      links.push(href);
+    for (const linkElement of jobLinks) {
+      const postDate = await linkElement.$eval('div.job-card-right div.job-date.home-date', (el) =>
+        el.textContent?.trim()
+      );
+      if (postDate === 'Today') {
+        const href = await linkElement.evaluate((el) => el.href);
+        links.push(href);
+      }
     }
+
+    for (const link of links) {
+      try {
+        await page.goto(link);
+        const html = await page.content();
+        const $ = cheerio.load(html);
+
+        const title = $('.top-title-job').text().trim();
+        const description = $('.text-rich-text > ul').text();
+        const { languages, frameworks } = filterLanguagesAndFrameworks(description);
+        const applicationLink = await shortenLink(link);
+
+        jobs.push({ title, languages, frameworks, applicationLink });
+      } catch (error) {
+        logger.error(`Error processing job link ${link}:, ${error}`);
+      }
+    }
+  } catch (error) {
+    logger.error(`Error scraping remocate:,${error}`);
+  } finally {
+    await browser.close();
   }
 
-  const jobs = [];
-
-  for (const link of links) {
-    await page.goto(link);
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    const title = $('.top-title-job').text().trim();
-    const description = $('.text-rich-text > ul').text();
-    const { languages, frameworks } = filterLanguagesAndFrameworks(description);
-    const applicationLink = await shortenLink(link);
-
-    jobs.push({ title, languages, frameworks, applicationLink });
-  }
-  await browser.close();
   return jobs;
 };
 
 export const smartRecruitersScrape = async () => {
   const { browser, page } = await initializePage(smartRecruiters);
-  await page.waitForSelector('.jobs-item');
+  const jobLinks: string[] = [];
+  const jobs: Job[] = [];
 
-  const jobLinks: any[] = [];
+  try {
+    await page.waitForSelector('.jobs-item');
 
-  const jobListings = await page.$$('.jobs-item');
-  for (const link of jobListings) {
-    const postDate = await link.$eval('.job-details li:nth-child(2)', (el) => el.textContent?.trim());
-    if (postDate?.includes('hours') || postDate?.includes('minutes')) {
-      const href = await link.$eval('a', (el) => el.href);
-      jobLinks.push(href);
+    const jobListings = await page.$$('.jobs-item');
+    for (const link of jobListings) {
+      const postDate = await link.$eval('.job-details li:nth-child(2)', (el) => el.textContent?.trim());
+      if (postDate?.includes('hours') || postDate?.includes('minutes')) {
+        const href = await link.$eval('a', (el) => el.href);
+        jobLinks.push(href);
+      }
     }
+    for (const link of jobLinks) {
+      await page.goto(link);
+      const html = await page.content();
+      const $ = cheerio.load(html);
+
+      const title = $('.job-title').text().trim();
+      const description = $(
+        '#st-companyDescription > div:nth-child(2) > p , #st-jobDescription > div:nth-child(2) > p, #st-jobDescription > div:nth-child(2) > ul:nth-child(3) > li , #st-additionalInformation > div:nth-child(2) > ul:nth-child(2) > li'
+      )
+        .text()
+        .trim();
+      const { languages, frameworks } = filterLanguagesAndFrameworks(description);
+
+      const applicationLink = await shortenLink(link);
+
+      jobs.push({ title, languages, frameworks, applicationLink });
+    }
+  } catch (error) {
+    logger.error(`Error scraping smartRecruiters:, ${error}`);
+  } finally {
+    await browser.close();
   }
 
-  const jobs: any[] = [];
-
-  for (const link of jobLinks) {
-    await page.goto(link);
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    const title = $('.job-title').text().trim();
-    const description = $(
-      '#st-companyDescription > div:nth-child(2) > p , #st-jobDescription > div:nth-child(2) > p, #st-jobDescription > div:nth-child(2) > ul:nth-child(3) > li , #st-additionalInformation > div:nth-child(2) > ul:nth-child(2) > li'
-    )
-      .text()
-      .trim();
-    const { languages, frameworks } = filterLanguagesAndFrameworks(description);
-
-    const applicationLink = await shortenLink(link);
-
-    jobs.push({ title, languages, frameworks, applicationLink });
-  }
-
-  await browser.close();
   return jobs;
 };
 
 export const baytScrape = async () => {
   const { browser, page } = await initializePage(bayt);
-  await page.waitForSelector('#results_inner_card');
+  const jobLinks: string[] = [];
+  const jobs: Job[] = [];
 
-  const jobLinks: any[] = [];
+  try {
+    await page.waitForSelector('#results_inner_card');
 
-  const jobListings = await page.$$('.has-pointer-d');
-  for (const link of jobListings) {
-    const href = await link.$eval('a', (el) => el.href);
-    jobLinks.push(href);
+    const jobListings = await page.$$('.has-pointer-d');
+    for (const link of jobListings) {
+      const href = await link.$eval('a', (el) => el.href);
+      jobLinks.push(href);
+    }
+
+    for (const link of jobLinks) {
+      try {
+        await page.goto(link);
+        const html = await page.content();
+        const $ = cheerio.load(html);
+
+        const title = $('#job_title').text().trim();
+        const description = $('div.t-break').text().trim();
+
+        const { languages, frameworks } = filterLanguagesAndFrameworks(description);
+
+        const applicationLink = await shortenLink(link);
+
+        jobs.push({ title, languages, frameworks, applicationLink });
+      } catch (error) {
+        logger.error(`Error processing job link ${link}:, ${error}`);
+      }
+    }
+  } catch (error) {
+    logger.error(`Error scraping bayt:, ${error}`);
+  } finally {
+    await browser.close();
   }
 
-  const jobs: any[] = [];
-
-  for (const link of jobLinks) {
-    await page.goto(link);
-    const html = await page.content();
-    const $ = cheerio.load(html);
-
-    const title = $('#job_title').text().trim();
-    const description = $('div.t-break').text().trim();
-
-    const { languages, frameworks } = filterLanguagesAndFrameworks(description);
-
-    const applicationLink = await shortenLink(link);
-
-    jobs.push({ title, languages, frameworks, applicationLink });
-  }
-  await browser.close();
   return jobs;
 };
 
@@ -264,17 +302,17 @@ export const remoteSourceScrape = async () => {
   await page.waitForSelector('.grouped-job-result');
 
   const jobListings = await page.$$('.grouped-job-result');
-  console.log(`Found ${jobListings.length} job listings`);
+  logger.info(`Found ${jobListings.length} job listings`);
 
   for (const job of jobListings) {
     const location = await job.evaluate(() => {
       return document.querySelector('.job-list-company-meta-item.job-list-company-meta-locations')?.textContent;
     });
 
-    console.log(`Location: ${location}`);
+    logger.info(`Location: ${location}`);
 
     if (location?.split('-').includes('Remote')) {
-      console.log('Location is remote');
+      logger.info('Location is remote');
 
       await page.click('div.grouped-job-result:nth-child(4) > button:nth-child(4)');
 
@@ -283,86 +321,90 @@ export const remoteSourceScrape = async () => {
         (el) => el.textContent
       );
 
-      console.log(`Title: ${title}`);
+      logger.info(`Title: ${title}`);
 
       const description = await page.$$eval(
         'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > div:nth-child(2) > span',
         (spans) => spans.map((span) => span.innerText).join(' ')
       );
 
-      console.log(`Description: ${description}`);
+      logger.info(`Description: ${description}`);
 
       const { languages, frameworks } = filterLanguagesAndFrameworks(description);
 
-      console.log(`Languages: ${languages}`);
-      console.log(`Frameworks: ${frameworks}`);
+      logger.info(`Languages: ${languages}`);
+      logger.info(`Frameworks: ${frameworks}`);
 
       const link = await page.$eval(
         'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)',
         (el) => el.href
       );
 
-      console.log(`Link: ${link}`);
+      logger.info(`Link: ${link}`);
 
       const applicationLink = await shortenLink(link);
 
-      console.log(`Application link: ${applicationLink}`);
-      console.log({ title, languages, frameworks, applicationLink });
+      logger.info(`Application link: ${applicationLink}`);
+      logger.info({ title, languages, frameworks, applicationLink });
     }
   }
   await browser.close();
 };
 
 export const linkedinScrape = async () => {
+  const jobsLink: string[] = [];
+  const jobs: Job[] = [];
+
   const { browser, page } = await initializePage(linkedin);
   await setTimeout(async () => {
     await page.mouse.click(100, 200);
   }, 2000);
 
-  const jobsLink: string[] = [];
+  try {
+    const jobListings = await page.$$('.base-card.relative.job-search-card');
 
-  const jobListings = await page.$$('.base-card.relative.job-search-card');
-
-  for (const job of jobListings) {
-    const href = await job.$eval('a.base-card__full-link', (el) => el.href);
-    jobsLink.push(href);
-  }
-
-  const jobs: any[] = [];
-
-  for (const link of jobsLink) {
-    try {
-      await page.goto(link, { waitUntil: 'networkidle0' });
-
-      await page.waitForSelector('.top-card-layout__title');
-
-      try {
-        await page.click(
-          'button.show-more-less-html__button--more[aria-expanded="false"][data-tracking-control-name="public_jobs_show-more-html-btn"]'
-        );
-      } catch (clickError) {
-        console.log('Show more button not found or not clickable');
-      }
-
-      const html = await page.content();
-      const $ = cheerio.load(html);
-
-      const title = $('.top-card-layout__title').text().trim();
-      const description = $('.show-more-less-html__markup').text().trim();
-      const { languages, frameworks } = await filterLanguagesAndFrameworks(description);
-      const applicationLink = await shortenLink(link);
-
-      jobs.push({
-        title,
-        languages,
-        frameworks,
-        applicationLink,
-      });
-    } catch (error) {
-      console.error(`Error processing job link ${link}:`, error);
+    for (const job of jobListings) {
+      const href = await job.$eval('a.base-card__full-link', (el) => el.href);
+      jobsLink.push(href);
     }
+
+    for (const link of jobsLink) {
+      try {
+        await page.goto(link, { waitUntil: 'networkidle0' });
+
+        await page.waitForSelector('.top-card-layout__title');
+
+        try {
+          await page.click(
+            'button.show-more-less-html__button--more[aria-expanded="false"][data-tracking-control-name="public_jobs_show-more-html-btn"]'
+          );
+        } catch (clickError) {
+          logger.info('Show more button not found or not clickable');
+        }
+
+        const html = await page.content();
+        const $ = cheerio.load(html);
+
+        const title = $('.top-card-layout__title').text().trim();
+        const description = $('.show-more-less-html__markup').text().trim();
+        const { languages, frameworks } = await filterLanguagesAndFrameworks(description);
+        const applicationLink = await shortenLink(link);
+
+        jobs.push({
+          title,
+          languages,
+          frameworks,
+          applicationLink,
+        });
+      } catch (error) {
+        logger.error(`Error processing job link ${link}:, ${error}`);
+      }
+    }
+  } catch (error) {
+    logger.error(`Error scraping linkedin:, ${error}`);
+  } finally {
+    await browser.close();
   }
 
-  await browser.close();
   return jobs;
 };
