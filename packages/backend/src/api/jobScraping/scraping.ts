@@ -10,7 +10,6 @@ const bayt =
 const remocate =
   'https://www.remocate.app/?Search=developer&Location=%F0%9F%93%8D+Any+Location&Category=%F0%9F%8C%9F+Any+Category#job-board';
 const smartRecruiters = 'https://jobs.smartrecruiters.com/?keyword=Developer&locationType=remote';
-const remoteSource = 'https://jobs.remotesource.com/jobs?jobTypes=Software+Engineer&postedSince=P1D';
 
 export function filterLanguagesAndFrameworks(paragraph: string) {
   const languages = [
@@ -117,7 +116,6 @@ export const xpert4Scrape = async () => {
     await page.waitForSelector('.jobs-wrapper.items-wrapper');
 
     const jobListings = await page.$$('.item-job');
-
     for (const listing of jobListings) {
       const link = await listing.$eval(' h2:nth-child(1) > a:nth-child(1)', (x) => x.href);
       links.push(link);
@@ -156,11 +154,11 @@ export const xpert4Scrape = async () => {
           applicationLink,
         });
       } catch (error) {
-        logger.error(`Error processing job link ${link}:`, error);
+        logger.error(`Error processing job link ${link}:, ${error}`);
       }
     }
   } catch (error) {
-    logger.error('Error scraping xpert4:', error);
+    logger.error(`Error scraping xpert4:, ${error}`);
   } finally {
     await browser.close();
   }
@@ -293,62 +291,6 @@ export const baytScrape = async () => {
   }
 
   return jobs;
-};
-
-//TODO:fix filtering the locations to get the remote jobs only
-export const remoteSourceScrape = async () => {
-  const { browser, page } = await initializePage(remoteSource);
-
-  await page.waitForSelector('.grouped-job-result');
-
-  const jobListings = await page.$$('.grouped-job-result');
-  logger.info(`Found ${jobListings.length} job listings`);
-
-  for (const job of jobListings) {
-    const location = await job.evaluate(() => {
-      return document.querySelector('.job-list-company-meta-item.job-list-company-meta-locations')?.textContent;
-    });
-
-    logger.info(`Location: ${location}`);
-
-    if (location?.split('-').includes('Remote')) {
-      logger.info('Location is remote');
-
-      await page.click('div.grouped-job-result:nth-child(4) > button:nth-child(4)');
-
-      const title = await page.$eval(
-        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)',
-        (el) => el.textContent
-      );
-
-      logger.info(`Title: ${title}`);
-
-      const description = await page.$$eval(
-        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > div:nth-child(2) > span',
-        (spans) => spans.map((span) => span.innerText).join(' ')
-      );
-
-      logger.info(`Description: ${description}`);
-
-      const { languages, frameworks } = filterLanguagesAndFrameworks(description);
-
-      logger.info(`Languages: ${languages}`);
-      logger.info(`Frameworks: ${frameworks}`);
-
-      const link = await page.$eval(
-        'div.grouped-job-result:nth-child(4) > div:nth-child(5) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)',
-        (el) => el.href
-      );
-
-      logger.info(`Link: ${link}`);
-
-      const applicationLink = await shortenLink(link);
-
-      logger.info(`Application link: ${applicationLink}`);
-      logger.info({ title, languages, frameworks, applicationLink });
-    }
-  }
-  await browser.close();
 };
 
 export const linkedinScrape = async () => {
