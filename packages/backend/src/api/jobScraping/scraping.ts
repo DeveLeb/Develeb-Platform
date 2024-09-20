@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser, Page, TimeoutError } from 'puppeteer';
 import { logger } from 'src/server';
 
 const linkedin =
@@ -99,8 +99,6 @@ async function shortenLink(link: any) {
 
 async function initializePage(link: string) {
   const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: { width: 1920, height: 1080 },
     args: ['--incognito'],
   });
   const page = await browser.newPage();
@@ -384,28 +382,96 @@ export const lbTalentScrape = async () => {
   return jobs;
 };
 
-export const linkedinScrape = async (): Promise<Job[] | null> => {
+const MAX_RETRIES = 2;
+const CLICK_RETRY_DELAY = 2000;
+
+async function isJoinLinkedInPage(page: Page): Promise<boolean> {
+  return safeEvaluate(page, () => {
+    return document.querySelector('h1')?.innerText.includes('Join LinkedIn') || false;
+  });
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function safeNavigate(page: Page, url: string, retries = 0): Promise<void> {
+  try {
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+  } catch (error) {
+    if (retries < MAX_RETRIES) {
+      logger.warn(`Navigation failed, retrying (${retries + 1}/${MAX_RETRIES}): ${url}`);
+      await delay(2000 * (retries + 1));
+      return safeNavigate(page, url, retries + 1);
+    }
+    throw error;
+  }
+}
+
+async function safeEvaluate<T>(page: Page, fn: () => T, retries = 0): Promise<T> {
+  try {
+    return await page.evaluate(fn);
+  } catch (error: any) {
+    if (error instanceof TimeoutError || error.message.includes('Execution context was destroyed')) {
+      if (retries < MAX_RETRIES) {
+        logger.warn(`Evaluation failed, retrying (${retries + 1}/${MAX_RETRIES})`);
+        await delay(2000 * (retries + 1));
+        return safeEvaluate(page, fn, retries + 1);
+      }
+    }
+    throw error;
+  }
+}
+
+async function safeClick(page: Page, x: number, y: number, retries = 0): Promise<void> {
+  try {
+    await page.mouse.click(x, y);
+  } catch (error: any) {
+    if (error.message.includes('Protocol error') || error.message.includes('Session closed')) {
+      if (retries < MAX_RETRIES) {
+        logger.warn(`Click failed, retrying (${retries + 1}/${MAX_RETRIES})`);
+        await delay(CLICK_RETRY_DELAY);
+        return safeClick(page, x, y, retries + 1);
+      }
+    }
+    throw error;
+  }
+}
+
+export const linkedinScrape = async (): Promise<Job[]> => {
   const jobsLink: string[] = [];
   const jobs: Job[] = [];
-
-  const { browser, page } = await initializePage(linkedin);
-  await setTimeout(async () => {
-    await page.mouse.click(100, 200);
-  }, 2000);
+  let browser: Browser | null = null;
+  let page: Page | null = null;
 
   try {
+    ({ browser, page } = await initializePage(linkedin));
+
+    // Wait for the page to load completely
+    await page.waitForNavigation({ waitUntil: 'networkidle0' });
+
+    // Perform the mouse click operation with retry logic
+    await safeClick(page, 100, 200);
+
     const jobListings = await page.$$('.base-card.relative.job-search-card');
 
-    for (const job of jobListings) {
-      const href = await job.$eval('a.base-card__full-link', (el) => el.href);
-      jobsLink.push(href);
+    for (const jobListing of jobListings) {
+      const href = await jobListing.$eval('a.base-card__full-link', (el) => el.href).catch(() => null);
+      if (href) {
+        jobsLink.push(href);
+      }
     }
 
     for (const link of jobsLink) {
       try {
-        await page.goto(link, { waitUntil: 'networkidle0' });
+        await safeNavigate(page, link);
 
-        await page.waitForSelector('.top-card-layout__title');
+        if (await isJoinLinkedInPage(page)) {
+          logger.info('Join LinkedIn page detected. Navigating back...');
+          await page.goBack();
+          await delay(Math.random() * 2000 + 1000);
+          continue;
+        }
+
+        await page.waitForSelector('.top-card-layout__title', { timeout: 10000 });
 
         try {
           await page.click(
@@ -415,12 +481,13 @@ export const linkedinScrape = async (): Promise<Job[] | null> => {
           logger.info('Show more button not found or not clickable');
         }
 
-        const html = await page.content();
-        const $ = cheerio.load(html);
-
-        const title = $('.top-card-layout__title').text().trim();
-        const description = $('.show-more-less-html__markup').text().trim();
-        const { languages, frameworks } = await filterLanguagesAndFrameworks(description);
+        const title: string = (await safeEvaluate(page, () =>
+          document.querySelector('.top-card-layout__title')?.textContent?.trim()
+        )) as string;
+        const description = await safeEvaluate(page, () =>
+          document.querySelector('.show-more-less-html__markup')?.textContent?.trim()
+        );
+        const { languages, frameworks } = await filterLanguagesAndFrameworks(description!);
         const applicationLink = await shortenLink(link);
 
         jobs.push({
@@ -429,14 +496,21 @@ export const linkedinScrape = async (): Promise<Job[] | null> => {
           frameworks,
           applicationLink,
         });
+
+        await delay(Math.random() * 2000 + 1000);
       } catch (error) {
         logger.error(`Error processing job link ${link}:, ${error}`);
       }
     }
   } catch (error) {
-    logger.error(`Error scraping linkedin:, ${error}`);
+    logger.error(`Error scraping LinkedIn:, ${error}`);
   } finally {
-    await browser.close();
+    if (page) {
+      await page.close().catch(() => {}); // Ignore errors when closing
+    }
+    if (browser) {
+      await browser.close().catch(() => {}); // Ignore errors when closing
+    }
   }
 
   return jobs;
