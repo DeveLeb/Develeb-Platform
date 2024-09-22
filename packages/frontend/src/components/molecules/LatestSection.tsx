@@ -46,36 +46,42 @@ function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
     ? [
         <LatestJobCard
           key={0}
-          title={'Lorem ipsum dollar Lorem ipsum  3'}
+          title="Software Engineer Opportunity"
           jobDetails={{
-            category: 'Category',
-            location: 'Location',
-            companyName: 'Company Name',
-            salary: 'Salary',
-            date: '2024-07-08',
+            category: 'Full-Time',
+            location: 'Remote',
+            companyName: 'Avua',
+            salary: '-',
+            date: '2024-09-21',
           }}
+          link="/jobs/avua"
+          imageSrc="/images/companies/Avua.jpeg"
         />,
         <LatestJobCard
-          key={0}
-          title="222"
+          key={1}
+          title="Fullstack Developer Opportunity"
           jobDetails={{
-            category: 'cat1',
-            location: 'loc1',
-            companyName: 'company1',
-            salary: '$123',
-            date: '2024-07-08',
+            category: 'Fullstack',
+            location: 'on-site',
+            companyName: 'Presentail',
+            salary: '-',
+            date: '2024-09-21',
           }}
+          link="/jobs/presentail"
+          imageSrc="/images/companies/Presentail.jpeg"
         />,
         <LatestJobCard
-          key={0}
-          title="333"
+          key={2}
+          title="Software Developer Opportunity"
           jobDetails={{
-            category: 'cat1',
-            location: 'loc1',
-            companyName: 'company1',
-            salary: '$123',
+            category: 'Full-Time',
+            location: 'on-site',
+            companyName: 'OutSourcement',
+            salary: '-',
             date: '2024-07-08',
           }}
+          link="/jobs/outsourcement"
+          imageSrc="/images/companies/OutSourcement.jpeg"
         />,
       ]
     : events.map((event, index) => (
@@ -93,7 +99,7 @@ function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
   };
 
   return (
-    <div className="">
+    <div>
       <div className={jobs ? 'text-primary' : 'text-[var(--green)] '}>
         <HomePageTitle title={title} />
       </div>
@@ -103,10 +109,11 @@ function LatestSection({ title, jobs }: { title: string; jobs: boolean }) {
       </div>
       <div className="lg:flex lg:gap-5 lg:justify-between">
         <div className={`lg:hidden ${totalCards > 0 ? '' : 'hidden'}`}>{cards[currentIndex]}</div>
-        <div className="hidden lg:flex lg:gap-5 lg:justify-between lg:w-full ">{cards}</div>
+        <div className="hidden lg:flex lg:gap-5 lg:justify-between lg:w-full">{cards}</div>
       </div>
     </div>
   );
 }
 
 export default LatestSection;
+
