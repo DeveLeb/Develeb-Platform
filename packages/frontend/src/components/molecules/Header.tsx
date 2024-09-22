@@ -21,7 +21,9 @@ function Header() {
   return (
     <header className="flex justify-between items-center bg-[var(--dark-blue)] sm:px-10 sm:py-3">
       <div className="text-[var(--white)]">
-      <img src="/images/Logo.png" alt="logo" className="w-14" />
+        <Link href="/">
+          <img src="/images/Logo.png" alt="logo" className="w-14 cursor-pointer" />
+        </Link>
       </div>
       {isMobileScreen ? (
         <div className="px-2 py-2 rounded-full hover:bg-white/50 transition-colors cursor-pointer">

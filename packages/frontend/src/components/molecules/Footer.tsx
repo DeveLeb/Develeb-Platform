@@ -44,7 +44,9 @@ function Footer() {
       </div>
       <div className="flex flex-col lg:flex-row justify-between items-center w-full pt-10 lg:pt-5 gap-8">
         <div className="px-2 py-1 text-center">
-          <Image src="/images/Logo.png" alt="logo" width={70} height={70} />
+          <Link href="/">
+            <Image src="/images/Logo.png" alt="logo" width={70} height={70} className="cursor-pointer" />
+          </Link>
         </div>
 
         <ul className="flex gap-8">
