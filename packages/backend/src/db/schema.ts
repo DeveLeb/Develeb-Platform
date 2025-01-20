@@ -146,7 +146,7 @@ export const event = pgTable('event', {
   speakerName: varchar('speaker_name', { length: 255 }),
   speakerDescription: varchar('speaker_description', { length: 255 }),
   speakerProfileUrl: varchar('speaker_profile_url', { length: 255 }),
-  typeId: varchar('location_type', { length: 30 }),
+  locationType: varchar('location_type', { length: 30 }),
   tags: text('tags'),
   postedAt: timestamp('posted_at'),
   createdAt: timestamp('created_at').defaultNow(),

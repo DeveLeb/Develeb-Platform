@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { z } from 'zod';
 
 import { ResponseStatus, ServiceResponse } from '../../common/models/serviceResponse';
 import { logger } from '../../server';
@@ -6,7 +7,6 @@ import { Event } from './eventModel';
 import { eventRepository } from './eventRepository';
 import { CreateEventSchema, UpdateEventRequest } from './eventRequest';
 import { RegisterationResponse } from './eventRespone';
-import { z } from 'zod';
 // import { findByIdAsync } from '../user/userRepository'; // TODO: Uncomment this line when the findByIdAsync function is implemented
 
 export const eventService = {

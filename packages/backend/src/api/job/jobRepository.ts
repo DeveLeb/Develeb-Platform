@@ -200,4 +200,12 @@ export const jobRepository = {
 
     return result.length > 0 ? result.map((row) => JobSchema.parse(row.job)) : null;
   },
+
+  deleteSavedJobAsync: async (jobId: string, userId: string): Promise<SavedJob | null> => {
+    const result = await db
+      .delete(jobSaved)
+      .where(and(eq(jobSaved.jobId, jobId), eq(jobSaved.userId, userId)))
+      .returning();
+    return result.length > 0 ? JobSavedSchema.parse(result[0]) : null;
+  },
 };

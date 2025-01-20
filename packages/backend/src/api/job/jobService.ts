@@ -4,6 +4,7 @@ import { commonValidations } from 'src/common/utils/commonValidation';
 import { logger } from 'src/server';
 import { ZodError } from 'zod';
 
+import { userRepository } from '../user/userRepository';
 import { Job, SavedJob } from './jobModel';
 import { jobRepository } from './jobRepository';
 import { CreateJobRequest, JobIDSchema, PutJobRequest } from './jobRequest';
@@ -428,7 +429,11 @@ export const jobService = {
 
   findSavedJobs: async (userId: string): Promise<ServiceResponse<Job[] | null>> => {
     try {
-      //first we want to check if there are user but we dont have the user repo for now
+      const user = await userRepository.findByIdAsync(userId);
+      if (!user) {
+        logger.info(`User not found with id ${userId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
       logger.info(`userId: ${userId}`);
       const result = await jobRepository.findSavedJobsAsync(userId);
       logger.info(`jobs: ${JSON.stringify(result)}`);
@@ -440,6 +445,39 @@ export const jobService = {
       return new ServiceResponse(ResponseStatus.Success, 'Saved jobs found', result, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error finding saved jobs: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  },
+
+  deleteSavedJob: async (jobId: string, userId: string): Promise<ServiceResponse<null>> => {
+    try {
+      const job = await jobRepository.findJobByIdAsync(jobId);
+      if (!job) {
+        logger.info(`Job not found with id ${jobId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'Job not found', null, StatusCodes.NOT_FOUND);
+      }
+      const user = await userRepository.findByIdAsync(userId);
+      if (!user) {
+        logger.info(`User not found with id ${userId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'User not found', null, StatusCodes.NOT_FOUND);
+      }
+      const savedJob = await jobRepository.findSavedJobAsync(jobId, userId);
+      if (!savedJob) {
+        logger.info(`Job not saved with id ${jobId} for user ${userId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'Job not saved', null, StatusCodes.NOT_FOUND);
+      }
+      const deletedJob = await jobRepository.deleteSavedJobAsync(jobId, userId);
+      if (!deletedJob) {
+        logger.info(`Job not deleted with id ${jobId} for user ${userId}`);
+        return new ServiceResponse(ResponseStatus.Success, 'Job not deleted', null, StatusCodes.NOT_FOUND);
+      }
+      logger.info(`Job with id ${jobId} deleted for user ${userId}`);
+      return new ServiceResponse(ResponseStatus.Success, 'Job deleted', null, StatusCodes.OK);
+    } catch (ex) {
+      if ((ex as Error) instanceof ZodError)
+        return new ServiceResponse(ResponseStatus.Failed, 'Invalid input', null, StatusCodes.BAD_REQUEST);
+      const errorMessage = `Error deleting job with id ${jobId}: ${(ex as Error).message}`;
       logger.error(errorMessage);
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }

@@ -1,9 +1,12 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import express, { Request, Response, Router } from 'express';
+import authenticate from 'src/common/middleware/authConfig/authentication';
+import authorizeRole from 'src/common/middleware/authConfig/authorizeRole';
+import { Roles } from 'src/common/middleware/authConfig/roles';
 
 import { createApiResponse } from '../../api-docs/openAPIResponseBuilders';
 import { handleServiceResponse, validateRequest } from '../../common/utils/httpHandlers';
-import { ResourceSchema } from './resourceModel';
+import { ResourceSchema, SavedResourceSchema } from './resourceModel';
 import {
   CreateResourceRequest,
   CreateResourceSchema,
@@ -32,7 +35,7 @@ resourceRegistry.register('Resource', ResourceSchema);
 export const resourceRouter: Router = (() => {
   const router = express.Router();
   resourceRegistry.registerPath({
-    method: 'post',
+    method: 'get',
     path: '/resources',
     tags: ['Resource'],
     responses: createApiResponse(ResourceSchema, 'Success'),
@@ -56,12 +59,17 @@ export const resourceRouter: Router = (() => {
     responses: createApiResponse(ResourceSchema, 'Success'),
   });
 
-  router.post('/', validateRequest(CreateResourceSchema), async (req: Request, res: Response) => {
-    //TODO auth implementation
-    const createResourceRequest = req.body as unknown as CreateResourceRequest;
-    const serviceResponse = await resourceService.createResource(createResourceRequest);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(CreateResourceSchema),
+    async (req: Request, res: Response) => {
+      const createResourceRequest = req.body as unknown as CreateResourceRequest;
+      const serviceResponse = await resourceService.createResource(createResourceRequest);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   resourceRegistry.registerPath({
     method: 'get',
@@ -70,12 +78,17 @@ export const resourceRouter: Router = (() => {
     responses: createApiResponse(GetResourceViewsResponse, 'Success'),
   });
 
-  router.get('/:id/views', validateRequest(GetResourceViewsSchema), async (req: Request, res: Response) => {
-    //TODO auth implementation
-    const { id } = req.params as unknown as GetResourceViewsRequest;
-    const serviceResponse = await resourceService.findResourceViews(id);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.get(
+    '/:id/views',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(GetResourceViewsSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as GetResourceViewsRequest;
+      const serviceResponse = await resourceService.findResourceViews(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   resourceRegistry.registerPath({
     method: 'post',
@@ -84,25 +97,29 @@ export const resourceRouter: Router = (() => {
     responses: createApiResponse(ResourceSchema, 'Success'),
   });
 
-  router.post('/:resourceId/save/:userId', validateRequest(SaveResourceSchema), async (req: Request, res: Response) => {
-    //TODO auth implementation
-    const { resourceId, userId } = req.params as unknown as SaveResourceRequest;
-    const serviceResponse = await resourceService.saveResourceForUser(resourceId, userId);
-    handleServiceResponse(serviceResponse, res);
-  });
+  router.post(
+    '/:resourceId/save/:userId',
+    authenticate,
+    validateRequest(SaveResourceSchema),
+    async (req: Request, res: Response) => {
+      const { resourceId, userId } = req.params as unknown as SaveResourceRequest;
+      const serviceResponse = await resourceService.saveResourceForUser(resourceId, userId);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
 
   resourceRegistry.registerPath({
     method: 'get',
     path: '/resources/{userId}/saved/resources',
-    tags: ['Job'],
+    tags: ['Resource'],
     responses: createApiResponse(ResourceSchema, 'Success'),
   });
 
   router.get(
     '/:userId/saved/resources',
+    authenticate,
     validateRequest(GetUserSavedResourcesSchema),
     async (req: Request, res: Response) => {
-      //TODO auth implementation
       const { userId } = req.params as unknown as GetUserSavedResourcesRequest;
       const serviceResponse = await resourceService.findSavedResources(userId);
       handleServiceResponse(serviceResponse, res);
@@ -121,25 +138,61 @@ export const resourceRouter: Router = (() => {
     handleServiceResponse(serviceResponse, res);
   });
 
-  router.put('/:id', validateRequest(PutResourceSchema), async (req: Request, res: Response) => {
-    //TODO auth implementation
-    const { id } = req.params as unknown as PutResourceRequest['params'];
-    const putResourceObject = req.body as unknown as PutResourceRequest['body'];
-    const serviceResponse = await resourceService.updateResource(id, putResourceObject);
-    handleServiceResponse(serviceResponse, res);
+  resourceRegistry.registerPath({
+    method: 'put',
+    path: '/resources/{id}',
+    tags: ['Resource'],
+    responses: createApiResponse(ResourceSchema, 'Success'),
   });
 
-  router.delete('/:id', validateRequest(DeleteResourceSchema), async (req: Request, res: Response) => {
-    //TODO auth implementation
-    const { id } = req.params as unknown as DeleteResourceRequest;
-    const serviceResponse = await resourceService.deleteResource(id);
-    handleServiceResponse(serviceResponse, res);
+  router.put(
+    '/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(PutResourceSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as PutResourceRequest['params'];
+      const putResourceObject = req.body as unknown as PutResourceRequest['body'];
+      const serviceResponse = await resourceService.updateResource(id, putResourceObject);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
+
+  resourceRegistry.registerPath({
+    method: 'delete',
+    path: '/resources/{id}',
+    tags: ['Resource'],
+    responses: createApiResponse(ResourceSchema, 'Success'),
   });
 
-  router.delete('/:id/saved', validateRequest(DeleteResourceSchema), async (req: Request, res: Response) => {
-    const { id } = req.params as unknown as DeleteResourceRequest;
-    const serviceResponse = await resourceService.deleteSavedResource(id);
-    handleServiceResponse(serviceResponse, res);
+  router.delete(
+    '/:id',
+    authenticate,
+    authorizeRole(Roles.ADMIN),
+    validateRequest(DeleteResourceSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as DeleteResourceRequest;
+      const serviceResponse = await resourceService.deleteResource(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
+
+  resourceRegistry.registerPath({
+    method: 'delete',
+    path: '/resources/saved/{id}',
+    tags: ['Resource'],
+    responses: createApiResponse(SavedResourceSchema, 'Success'),
   });
+
+  router.delete(
+    '/saved/:id',
+    authenticate,
+    validateRequest(DeleteResourceSchema),
+    async (req: Request, res: Response) => {
+      const { id } = req.params as unknown as DeleteResourceRequest;
+      const serviceResponse = await resourceService.deleteSavedResource(id);
+      handleServiceResponse(serviceResponse, res);
+    }
+  );
   return router;
 })();
