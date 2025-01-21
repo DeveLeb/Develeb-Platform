@@ -45,11 +45,11 @@ passport.use(
         const user = await userRepository.findByEmailAsync(email);
         if (!user) {
           logger.info('Email not found');
-          return done(null, false, { message: 'Incorrect email.' });
+          return done(null, false, { message: 'Incorrect credentials.' });
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: 'Incorrect password.' });
+          return done(null, false, { message: 'Incorrect credentials.' });
         }
         return done(null, user);
       } catch (error) {

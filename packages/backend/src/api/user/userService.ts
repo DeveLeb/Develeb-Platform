@@ -112,7 +112,7 @@ export const userService = {
       return new ServiceResponse(ResponseStatus.Failed, errorMessage, null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   },
-  resetPassword: async (id: string, password: string): Promise<ServiceResponse<User | null>> => {
+  resetPassword: async (id: string, password: string): Promise<ServiceResponse<null>> => {
     try {
       logger.info('Fetching user from database...');
       const user = await userRepository.findByIdAsync(id);
@@ -133,9 +133,9 @@ export const userService = {
       }
       logger.info('Password is different from the current one, resetting password...');
       const hashPassword = await bcrypt.hash(password, 4);
-      const returnedUser = await userRepository.resetPasswordAsync(id, hashPassword);
+      await userRepository.resetPasswordAsync(id, hashPassword);
       logger.info('Password reset');
-      return new ServiceResponse<User>(ResponseStatus.Success, 'Password reset', returnedUser, StatusCodes.OK);
+      return new ServiceResponse(ResponseStatus.Success, 'Password reset', null, StatusCodes.OK);
     } catch (ex) {
       const errorMessage = `Error resetting password for user with id ${id}: ${(ex as Error).message}`;
       logger.error(errorMessage);

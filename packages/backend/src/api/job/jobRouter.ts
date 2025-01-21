@@ -110,6 +110,7 @@ export const jobRouter: Router = (() => {
   router.post(
     '/category',
     authenticate,
+    authorizeRole(Roles.ADMIN),
     validateRequest(CreateJobCategorySchema),
     async (req: Request, res: Response) => {
       // TODO: user auth
@@ -254,7 +255,7 @@ export const jobRouter: Router = (() => {
     responses: createApiResponse(GetJobViewsSchema, 'Success'),
   });
 
-  router.get(':id/views', async (req: Request, res: Response) => {
+  router.get(':id/views', authenticate, authorizeRole(Roles.ADMIN), async (req: Request, res: Response) => {
     const { id } = req.params;
     const serviceResponse = await jobService.findJobTotalViews(id);
     handleServiceResponse(serviceResponse, res);
@@ -357,6 +358,19 @@ export const jobRouter: Router = (() => {
   router.get('/:userId/saved/jobs', authenticate, async (req: Request, res: Response) => {
     const { userId } = req.params;
     const serviceResponse = await jobService.findSavedJobs(userId);
+    handleServiceResponse(serviceResponse, res);
+  });
+
+  jobRegistry.registerPath({
+    method: 'delete',
+    path: '/jobs/{userId}/saved/{jobId}',
+    tags: ['Job'],
+    responses: createApiResponse(z.object({}), 'Success'),
+  });
+
+  router.delete('/:userId/saved/:jobId', authenticate, async (req: Request, res: Response) => {
+    const { userId, jobId } = req.params;
+    const serviceResponse = await jobService.deleteSavedJob(jobId, userId);
     handleServiceResponse(serviceResponse, res);
   });
 
