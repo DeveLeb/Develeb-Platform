@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+tests
+coverage
+*.test.ts
+*.spec.ts
