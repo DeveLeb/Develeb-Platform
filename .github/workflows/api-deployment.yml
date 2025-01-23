@@ -2,10 +2,10 @@ name: Build
 
 on:
   push:
-      branches:
-        - main
-      paths:
-        - 'packages/backend/**'
+    branches:
+      - main
+    paths:
+      - 'packages/api/**'
   workflow_dispatch:
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./packages/backend/Dockerfile
+          file: ./packages/api/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/develeb-backend:${{ github.sha }}, ${{ secrets.DOCKER_USERNAME }}/develeb-backend:latest
 
